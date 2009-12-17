@@ -1,0 +1,1274 @@
+  /*********************************************************/
+  /*          EEK - EGADSS Arden Compiler (EAC)            */
+  /*                http://egadss.org                      */
+  /*                                                       */
+  /*      For info email: glen.mccallum@egadss.org         */
+  /*                                                       */
+  /*       Principal Investigator: Dr. Morgan Price        */
+  /*            University of British Columbia             */
+  /*             Department of Family Practice             */
+  /*           Suite 211 - 2150 Western Parkway            */
+  /*              Vancouver, British Columbia              */
+  /*                    Canada V6T 1V6                     */
+  /*                                                       */
+  /*  Copyright (C) 2004  University of British Columbia   */
+  /*                                                       */
+  /* This program is free software; you can redistribute   */
+  /* it and/or modify  it under the terms of the GNU       */
+  /* General Public License as published by  the Free      */
+  /* Software Foundation; either version 2 of the License, */
+  /* or  (at your option) any later version.               */
+  /*                                                       */
+  /* This program is distributed in the hope that it will  */
+  /* be useful,  but WITHOUT ANY WARRANTY; without even    */
+  /* the implied warranty of  MERCHANTABILITY or FITNESS   */
+  /* FOR A PARTICULAR PURPOSE. See the  GNU General Public */
+  /* License for more details.                             */
+  /*                                                       */
+  /* You should have received a copy of the GNU General    */
+  /* Public License  along with this program; if not,      */
+  /* write to the Free Software  Foundation, Inc.,         */
+  /* 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA */
+  /*********************************************************/
+
+Package arden.compiler;
+
+Helpers
+
+  all       = [0..127];  // ASCII
+  printable = [32..126];
+
+  ascii_character     = [0..0xff];
+  ascii_small         = ['a'..'z'];
+  ascii_caps          = ['A'..'Z'];
+
+  space  = 0x20;
+  tab    = 0x09;
+  ff     = 0x0C;
+  lf     = 0x0A;
+  cr     = 0x0D;
+  eol    = cr lf | cr | lf;   // Windows, Mac, UNIX line terminators
+  no_eol = [[all - cr] - lf];
+
+  sp  = ' ';
+  ht  = 0x09;
+
+
+  line_terminator     = lf | cr | cr lf;
+  input_character     = [ascii_character - [cr + lf]];
+  single_character    = [input_character - [''' + '\']];
+
+  not_star            = [input_character - '*'] | line_terminator;
+  not_star_not_slash  = [input_character - ['*' + '/']] | line_terminator;
+
+  escape_sequence     = '\n' | '\t' | '\v' | '\b' | '\r' | '\f' | '\a' | '\"' | '\' ''' | '\\';
+
+  semicol= ';';
+  nosemi = [printable - semicol];
+  allnosemi = [[all -semicol] - '"'];
+  nosemibr = [[nosemi - '{']-'}'];
+
+  star          = '*';
+  slash         = '/';
+  slashslash    = '//';
+
+  no_star       = [all - star];
+  no_star_slash = [no_star - slash];
+  us = '_';
+  dash = '-';
+
+  digit          = ['0'..'9'];
+  /* no spaces are permitted between elements */
+  ddigits         = digit+;
+
+  letter                = [['a'..'z']+['A'..'Z']];
+
+  nosemicr = [nosemi + tab];
+  ttext  = nosemi+ (semicol nosemi+)*;
+  linktext = (nosemicr+ (semicol nosemicr+)* eol?)* nosemicr+ (semicol nosemicr+)*;
+  sstring = allnosemi+ (semicol allnosemi+)*;
+  datamaptext = nosemibr+ (semicol nosemibr+)*;
+
+   sign =   /* null */
+
+                | '+'
+                | '-'
+   ;
+
+   fractional_seconds =  /* no spaces are permitted between elements */
+                        '.' ddigits
+                        |   /* empty */
+  ;
+
+  time_zone =  /* no spaces are permitted between elements */
+                /* null */
+                | 'Z'
+                | 'z'
+                | '+' digit digit ':' digit digit
+                | '-' digit digit ':' digit digit
+                |
+  ;
+  a = ['a' + 'A'];
+  b = ['b' + 'B'];
+  c = ['c' + 'C'];
+  d = ['d' + 'D'];
+  e = ['e' + 'E'];
+  f = ['f' + 'F'];
+  g = ['g' + 'G'];
+  h = ['h' + 'H'];
+  i = ['i' + 'I'];
+  j = ['j' + 'J'];
+  k = ['k' + 'K'];
+  l = ['l' + 'L'];
+  m = ['m' + 'M'];
+  n = ['n' + 'N'];
+  o = ['o' + 'O'];
+  p = ['p' + 'P'];
+  q = ['q' + 'Q'];
+  r = ['r' + 'R'];
+  s = ['s' + 'S'];
+  t = ['t' + 'T'];
+  u = ['u' + 'U'];
+  v = ['v' + 'V'];
+  w = ['w' + 'W'];
+  x = ['x' + 'X'];
+  y = ['y' + 'Y'];
+  z = ['z' + 'Z'];
+  one = '1';
+  zero = '0';
+
+States
+  normal, text, mlmname, datamap, arden, format, formatted, link;
+
+
+//==============================================================================
+Tokens
+//==============================================================================
+
+//-- Symbols -------------------------------------------------------------------
+
+
+
+  // grouping
+  l_par = '(';
+  r_par = ')';
+  {normal -> datamap} l_brc = '{';
+  {datamap -> normal} r_brc = '}';
+  l_brk = '[';
+  r_brk = ']';
+
+  // sequencing/binding
+  comma      = ',';
+  semicolon  = ';';
+  {normal -> text}colon      = ':';
+  {normal, text -> normal, mlmname -> normal, arden->normal, link -> normal}semicolons = ';;';
+  dot        = '.';
+  assign     = ':=';
+  // logical
+  logor  = '||';
+
+  // comparison
+  eqsign = '=';
+  nesign = '<>';
+  ltsign = '<';
+  lesign = '<=';
+  gtsign = '>';
+  gesign = '>=';
+
+  // arithmetic
+  {normal, formatted}plus  = '+';
+  {normal, formatted}minus = '-';
+  times = '*';
+  div   = '/';
+  mod   = '%';
+  dexp   = '**';
+
+//other
+  {normal, format -> formatted, formatted -> normal}dquote = '"';
+  {formatted}numsign='#';
+
+
+// Unhandled symbols  . . . �
+
+
+  //-- Keywords ------------------------------------------------------------------
+  abs         = a b s;
+  action      = a c t i o n ':';
+  after       = a f t e r;
+  ago         = a g o;
+  alert       = 'alert';
+  all         = a l l;
+  and         = a n d;
+  any         = a n y;
+  arccos      = a r c c o s;
+  arcsin      = a r c s i n;
+  arctan      = a r c t a n;
+  {normal -> arden}arden       = a r d e n ':';
+  are         = a r e;
+  argument    = a r g u m e n t;
+  as          = a s;
+  at          = a t;
+  {normal -> text}author      = a u t h o r ':';
+  average     = a v e r a g e;
+  avg         = a v g;
+  be          = b e;
+  before      = b e f o r e;
+  boolean     = b o o l e a n;
+  call        = c a l l;
+  ceiling     = c e i l i n g;
+  characters  = c h a r a c t e r s;
+  {normal -> link}citations   = c i t a t i o n s ':';
+  conclude    = c o n c l u d e;
+  cos         = c o s;
+  cosine      = c o s i n e;
+  count       = c o u n t;
+  currenttime = c u r r e n t t i m e;
+  data        = d a t a ':';
+  data_driven = d a t a us d r i v e n;
+  dataadashdriven =  d a t a dash d r i v e n;
+  date        = d a t e ':';
+  day         = d a y;
+  days        = d a y s;
+  decrease    = d e c r e a s e;
+  delay       = d e l a y;
+  destination = d e s t i n a t i o n;
+  do          = d o;
+  duration    = d u r a t i o n;
+  earliest    = e a r l i e s t;
+  else        = e l s e;
+  elseif      = e l s e i f;
+  enddo       = e n d d o;
+  endif       = e n d i f;
+  end         = e n d ':';
+  eq          = e q;
+  equal       = e q u a l;
+  event       = e v e n t;
+  eventtime   = e v e n t t i m e;
+  every       = e v e r y;
+  evoke       = e v o k e ':';
+  exist       = e x i s t;
+  exists      = e x i s t s;
+  exp         = e x p;
+  expired     = e x p i r e d;
+  {normal -> text}explanation = e x p l a n a t i o n ':';
+  extract     = e x t r a c t;
+  false       = f a l s e;
+  {normal->mlmname}filename    = f i l e n a m e ':';
+  find  = f i n d;
+  first       = f i r s t;
+  floor       = f l o o r;
+  following   = f o l l o w i n g;
+  for         = f o r;
+  {normal -> format} formatted   = f o r m a t t e d;
+  from        = f r o m;
+  ge          = g e;
+  greater     = g r e a t e r;
+  gt          = g t;
+  hour        = h o u r;
+  hours       = h o u r s;
+  if          = i f;
+  in          = i n;
+  increase    = i n c r e a s e;
+  index       = i n d e x;
+  institution = i n s t i t u t i o n;
+  int         = i n t;
+  interface   = i n t e r f a c e;
+  interval    = i n t e r v a l;
+  is          = i s;
+  it          = i t;
+  {normal -> text}keywords    = k e y w o r d s ':';
+  knowledge   = k n o w l e d g e ':';
+  last        = l a s t;
+  latest      = l a t e s t;
+  le          = l e;
+  left        = l e f t;
+  length      = l e n g t h;
+  less        = l e s s;
+  let         = l e t;
+  library     = l i b r a r y ':';
+  {normal -> link} links       = l i n k s ':';
+  list        = l i s t;
+  log         = l o g;
+  log10       = l o g '1' '0';
+  logic       = l o g i c ':';
+  lowercase   = l o w e r c a s e;
+  lt          = l t;
+  maintenance = m a i n t e n a n c e ':';
+  matches     = m a t c h e s;
+  max         = m a x;
+  maximum     = m a x i m u m;
+  median      = m e d i a n;
+  merge       = m e r g e;
+  message     = m e s s a g e;
+  min         = m i n;
+  minimum     = m i n i m u m;
+  minute      = m i n u t e;
+  minutes     = m i n u t e s;
+  mlm         = m l m;
+  {normal -> mlmname}mlmname     = m l m n a m e ':';
+  mlm_self    = m l m us s e l f;
+  month       = m o n t h;
+  months      = m o n t h s;
+  ne          = n e;
+  nearest     = n e a r e s t;
+  no          = n o;
+  not         = n o t;
+  now         = n o w;
+  null        = n u l l ;
+  number      = n u m b e r;
+  occur       = o c c u r;
+  occurred    = o c c u r r e d;
+  occurs      = o c c u r s;
+  of          = o f;
+  or          = o r;
+  past        = p a s t;
+  pattern     = p a t t e r n;
+  percent     = p e r c e n t;
+  preceding   = p r e c e d i n g;
+  present     = p r e s e n t;
+  priority    = p r i o r i t y ':';
+  production  = p r o d u c t i o n;
+  {normal->text}purpose     = p u r p o s e ':';
+  read        = r e a d;
+  refute      = r e f u t e;
+  research    = r e s e a r c h;
+  return      = r e t u r n;
+  reverse     = r e v e r s e;
+  right       = r i g h t;
+  round       = r o u n d;
+  same        = s a m e;
+  second      = s e c o n d;
+  seconds     = s e c o n d s;
+  seqto       = s e q t o;
+  sin         = s i n;
+  sine        = s i n e;
+  slope       = s l o p e;
+  sort        = s o r t;
+  {normal-> text}specialist  = s p e c i a l i s t ':';
+  sqrt        = s q r t;
+  starting    = s t a r t i n g;
+  stddev      = s t d d e v;
+  string      = s t r i n g;
+  substring  = s u b s t r i n g;
+  sum         = s u m;
+  support     = s u p p o r t;
+  surrounding = s u r r o u n d i n g;
+  tan         = t a n;
+  tangent     = t a n g e n t;
+  testing     = t e s t i n g;
+  than        = t h a n;
+  the         = 'the';
+  then        = t h e n;
+  they        = t h e y;
+  time        = t i m e;
+  {normal -> text}title       = t i t l e ':';
+  to          = t o;
+  triggertime = t r i g g e r t i m e;
+  trim  = t r i m;
+  true        = t r u e;
+  truncate    = t r u n c a t e;
+  type        = t y p e ':';
+  unique      = u n i q u e;
+  until       = u n t i l;
+  uppercase   = u p p e r c a s e;
+  urgency     = u r g e n c y ':';
+  validation  = v a l i d a t i o n ':';
+  variance    = v a r i a n c e;
+  version     = v e r s i o n;
+  was         = w a s;
+  week        = w e e k;
+  weeks       = w e e k s;
+  were        = w e r e;
+  where       = w h e r e;
+  while       = w h i l e;
+  {normal, format} with        = w i t h;
+  within      = w i t h i n;
+  write       = w r i t e;
+  year        = y e a r;
+  years       = y e a r s;
+
+  // pseudo-keywords
+  {normal -> link, link} url_link    = u r l us l i n k;
+  {normal -> link, link} mesh_link   = m e s h us l i n k;
+  {normal -> link, link} other_link  = o t h e r us l i n k;
+  {normal -> link, link} exe_link    = e x e us l i n k;
+  {formatted}ce           = 'E';
+  {formatted}e           = 'e';
+  ct           = 'T';
+  {formatted}t           = 't';
+  {formatted} zero      = '0';
+  {arden}two            = '2';
+  {arden}twopointone        = '2' '.' '1';
+  {formatted} c         = 'c';
+  {formatted}cc         = 'C';
+  {formatted} d         = 'd';
+  {formatted}ci         = 'I';
+  {formatted}o          ='o';
+  {formatted}u          ='u';
+  {formatted}x          ='x';
+  {formatted}cx         ='X';
+  {formatted}f          ='f';
+  {formatted}g          ='g';
+  {formatted}cg         ='G';
+  {formatted}n          ='n';
+  {formatted}p          ='p';
+  {formatted}s          ='s';
+
+  {normal}identifier = letter (letter | digit | us)*;
+  /* up to 80 characters total (no reserved words allowed) */
+
+  {mlmname} mlmname_text = letter (letter | digit | us | '-' | '.')*;
+
+
+
+  blank = (sp | ht | ff | line_terminator)*;
+
+  {formatted}sspace = space;
+
+  {link} link_ttext = linktext;
+
+  {text, formatted}text  = ttext;
+
+  /****** lexical constructs ******/
+
+  /* any string of characters enclosed in double quotes (" ASCII 22) with nested "" but without semicolons */
+  {normal, link} string_literal = '"' sstring '"';
+
+  digits = ddigits;
+
+  /* no spaces are permitted between elements */
+  /* null */
+  exponent = (e sign ddigits)?;
+
+
+  /* no spaces are permitted between elements */
+  iso_date =  digit digit digit digit '-' digit digit '-' digit digit;
+
+
+
+  iso_date_time =  digit digit digit digit '-' digit digit '-' digit digit t digit digit ':' digit digit ':' digit digit fractional_seconds time_zone;
+
+   /* any balanced string of characters enclosed in curly brackets { }       */
+   /* (ASCII 123 and 125, respectively) without semicolons the data mapping  */
+   /* does not include the curly bracket characters                          */
+  {datamap} data_mapping =  datamaptext;
+
+  /* any string of characters enclosed in single quotes (�, ASCII 44) without semicolons */
+  {normal, link}term =  ''' ttext ''';
+
+  traditional_comment = '/*' not_star+ '*'+ (not_star_not_slash not_star* '*'+)* '/';
+  documentation_comment =    '/**' '*'* (not_star_not_slash not_star* '*'+)* '/';
+  end_of_line_comment = '//' input_character* line_terminator?;
+
+Ignored Tokens
+  blank,
+  traditional_comment,
+  documentation_comment,
+  end_of_line_comment;
+
+//==============================================================================
+Productions
+//==============================================================================
+
+/****** physical file containing one or more MLMs ******/
+
+
+/****** file of individual MLMs ******/
+program =
+                P.mlms;
+
+mlms =
+      {mlm}     P.mlm
+    | {mlms}    P.mlm P.mlms;
+
+/****** categories ******/
+mlm =
+                maintenance_category
+                library_category
+                knowledge_category
+                end;
+
+maintenance_category =
+                maintenance maintenance_body;
+
+maintenance_body =
+                title_slot
+                mlmname_slot
+                arden_version_slot
+                version_slot
+                institution_slot
+                author_slot
+                specialist_slot
+                date_slot
+                validation_slot;
+
+library_category =
+                library library_body;
+
+library_body =
+                purpose_slot
+                explanation_slot
+                keywords_slot
+                citations_slot
+                links_slot;
+
+knowledge_category =
+                knowledge knowledge_body;
+
+knowledge_body =
+                type_slot
+                data_slot
+                priority_slot
+                evoke_slot
+                logic_slot
+                action_slot
+                urgency_slot;
+
+/****** slots ******/
+/****** maintenance slots ******/
+
+title_slot =
+                title text semicolons;
+
+mlmname_slot =
+      {mname}   mlmname mlmname_text semicolons
+    | {fname}   filename mlmname_text semicolons;
+
+
+/* the "FILENAME:" form is only valid */
+/* combination with the empty version */
+/* of arden_version_slot            */
+
+arden_version_slot =
+      {vrsn}    arden arden_version semicolons
+    | {ntxt}    arden semicolons
+    | {empty};    /* the empty version is only valid    */
+                  /* combination with the "FILENAME"    */
+                  /* form of < mlmname_slot >           */
+
+arden_version =
+      {two}     version two
+    | {twoone}  version twopointone;
+
+version_slot =
+                version colon mlm_version semicolons;
+
+mlm_version =
+                text;
+
+institution_slot =
+      {text}    institution colon text semicolons
+    | {empty}   institution colon semicolons;
+
+/* text limited to 80 characters */
+
+author_slot =
+      {text}    author text semicolons
+    | {empty}   author semicolons;
+
+/* see 6.1.6 for details */
+
+specialist_slot =
+      {text}    specialist text semicolons
+    | {empty}   specialist semicolons;
+
+/* see 6.1.7 for details */
+
+date_slot =
+                date mlm_date semicolons;
+
+mlm_date =
+      {date}    iso_date
+    | {dtime}  iso_date_time;
+
+validation_slot =
+                validation validation_code semicolons;
+
+validation_code =
+      {prod}    production
+    | {res}     research
+    | {test}    testing
+    | {exp}     expired;
+
+/****** library slots ******/
+
+purpose_slot =
+      {text}    purpose text semicolons
+    | {ntxt}    purpose semicolons;
+
+explanation_slot =
+      {text}    explanation text semicolons
+    | {empty}   explanation semicolons;
+
+keywords_slot =
+      {text}    keywords text semicolons
+    | {empty}   keywords semicolons;
+
+/* May require special processing to handle both list and text versions */
+
+citations_slot =
+      {empty}
+    | {list}    citations citations_list semicolons
+    | {text}    citations link_ttext semicolons; /* deprecated -- supported for backward compatibility */
+
+citations_list =
+      {empty}
+    | {single}  single_citation
+    | {list}    single_citation semicolon citations_list;
+
+single_citation =
+      {formal}  digits dot citation_type citation_text
+    | {text}    citation_text;
+
+/* This is a separate definition to allow for future expansion */
+
+citation_text =
+                string_literal;
+
+citation_type =
+      {empty}
+    | {sup}     support
+    | {ref}     refute;
+
+/* May require special processing to handle both list and text versions */
+
+links_slot =
+      {empty}
+    | {list}    links links_list semicolons
+    | {text}    links link_ttext semicolons;
+
+/* deprecated - supported for backward*/
+/* compatibility */
+
+links_list =
+      {empty}
+    | {single}  single_link
+    | {list}    links_list semicolon single_link;
+
+single_link =
+                link_type link_name link_text;
+
+link_type =
+      {empty}
+    | {url}     url_link
+    | {mesh}    mesh_link
+    | {other}   other_link
+    | {exe}     exe_link;
+
+link_name =
+      {empty}
+    | {string}  string_literal;
+
+/* This is a separate definition to allow for future expansion */
+
+link_text =
+                term;
+
+/****** knowledge slots ******/
+
+type_slot =
+                type type_code semicolons;
+
+/* This is a separate definition to allow for future expansion */
+
+type_code =
+      {data}    data_driven
+    | {driven}  dataadashdriven; /* deprecated -- supported for backwards */
+                                 /* compatibility */
+
+data_slot =
+                data data_block semicolons;
+
+priority_slot =
+      {empty}
+    | {pri}     priority P.number semicolons;
+
+evoke_slot =
+                evoke evoke_block semicolons;
+
+logic_slot =
+                logic logic_block semicolons;
+
+action_slot =
+                action action_block semicolons;
+
+urgency_slot =
+      {empty}
+    | {urg}     urgency urgency_val semicolons;
+
+urgency_val =
+      {num}     P.number
+    | {id}      identifier;
+
+/****** logic block ******/
+
+logic_block =
+      {lblk}   logic_block semicolon logic_statement
+    | {lstmt}  logic_statement;
+
+logic_statement =
+      {empty}
+    | {ass}     logic_assignment
+    | {if}      if logic_if_then_else2
+    | {for}     for identifier in expr do logic_block semicolon enddo
+    | {while}   while expr do logic_block semicolon enddo
+    | {conc}    conclude expr;
+
+logic_if_then_else2 =
+                [condition]:expr then [then_block]:logic_block [s1]:semicolon  [else_block]:logic_elseif;
+
+logic_elseif =
+      {end}     endif
+    | {else}    else logic_block semicolon endif
+    | {elseif}  elseif logic_if_then_else2;
+
+logic_assignment =
+      {idex}   identifier_becomes expr
+    | {tex}    time_becomes expr
+    | {icall}  identifier_becomes call_phrase;
+
+identifier_becomes =
+      {id}      identifier assign
+    | {let}     let identifier be
+    | {now}     now assign;
+
+time_becomes =
+      {timeof}  time of identifier assign
+    | {time}    time identifier assign
+    | {letto}   let time of identifier be
+    | {ltime}   let time identifier be;
+
+call_phrase =
+      {id}      call identifier
+    | {idex}   call identifier with expr;
+
+/****** expressions ******/
+
+expr =
+      {sort}    expr_sort
+    | {exsort}  expr comma expr_sort
+    | {comma}   comma expr_sort;
+
+expr_sort =
+      {where}   expr_where
+    | {merge}   expr_where merge expr_sort
+    | {sort}    sort  expr_sort
+    | {sopt}    sort l_brk sort_option r_brk expr_sort;
+
+sort_option =
+      {time}    time
+    | {data}    data;
+
+expr_where =
+      {range}   expr_range
+    | {wrange}  [this_range]:expr_range where  [next_range]:expr_range;
+
+expr_range =
+      {or}      expr_or
+    | {seq}     [this_or]:expr_or seqto  [next_or]:expr_or;
+
+expr_or =
+      {or}      expr_or or expr_and
+    | {and}     expr_and;
+
+expr_and =
+      {and}     expr_and and expr_not
+    | {not}     expr_not;
+
+expr_not =
+      {not}     not expr_comparison
+    | {comp}    expr_comparison;
+
+expr_comparison =
+      {str}     expr_string
+    | {find}    expr_find_string
+    | {sim}     [first_string]:expr_string simple_comp_op [second_string]:expr_string
+    | {is}      expr_string P.is main_comp_op
+    | {inot}    expr_string P.is not main_comp_op
+    | {in}      expr_string in_comp_op
+    | {nin}     expr_string not in_comp_op
+    | {occur}   expr_string P.occur temporal_comp_op
+    | {ocrnot}  expr_string P.occur not temporal_comp_op
+    | {range}   expr_string P.occur range_comp_op
+    | {rngnot}  expr_string P.occur not range_comp_op
+    | {match}   [first_string]:expr_string matches pattern [second_string]:expr_string;
+
+expr_find_string =
+      {istr}    find [substring]:expr_string T.in T.string [fullstring]:expr_string string_search_start
+    | {str}     find [substring]:expr_string T.string [fullstring]:expr_string string_search_start;
+
+expr_string =
+      {plus}    expr_plus
+    | {or}      expr_string logor expr_plus
+    | {form}    expr_string formatted with format_string;
+//   | {trim}    trim trim_option expr_string;// <------------------------------------------------------Problem
+//   | {sub}     substring expr_plus characters string_search_start from expr_string ; //<--------------Problem
+
+format_string =
+                [d1]:dquote [spec]:format_specification [d2]:dquote;
+
+/* The format string is a true     */
+/* Arden Syntax string, enclosed   */
+
+format_specification = /*  See section 9.8.2 (p. 34) and Annex 5 for */
+                       /* explanation of valid combination and their */
+                       /* meanings.                                  */
+
+      {specs}   format_specification format_specification_single
+    | {single}  format_specification_single;
+
+format_specification_single =
+      {options} mod format_options format_flag P.width P.precision
+                  /*  No spaces  are permitted between elements in above form */
+    | {text}    text;
+
+format_options = {empty}
+    | {plus}    T.plus
+    | {minus}   T.minus
+    | {zero}    T.zero
+    | {space}   T.sspace /* space */
+    | {numsign} T.numsign;
+
+format_flag = /* Format flags are case sensitive */
+      {c}       c
+    | {cc}      cc
+    | {d}       d
+    | {ci}      ci
+    | {o}       o
+    | {u}       u
+    | {x}       x
+    | {cx}      cx
+    | {e}       e
+    | {ce}      ce
+    | {f}       f
+    | {g}       g
+    | {cg}      cg
+    | {n}       n
+    | {p}       p
+    | {s}       s
+    | {t}       t;
+
+width =
+      {empty}
+    | {digits}  digits;
+
+precision =
+      {empty}
+    | {digits}  dot digits;
+
+trim_option =
+      {empty}
+    | {left}    T.left
+    | {right}   T.right;
+
+string_search_start =
+      {empty}
+    | {at}      T.starting T.at expr_plus;
+
+expr_plus =
+      {times}   expr_times
+    | {plus}    expr_plus plus expr_times
+    | {minus}   expr_plus minus expr_times
+    | {plust}   plus expr_times
+    | {mint}    minus expr_times;
+
+expr_times =
+      {power}   expr_power
+    | {tpow}    expr_times times expr_power
+    | {dpow}    expr_times div expr_power;
+
+expr_power =
+      {before}  expr_before
+    | {exp}     [base]:expr_function dexp [exp]:expr_function;
+                  /* Exponent (second arguement) must be an expression that */
+                  /* evaluates to a scalar number                           */
+
+expr_before =
+      {ago}     expr_ago
+    | {before}  expr_duration before expr_ago
+    | {after}   expr_duration after expr_ago
+    | {from}    expr_duration from expr_ago;
+
+expr_ago =
+      {func}    expr_function
+    | {dur}     expr_duration
+    | {ago}     expr_duration ago;
+
+expr_duration =
+                expr_function duration_op;
+
+expr_function =
+      {expr}    expr_factor
+    | {ofexpr}      of_func_op expr_function
+    | {ofofexpr}     of_func_op of expr_function
+    | {fromexpr}     from_of_func_op expr_function
+    | {fromofexpr}    from_of_func_op of expr_function
+    | {fromofexprfrom}   from_of_func_op expr_factor from expr_function
+    | {fromexprfrom}  from_func_op expr_factor from expr_function
+    | {ifromexpr}   index_from_of_func_op expr_function
+    | {ifromofexpr}    index_from_of_func_op of expr_function
+    | {ifromofexprfrom}   index_from_of_func_op expr_factor from expr_function
+    | {ifromexprfrom}    index_from_func_op expr_factor from expr_function
+    | {factas}  expr_factor as as_func_op;
+
+expr_factor =
+      {expf}   expr_factor_atom
+    | {efe}   expr_factor_atom l_brk expr r_brk ;
+                  /* number [expr] is not   */
+                  /* a valid construct      */
+
+expr_factor_atom =
+      {id}      identifier
+    | {num}     P.number
+    | {string}  string_literal
+    | {time}    time_value
+    | {bool}    boolean_value
+    | {null}    null
+    | {it}      P.it
+                  /* Value is NULL outside of a where   */
+                  /* clause and may be flagged as an    */
+                  /* error in some implementations.     */
+    | {par}     l_par r_par
+    | {exp}     l_par expr r_par;
+
+/****** for readability *******/
+it =
+      {it}      T.it
+    | {they}    they;
+
+/****** comparison synonyms ******/
+is =
+      {is}      T.is
+    | {are}     are
+    | {was}     was
+    | {were}    were;
+
+occur =
+      {ocr}     T.occur
+    | {ocrs}    T.occurs
+    | {ocrd}    T.occurred;
+
+/****** operators ******/
+simple_comp_op =
+      {eqs}     eqsign
+    | {eq}      eq
+    | {lts}     ltsign
+    | {lt}      lt
+    | {gts}     gtsign
+    | {gt}      gt
+    | {les}     lesign
+    | {le}      le
+    | {ges}     gesign
+    | {ge}      ge
+    | {nes}     nesign
+    | {ne}      ne;
+
+main_comp_op =
+      {tcomp}  temporal_comp_op
+    | {rcomp}  range_comp_op
+    | {ucomp}  unary_comp_op
+    | {bcomp}  binary_comp_op expr_string;
+
+
+/*  the WITHIN TO operator will accept any ordered parameter,      */
+/*  including numbers, strings (single characters), times, Boolean */
+
+range_comp_op =
+                within [lower]:expr_string to [upper]:expr_string;
+
+temporal_comp_op =
+      {prec}    within [left]:expr_string preceding [right]:expr_string
+    | {fol}     within [left]:expr_string following [right]:expr_string
+    | {sur}     within [left]:expr_string surrounding [right]:expr_string
+    | {past}    within past expr_string
+    | {same}    within same day as expr_string
+    | {bef}     before expr_string
+    | {after}   after expr_string
+    | {equal}   equal expr_string
+    | {at}      at expr_string;
+
+unary_comp_op =
+      {pres}    present
+    | {null}    null
+    | {bool}    boolean
+    | {num}     T.number
+    | {time}    time
+    | {dur}     duration
+    | {str}     T.string
+    | {list}    list;
+
+binary_comp_op =
+      {lt}      less than
+    | {gt}      greater than
+    | {ge}      greater than or equal
+    | {le}      less than or equal
+    | {in}      in;
+
+of_func_op =
+      {ofr}    of_read_func_op
+    | {ofnr}   of_noread_func_op;
+
+in_comp_op =
+                in;
+
+of_read_func_op =
+      {avge}    average
+    | {avg}     avg
+    | {cnt}     count
+    | {ex}      exist
+    | {exs}     exists
+    | {sum}     sum
+    | {med}     median;
+
+of_noread_func_op =
+      {any}     any
+    | {all}     all
+    | {no}      no
+    | {slp}     slope
+    | {stdv}    stddev
+    | {var}     variance
+    | {inc}     increase
+    | {peri}   percent increase
+    | {modi}   mod increase
+    | {dec}     decrease
+    | {perd}   percent decrease
+    | {modd}   mod decrease
+    | {inter}   interval
+    | {time}    time
+    | {acos}    arccos
+    | {asin}    arcsin
+    | {atan}    arctan
+    | {csin}    cosine
+    | {cos}     cos
+    | {sine}    sine
+    | {sin}     sin
+    | {tang}    tangent
+    | {tan}     tan
+    | {exp}     exp
+    | {flr}     floor
+    | {int}     int
+    | {round}   round
+    | {ceil}    ceiling
+    | {trunc}   truncate
+    | {log}     log
+    | {logt}    log10
+    | {abs}     abs
+    | {sqrt}    sqrt
+    | {exy}    extract year
+    | {exmo}   extract month
+    | {exd}    extract day
+    | {exh}    extract hour
+    | {exmi}   extract minute
+    | {exs}    extract second
+    | {str}     T.string
+    | {exc}    extract characters
+    | {rev}     reverse
+    | {len}     length
+    | {uc}      uppercase
+    | {lc}      lowercase;
+
+from_func_op =
+                nearest;
+
+index_from_func_op =
+                index nearest;
+
+from_of_func_op =
+      {mini}    minimum
+    | {min}     min
+    | {maxi}    maximum
+    | {max}     max
+    | {last}    last
+    | {fir}     first
+    | {ear}     earliest
+    | {lat}     latest;
+
+/* must be careful as reverse 5 from x does */
+/* not make sense                           */
+index_from_of_func_op =
+      {minimum}   index minimum
+    | {indexmin}    index min
+    | {maximum}   index maximum
+    | {indexmax}    index max
+    | {earliest}    index earliest
+    | {latest}    index latest;
+
+as_func_op =
+                T.number;
+
+duration_op =
+      {year}    year
+    | {years}   years
+    | {month}   month
+    | {months}  months
+    | {week}    week
+    | {weeks}   weeks
+    | {day}     day
+    | {days}    days
+    | {hour}    hour
+    | {hours}   hours
+    | {min}     minute
+    | {mins}    minutes
+    | {sec}     second
+    | {secs}    seconds;
+
+/****** factors ******/
+boolean_value =
+      {true}    true
+    | {false}   false;
+
+time_value =
+      {now}     now
+    | {idt}    iso_date_time
+    | {idat}   iso_date
+    | {etim}   eventtime
+    | {ttim}   triggertime
+    | {ctim}   currenttime;
+
+/****** data block ******/
+data_block =
+      {block}   data_block semicolon data_statement
+    | {func}    data_statement;
+
+data_statement =
+      {empty}
+    | {ass}     data_assignment
+    | {if}      if data_if_then_else2
+    | {for}     for identifier in expr do data_block semicolon enddo
+    | {while}   while expr do data_block semicolon enddo;
+
+data_if_then_else2 =
+                expr then data_block semicolon data_elseif;
+
+data_elseif =
+      {end}     endif
+    | {else}    else data_block semicolon endif
+    | {elseif}  elseif data_if_then_else2;
+
+data_assignment =
+      {iphr}   identifier_becomes data_assign_phrase
+    | {texpr}  time_becomes expr
+    | {lphr}   l_par data_var_list r_par assign read read_phrase
+    | {llphr}  let l_par data_var_list r_par be read read_phrase
+    | {laarg}  l_par data_var_list r_par assign argument
+    | {llbarg} let l_par data_var_list r_par be argument;
+
+data_var_list =
+      {id}      identifier
+    | {idl}     identifier comma data_var_list;
+
+data_assign_phrase =
+      {read}    read read_phrase
+    | {mlm}     T.mlm term
+    | {mlmi}    T.mlm term from institution string_literal
+    | {mlms}    T.mlm T.mlm_self
+    | {imap}    interface mapping_factor
+    | {emap}    event mapping_factor
+    | {mmap}    message mapping_factor
+    | {dmap}    destination mapping_factor
+    | {arg}     argument
+    | {cphr}    call_phrase
+    | {expr}    expr;
+
+read_phrase =
+      {read}    read_where
+    | {of}      of_read_func_op read_where
+    | {off}     of_read_func_op of read_where
+    | {f}       from_of_func_op read_where
+    | {fof}     from_of_func_op of read_where
+    | {foff}    from_of_func_op expr_factor from read_where;
+
+read_where =
+      {map}     mapping_factor
+    | {tmp}     mapping_factor where P.it P.occur temporal_comp_op
+    | {ntmp}    mapping_factor where P.it P.occur not temporal_comp_op
+    | {rng}     mapping_factor where P.it P.occur range_comp_op
+    | {nrng}    mapping_factor where P.it P.occur not range_comp_op
+    | {rdwhr}   l_par read_where r_par;
+
+mapping_factor =
+                l_brc data_mapping r_brc;
+
+/****** evoke block ******/
+evoke_block =
+      {estmt}  evoke_statement
+    | {eblk}   evoke_block semicolon evoke_statement;
+
+evoke_statement =
+      {empty}
+    | {eor}    event_or
+    | {etim}   evoke_time
+    | {ecyc}   qualified_evoke_cycle
+    | {call}    call; /* deprecated -- kept for backward compatibility */
+
+event_list =
+      {eor}    event_or
+    | {elst}   event_list comma event_or;
+
+event_or =
+      {or}   event_or or event_any
+    | {any}  event_any;
+
+event_any =
+      {alst}   any l_par event_list r_par
+    | {aolst}  any of l_par event_list r_par
+    | {aid}    any identifier
+    | {aoid}   any of identifier
+    | {efct}   event_factor;
+
+event_factor =
+      {eor}    l_par event_or r_par
+    | {id}      identifier;
+
+evoke_time =
+      {edur}   evoke_duration after evoke_time
+    | {time}    time event_any
+    | {tof}    time of event_any
+    | {idt}    iso_date_time
+    | {idate}  iso_date;
+
+qualified_evoke_cycle =
+      {simp}    simple_evoke_cycle
+    | {sunt}   simple_evoke_cycle until expr;
+
+simple_evoke_cycle =
+                every [dur_l]:evoke_duration for [dur_r]:evoke_duration starting evoke_time;
+
+evoke_duration =
+                P.number duration_op;
+
+/****** action block ******/
+action_block =
+      {astmt}  action_statement
+    | {ablk}   action_block semicolon action_statement;
+
+action_statement =
+      {empty}
+    | {if}      if action_if_then_else2
+    | {for}     for identifier in expr do action_block semicolon enddo
+    | {while}   while expr do action_block semicolon enddo
+    | {call}    call_phrase
+    | {cdel}   call_phrase delay expr
+    | {write}   write expr
+    | {wrtat}  write expr at identifier
+    | {return}  return expr;
+
+action_if_then_else2 =
+                expr then action_block semicolon action_elseif;
+
+action_elseif =
+      {end}     endif
+    | {else}    else action_block semicolon endif
+    | {elseif}  elseif action_if_then_else2;
+
+number =
+      {dexp}    digits exponent
+    | {dig}     digits
+    | {ddote}   digits dot exponent
+    | {ddot}    digits dot
+    | {ddotde}  [whole]:digits dot [decimal]:digits exponent
+    | {ddotd}   [whole]:digits dot [decimal]:digits
+    | {dotde}   dot digits exponent
+    | {dotd}    dot digits;
+                /* no spaces are permitted between elements */
+
