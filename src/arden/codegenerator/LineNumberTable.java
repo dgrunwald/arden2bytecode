@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * Speichert Zeilennummern für Exception Stacktraces/Debugger.
+ * Stores line numbers for exception stacktrace/debugger.
  * 
- * @author daniel
+ * @author Daniel Grunwald
  * 
  */
 class LineNumberTable {

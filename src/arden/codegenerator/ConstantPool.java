@@ -11,10 +11,9 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 
 /**
- * Repräsentiert den ConstantPool in einer Java .class-Datei
+ * Represents the constant pool inside a Java class file.
  * 
- * @author daniel
- * 
+ * @author Daniel Grunwald
  */
 public class ConstantPool {
 	static final byte CONSTANT_Class = 7;
@@ -45,15 +44,17 @@ public class ConstantPool {
 	private ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
 	private DataOutputStream data = new DataOutputStream(byteOutputStream);
 
-	// gets the index for the new constant pool entry being created
+	/** gets the index for the new constant pool entry being created */
 	private int getNextIndex() {
 		if (elementNumber >= 65534)
 			throw new ClassFileLimitExceededException("Too many constants.");
 		return ++elementNumber;
 	}
 
-	// gets the index for the new constant pool entry being created for a double
-	// or long value
+	/**
+	 * gets the index for the new constant pool entry being created for a double
+	 * or long value
+	 */
 	private int getNextDoubleIndex() {
 		int index = getNextIndex();
 		if (elementNumber >= 65534)
@@ -62,7 +63,7 @@ public class ConstantPool {
 		return index;
 	}
 
-	/** Speichert den ConstantPool in die .class-Datei */
+	/** Saves the ConstantPool into a .class-file */
 	public void save(DataOutput output) throws IOException {
 		data.flush(); // ensure the DataOutputStream writes everything to the
 		// ByteArrayOutputStream
@@ -71,11 +72,11 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet einen vorhandenen Integer-Eintrag oder erstellt einen neuen.
+	 * Finds an existing Integer-entry or creates a new entry.
 	 * 
 	 * @param value
-	 *            Der Wert des integers
-	 * @return Nummer des Integer-Eintrages
+	 *            The value of the entry.
+	 * @return The index of the entry.
 	 */
 	public int getInteger(Integer value) {
 		if (integer_map.containsKey(value))
@@ -92,11 +93,11 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet einen vorhandenen Double-Eintrag oder erstellt einen neuen.
+	 * Finds an existing Double-entry or creates a new entry.
 	 * 
 	 * @param value
-	 *            Der Wert des doubles
-	 * @return Nummer des Double-Eintrages
+	 *            The value of the entry.
+	 * @return The index of the entry.
 	 */
 	public int getDouble(Double value) {
 		if (double_map.containsKey(value))
@@ -113,11 +114,11 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet einen vorhandenen Long-Eintrag oder erstellt einen neuen.
+	 * Finds an existing Long-entry or creates a new entry.
 	 * 
 	 * @param value
-	 *            Der Wert des longs
-	 * @return Nummer des Long-Eintrages
+	 *            The value of the entry.
+	 * @return The index of the entry.
 	 */
 	public int getLong(Long value) {
 		if (long_map.containsKey(value))
@@ -134,11 +135,11 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet einen vorhandenen Utf8-Eintrag oder erstellt einen neuen.
+	 * Finds an existing Utf8-entry or creates a new entry.
 	 * 
-	 * @param text
-	 *            Der Text des Eintrages
-	 * @return Nummer des Utf8-Eintrages
+	 * @param value
+	 *            The value of the entry.
+	 * @return The index of the entry.
 	 */
 	public int getUtf8(String text) {
 		if (utf8_map.containsKey(text))
@@ -158,11 +159,11 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet einen vorhandenen String-Eintrag oder erstellt einen neuen.
+	 * Finds an existing String-entry or creates a new entry.
 	 * 
-	 * @param text
-	 *            Der Text des Eintrages
-	 * @return Nummer des String-Eintrages
+	 * @param value
+	 *            The value of the entry.
+	 * @return The index of the entry.
 	 */
 	public int getString(String text) {
 		if (string_map.containsKey(text))
@@ -180,12 +181,11 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet einen vorhandenen Class-Eintrag oder erstellt einen neuen.
+	 * Finds an existing Class-entry or creates a new entry.
 	 * 
 	 * @param classSym
-	 *            Das Klassen-Symbol, für das der Class-Eintrag erstellt werden
-	 *            soll
-	 * @return Nummer des Class-Eintrages
+	 *            The target class.
+	 * @return Index of the Class-entry.
 	 */
 	public int getClass(Class<?> classSym) {
 		if (classSym == null)
@@ -194,14 +194,13 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet einen vorhandenen Class-Eintrag für einen Array-Typen oder
-	 * erstellt einen neuen.
+	 * Finds an existing Class-entry for an array type or creates a new entry.
 	 * 
 	 * @param elementType
-	 *            Der Elementtyp des Arrays
+	 *            The array element type
 	 * @param arrayNestingLevel
-	 *            Verschachtelungstiefe des Arrays
-	 * @return Nummer des Class-Eintrages
+	 *            Nesting level of the array
+	 * @return Index of the Class-entry
 	 */
 	public int getClass(Class<?> elementType, int arrayNestingLevel) {
 		if (elementType == null)
@@ -215,7 +214,7 @@ public class ConstantPool {
 		return getClassByJavaName(b.toString());
 	}
 
-	/** Ermittelt den Java-Namen der Klasse */
+	/** Calculates the internal Java name of the class */
 	static String getInternalJavaName(Class<?> classSym) {
 		if (classSym.isArray() || classSym.isPrimitive())
 			throw new IllegalArgumentException("Cannot use array classes or primitive classes");
@@ -223,12 +222,12 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet einen vorhandenen Class-Eintrag für einen Typen oder erstellt
-	 * einen neuen.
+	 * Finds an existing Class-entry or creates a new entry.
 	 * 
 	 * @param internalJavaName
-	 *            Der interne Java-Name des Typen (z.B. '[Lopa/runtime/Object;')
-	 * @return Nummer des Class-Eintrages
+	 *            The internal Java name of the Type (e.g.
+	 *            '[Ljava/lang/Object;')
+	 * @return Index of the Class-entry.
 	 */
 	public int getClassByJavaName(String internalJavaName) {
 		if (class_map.containsKey(internalJavaName))
@@ -246,11 +245,11 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet einen vorhandenen Fieldref-Eintrag oder erstellt einen neuen.
+	 * Finds an existing Fieldref-entry or creates a new entry.
 	 * 
 	 * @param field
-	 *            Das Feld, für das der Fieldref-Eintrag erstellt werden soll
-	 * @return Nummer des Fieldref-Eintrages
+	 *            The target Field.
+	 * @return Index of the Fieldref-Entry
 	 */
 	public FieldReference getFieldref(Field field) {
 		if (field == null)
@@ -307,11 +306,11 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet einen vorhandenen Methodref-Eintrag oder erstellt einen neuen.
+	 * Finds an existing Methodref-entry or creates a new entry.
 	 * 
 	 * @param method
-	 *            Das Feld, für das der Methodref-Eintrag erstellt werden soll
-	 * @return Nummer des Methodref-Eintrages
+	 *            The target method.
+	 * @return Index of the Methodref-entry.
 	 */
 	public int getMethodref(Method method) {
 		if (method == null)
@@ -319,7 +318,8 @@ public class ConstantPool {
 		if (methodref_map.containsKey(method))
 			return methodref_map.get(method);
 		int classRef = getClass(method.getDeclaringClass());
-		int natRef = getNameAndType(method.getName(), createMethodDescriptor(method.getParameterTypes(), method.getReturnType()));
+		int natRef = getNameAndType(method.getName(), createMethodDescriptor(method.getParameterTypes(), method
+				.getReturnType()));
 		int index = getNextIndex();
 		methodref_map.put(method, index);
 		try {
@@ -347,12 +347,11 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet die Methodref für den Java-Konstruktor, der aus einem Java Wert
-	 * einen OPA-Runtimeobjekt macht
+	 * Finds an existing Method-entry for a constructor or creates a new entry.
 	 * 
 	 * @param ctor
-	 *            Der Konstruktor.
-	 * @return Nummer des Eintrags im Constant-Pool
+	 *            The target constructor.
+	 * @return Index of the entry
 	 */
 	public int getConstructor(Constructor<?> ctor) {
 		if (constructor_map.containsKey(ctor))
@@ -372,14 +371,14 @@ public class ConstantPool {
 	}
 
 	/**
-	 * Findet einen vorhandenen NameAndType-Eintrag oder erstellt einen neuen.
+	 * Finds an existing NameAndType-entry or creates a new entry.
 	 * 
 	 * @param name
-	 *            Der Name des NameAndType-Eintrages
+	 *            The name of the entry
 	 * @param typeDescriptor
-	 *            Der Typ des Eintrages (Java FieldDescriptor oder
+	 *            The type of the entry (Java FieldDescriptor or
 	 *            MethodDescriptor)
-	 * @return Nummer des NameAndType-Eintrages
+	 * @return Index of the entry
 	 */
 	public int getNameAndType(String name, String typeDescriptor) {
 		NameTypePair ntp = new NameTypePair(name, typeDescriptor);

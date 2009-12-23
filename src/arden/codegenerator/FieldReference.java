@@ -1,6 +1,10 @@
 package arden.codegenerator;
 
-/** Represents a field referenced in the constant pool. */
+/**
+ * Represents a field referenced in the constant pool.
+ * 
+ * @author Daniel Grunwald
+ */
 public class FieldReference {
 	final int index;
 

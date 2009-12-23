@@ -10,47 +10,53 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
+/**
+ * This class is used for emitting the byte code in the body of methods.
+ * 
+ * @author Daniel Grunwald
+ * 
+ */
 public class MethodWriter {
-	/** ConstantPool für Methoden- und Feldreferenzen */
+	/** ConstantPool for method- and field references */
 	private ConstantPool pool;
 
-	/** Line number table, falls Positionsinformationen ausgegeben werden sollen */
+	/** Line number table, used if debugging information should be output */
 	private LineNumberTable lineNumberTable;
 
-	/** Tabelle von lokalen Variablen, für Debugger */
+	/** Table of local variables (for use by debuggers) */
 	private LocalVariableTable localVariableTable;
 
-	/** OutputStream, in den der Bytecode geschrieben wird */
+	/** OutputStream: all byte code is written here */
 	private ByteArrayOutputStream byteCodeOutputStream = new ByteArrayOutputStream();
-	/** DataOutputStream zum Schreiben des Bytecodes in den byteCodeOutputStream */
-	private DataOutputStream byteCode = new DataOutputStream(
-			byteCodeOutputStream);
+
+	/** DataOutputStream that wraps the byteCodeOutputStream */
+	private DataOutputStream byteCode = new DataOutputStream(byteCodeOutputStream);
 
 	private boolean isInstanceMethod;
-	
-	/**
-	 * Speichert Positionen, an denen das Ziel von Labels eingesetzt werden muss
-	 */
+
+	/** Stores positions, where the target of labels has to be placed. */
 	private ArrayList<LabelReference> labelReferences = new ArrayList<LabelReference>();
 
-	/** Anzahl lokaler Variablen inklusiv Parameter und 'this' */
+	/** Number of local variables including parameters and 'this' */
 	private int numLocals;
+
 	/**
-	 * Aktuelle Stackgröße.
+	 * Current stack size.
 	 * 
-	 * Jede erzeugte Anweisung passt diesen Wert durch einen Aufruf von poppush
-	 * an, so dass immer die aktuelle Größe des Java-Stacks bekannt ist. Nach
-	 * unbedingten Sprunganweisungen ist die Stackgröße unbekannt (durch -1
-	 * dargestellt). Dann muss zunächst die Stackgröße von einer Sprungmarke
-	 * übernommen werden (durch einen mark()-Aufruf), bevor wieder Code
-	 * generiert werden kann.
+	 * Every instruction being emitted will adjust this value by calling
+	 * poppush, so that the current size of the Java stack is known. After
+	 * unconditional jump instructions the stack size is unknown, this is
+	 * represented using the value -1. In this case, the stack size must be
+	 * inferred from a jump mark (by calling mark()) before additional
+	 * instructions can be emitted.
 	 */
 	private int stackSize;
-	/** Maximale Stackgröße */
+
+	/** Maximum stack size that was observed so far */
 	private int maxStackSize;
 
 	/**
-	 * MethodWriter constructor. 
+	 * MethodWriter constructor.
 	 */
 	public MethodWriter(ConstantPool pool, boolean isInstanceMethod) {
 		this.pool = pool;
@@ -58,7 +64,7 @@ public class MethodWriter {
 		this.numLocals = isInstanceMethod ? 1 : 0;
 	}
 
-	/** Passt stackSize für eine Operation an (um maxStackSize zu ermitteln) */
+	/** Adjusts stackSize for one operation (to calculate maxStackSize) */
 	private void poppush(int popsize, int pushsize) {
 		if (stackSize == -1) {
 			// Code is unreachable.
@@ -76,7 +82,7 @@ public class MethodWriter {
 		}
 	}
 
-	/** Gibt ein Byte (0-255) in den Bytecode aus. */
+	/** Emits one byte (0-255) into the byte code. */
 	private void emit(int b) {
 		if (b < 0 || b > 255)
 			throw new IllegalArgumentException("Number out of range");
@@ -89,7 +95,7 @@ public class MethodWriter {
 		}
 	}
 
-	/** Gibt ein signed Byte (-128 bis 127) in den Bytecode aus. */
+	/** Emits a signed byte (-128 to 127) into the byte code. */
 	private void emitInt8(int b) {
 		if (b < Byte.MIN_VALUE || b > Byte.MAX_VALUE)
 			throw new IllegalArgumentException("Number out of range");
@@ -102,7 +108,7 @@ public class MethodWriter {
 		}
 	}
 
-	/** Gibt einen unsigned short in den Bytecode aus. */
+	/** Emits an unsigned short into the byte code. */
 	private void emitUInt16(int num) {
 		if (num < 0 || num > 65535)
 			throw new IllegalArgumentException("Number out of range");
@@ -115,7 +121,7 @@ public class MethodWriter {
 		}
 	}
 
-	/** Gibt ein signed short in den Bytecode aus. */
+	/** Emits a signed short into the byte code. */
 	private void emitInt16(int num) {
 		if (num < -32768 || num > 32767)
 			throw new IllegalArgumentException("Number out of range");
@@ -128,6 +134,7 @@ public class MethodWriter {
 		}
 	}
 
+	/** Emits an int into the byte code. */
 	private void emitInt32(int num) {
 		if (stackSize == -1)
 			return; // don't emit unreachable code
@@ -138,32 +145,30 @@ public class MethodWriter {
 		}
 	}
 
-	/** Gibt die aktuelle Position im Bytecode zurück */
+	/** Returns the current position in the byte code */
 	private int getCurrentPosition() {
 		return byteCode.size();
 	}
 
-	/** Gibt die Zieladdresse eines Labels aus. */
+	/** Emits the target location of a label (16-bit offset) */
 	private void emitLabelReference(Label label, int basePosition) {
 		if (checkLabel(label)) {
 			int referencePosition = getCurrentPosition();
-			// erstmal nur Platzhalter ausgeben
+			// emit place holder
 			emitUInt16(0);
-			// Position merken, um Label-Ziel später einzutragen
-			labelReferences.add(new LabelReference(referencePosition,
-					basePosition, label, false));
+			// remember position, to fill in the actual target later
+			labelReferences.add(new LabelReference(referencePosition, basePosition, label, false));
 		}
 	}
 
-	/** Gibt die Zieladdresse eines Labels aus. */
+	/** Emits the target location of a label (32-bit offset) */
 	private void emitLabelReference32(Label label, int basePosition) {
 		if (checkLabel(label)) {
 			int referencePosition = getCurrentPosition();
-			// erstmal nur Platzhalter ausgeben
+			// emit place holder
 			emitInt32(0);
-			// Position merken, um Label-Ziel später einzutragen
-			labelReferences.add(new LabelReference(referencePosition,
-					basePosition, label, true));
+			// remember position, to fill in the actual target later
+			labelReferences.add(new LabelReference(referencePosition, basePosition, label, true));
 		}
 	}
 
@@ -173,25 +178,21 @@ public class MethodWriter {
 		if (stackSize == -1)
 			return false; // don't emit unreachable code
 		if (!label.allowJumps)
-			throw new IllegalArgumentException(
-					"Cannot emit backward jump to forward-only label.");
+			throw new IllegalArgumentException("Cannot emit backward jump to forward-only label.");
 		if (label.stackSize == -1)
 			label.stackSize = stackSize;
 		else if (label.stackSize != stackSize)
-			throw new IllegalArgumentException(
-					"All paths reaching a label must result in the same stack size.");
+			throw new IllegalArgumentException("All paths reaching a label must result in the same stack size.");
 		return true;
 	}
 
 	/**
-	 * Trägt die Zieladdressen von Labels in die dafür vorgesehenen Platzhalter
-	 * ein.
+	 * Fills in the target addresses of all labels into the place holders.
 	 */
 	private void resolveLabels(byte[] byteCode) {
 		for (LabelReference labelRef : labelReferences) {
 			if (labelRef.label.markedPosition < 0)
-				throw new IllegalStateException(
-						"Cannot resolve label - did you use a label without calling mark()?");
+				throw new IllegalStateException("Cannot resolve label - did you use a label without calling mark()?");
 			int offset = labelRef.label.markedPosition - labelRef.basePosition;
 			if (labelRef.is32BitOffset) {
 				byteCode[labelRef.referencePosition] = (byte) (offset >>> 24);
@@ -200,8 +201,7 @@ public class MethodWriter {
 				byteCode[labelRef.referencePosition + 3] = (byte) (offset & 0xff);
 			} else {
 				if (offset < Short.MIN_VALUE || offset > Short.MAX_VALUE)
-					throw new ClassFileLimitExceededException(
-							"Branch distance too large.");
+					throw new ClassFileLimitExceededException("Branch distance too large.");
 				byteCode[labelRef.referencePosition] = (byte) ((short) offset >>> 8);
 				byteCode[labelRef.referencePosition + 1] = (byte) (offset & 0xff);
 			}
@@ -209,7 +209,7 @@ public class MethodWriter {
 		labelReferences.clear();
 	}
 
-	/** Gibt den bisher erzeugten Bytecode zurück. */
+	/** Returns the emitted byte code. */
 	public byte[] getByteCode() {
 		try {
 			byteCode.flush();
@@ -224,8 +224,8 @@ public class MethodWriter {
 	}
 
 	/**
-	 * Gibt den Inhalt des "Code" Attributes zurück. Dieses enthält den Bytecode
-	 * sowie einige Zusatzdaten (maxStackSize etc.)
+	 * Returns the content of the "Code" attribute. This contains the byte code
+	 * and some additional data (maxStackSize etc.)
 	 */
 	public byte[] getCodeAttributeData() {
 		try {
@@ -263,13 +263,11 @@ public class MethodWriter {
 	}
 
 	/**
-	 * Aktiviert die Zeilennummertabelle, in der Sequenzpunkte für Debugger
-	 * gespeichert werden.
+	 * Enables the LineNumberTable, which stores sequence points for debuggers.
 	 */
 	public void enableLineNumberTable() {
 		if (lineNumberTable != null)
-			throw new IllegalStateException(
-					"Line number table is already enabled.");
+			throw new IllegalStateException("Line number table is already enabled.");
 		lineNumberTable = new LineNumberTable(pool);
 	}
 
@@ -290,8 +288,7 @@ public class MethodWriter {
 	 */
 	public void sequencePoint(int lineNumber) {
 		if (stackSize > 0)
-			throw new IllegalStateException(
-					"Expecting empty stack at start of statement.");
+			throw new IllegalStateException("Expecting empty stack at start of statement.");
 		if (lineNumberTable != null)
 			lineNumberTable.addEntry(byteCode.size(), lineNumber);
 	}
@@ -322,7 +319,7 @@ public class MethodWriter {
 			emitLdc(pool.getInteger(val));
 		}
 	}
-	
+
 	/**
 	 * Legt einen konstanten String auf den Stack (ohne Wrapper-Klasse).
 	 * 
@@ -336,7 +333,7 @@ public class MethodWriter {
 			emitLdc(pool.getString(val));
 		}
 	}
-	
+
 	/**
 	 * Legt einen konstanten Double auf den Stack (ohne Wrapper-Klasse).
 	 * 
@@ -353,7 +350,7 @@ public class MethodWriter {
 			emitUInt16(pool.getDouble(val));
 		}
 	}
-	
+
 	/**
 	 * Legt einen konstanten Long auf den Stack (ohne Wrapper-Klasse).
 	 * 
@@ -370,7 +367,7 @@ public class MethodWriter {
 			emitUInt16(pool.getLong(val));
 		}
 	}
-	
+
 	/**
 	 * Legt die null-Referenz auf den Stack.
 	 * 
@@ -388,8 +385,7 @@ public class MethodWriter {
 	 */
 	public void loadThis() {
 		if (isInstanceMethod)
-			throw new IllegalArgumentException(
-					"Cannot load 'this' in static method.");
+			throw new IllegalArgumentException("Cannot load 'this' in static method.");
 		loadVariable(0);
 	}
 
@@ -422,7 +418,7 @@ public class MethodWriter {
 			emitUInt16(vindex);
 		}
 	}
-	
+
 	/**
 	 * Legt den Wert einer primitven int-Variablen auf den Stack.
 	 * 
@@ -464,7 +460,8 @@ public class MethodWriter {
 	}
 
 	/**
-	 * Speichert einen primitiven int-Wert vom Stack in der angegebenen Variablen.
+	 * Speichert einen primitiven int-Wert vom Stack in der angegebenen
+	 * Variablen.
 	 * 
 	 * Stack: .., wert => ..
 	 */
@@ -642,18 +639,16 @@ public class MethodWriter {
 	 * @param defaultLabel
 	 *            Das default-Label
 	 * 
-	 * Stack: .., int => ..
+	 *            Stack: .., int => ..
 	 */
 	public void lookupSwitch(int[] constantValues, Label[] targetLabels, Label defaultLabel) {
 		if (constantValues.length != targetLabels.length)
-			throw new IllegalArgumentException(
-					"Values and label arrays must have same length");
+			throw new IllegalArgumentException("Values and label arrays must have same length");
 		if (constantValues.length == 0)
 			throw new IllegalArgumentException("Empty switch not supported");
 		for (int i = 0; i < constantValues.length; i++) {
 			if (i > 0 && constantValues[i - 1] >= constantValues[i])
-				throw new IllegalArgumentException(
-						"Constants are not sorted/duplicate constant");
+				throw new IllegalArgumentException("Constants are not sorted/duplicate constant");
 		}
 		poppush(1, 0);
 		int basePosition = getCurrentPosition();
@@ -698,13 +693,11 @@ public class MethodWriter {
 			} else {
 				if (stackSize != label.stackSize)
 					throw new IllegalArgumentException(
-							"Label cannot be placed here: A jump to this position expects stack size"
-									+ label.stackSize + ", but stack size is "
-									+ stackSize);
+							"Label cannot be placed here: A jump to this position expects stack size" + label.stackSize
+									+ ", but stack size is " + stackSize);
 			}
 		} else {
-			throw new IllegalArgumentException(
-					"The label already was used to mark a position.");
+			throw new IllegalArgumentException("The label already was used to mark a position.");
 		}
 	}
 
@@ -718,8 +711,7 @@ public class MethodWriter {
 			label.markedPosition = getCurrentPosition();
 			if (stackSize > 0)
 				throw new IllegalArgumentException(
-						"Label cannot be placed here: Stack must be empty at label position, but has size "
-								+ stackSize);
+						"Label cannot be placed here: Stack must be empty at label position, but has size " + stackSize);
 			if (label.stackSize > 0)
 				throw new IllegalArgumentException(
 						"Label cannot be placed here: Stack must be empty during jump, but there is a jump source with stack size "
@@ -727,8 +719,7 @@ public class MethodWriter {
 			stackSize = 0;
 			label.stackSize = 0;
 		} else {
-			throw new IllegalArgumentException(
-					"The label already was used to mark a position.");
+			throw new IllegalArgumentException("The label already was used to mark a position.");
 		}
 	}
 
@@ -759,7 +750,7 @@ public class MethodWriter {
 			throw new IllegalArgumentException("Expected instance field, but found static field.");
 		loadInstanceField(pool.getFieldref(field));
 	}
-	
+
 	public void loadInstanceField(FieldReference field) {
 		poppush(1, 1);
 		emit(180); // getfield
@@ -776,7 +767,7 @@ public class MethodWriter {
 			throw new IllegalArgumentException("Expected instance field, but found static field.");
 		storeInstanceField(pool.getFieldref(field));
 	}
-	
+
 	public void storeInstanceField(FieldReference field) {
 		poppush(2, 0);
 		emit(181); // putfield
@@ -793,7 +784,7 @@ public class MethodWriter {
 			throw new IllegalArgumentException("Expected static field, but found instance field.");
 		loadStaticField(pool.getFieldref(field));
 	}
-	
+
 	public void loadStaticField(FieldReference field) {
 		poppush(0, 1);
 		emit(178); // getstatic
@@ -810,6 +801,7 @@ public class MethodWriter {
 			throw new IllegalArgumentException("Expected static field, but found instance field.");
 		storeStaticField(pool.getFieldref(field));
 	}
+
 	public void storeStaticField(FieldReference field) {
 		poppush(1, 0);
 		emit(179); // putstatic
@@ -839,8 +831,7 @@ public class MethodWriter {
 	 */
 	public void invokeInstance(Method method) {
 		if (isStatic(method))
-			throw new IllegalArgumentException(
-					"Cannot use invokeInstance for static method");
+			throw new IllegalArgumentException("Cannot use invokeInstance for static method");
 		poppush(1 + getStackSize(method.getParameterTypes()), getStackSize(method.getReturnType()));
 		emit(182); // invokevirtual
 		emitUInt16(pool.getMethodref(method));
@@ -853,15 +844,13 @@ public class MethodWriter {
 	 */
 	public void invokeStatic(Method method) {
 		if (!isStatic(method))
-			throw new IllegalArgumentException(
-					"Cannot use invokeStatic for instance method");
+			throw new IllegalArgumentException("Cannot use invokeStatic for instance method");
 		poppush(getStackSize(method.getParameterTypes()), getStackSize(method.getReturnType()));
 		emit(184); // invokestatic
 		emitUInt16(pool.getMethodref(method));
 	}
 
-	private boolean isStatic(Member member)
-	{
+	private boolean isStatic(Member member) {
 		return (member.getModifiers() & Modifier.STATIC) == Modifier.STATIC;
 	}
 
@@ -881,8 +870,7 @@ public class MethodWriter {
 	 * 
 	 * Stack: .., objectref, parameters => ..
 	 */
-	public void invokeConstructor(Constructor<?> ctor)
-	{
+	public void invokeConstructor(Constructor<?> ctor) {
 		poppush(1 + getStackSize(ctor.getParameterTypes()), 0);
 		emit(183); // invokespecial
 		emitUInt16(pool.getConstructor(ctor));

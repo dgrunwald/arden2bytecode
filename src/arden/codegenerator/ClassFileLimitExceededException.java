@@ -1,11 +1,10 @@
 package arden.codegenerator;
 
 /**
- * Diese Exception tritt auf, wenn eines der Limits des Class-File-Formates zu
- * überschreiten.
+ * This exceptions occurs when one of the limits of the .class file format is
+ * exceeded.
  * 
- * @author daniel
- * 
+ * @author Daniel Grunwald
  */
 public class ClassFileLimitExceededException extends RuntimeException {
 
@@ -17,7 +16,7 @@ public class ClassFileLimitExceededException extends RuntimeException {
 	public ClassFileLimitExceededException(String message) {
 		super(message);
 	}
-	
+
 	public ClassFileLimitExceededException(Exception inner) {
 		super(inner);
 	}

@@ -11,8 +11,7 @@ import java.util.List;
 /**
  * Class for writing .class files
  * 
- * @author daniel
- * 
+ * @author Daniel Grunwald
  */
 public class ClassFileWriter {
 	ConstantPool pool = new ConstantPool();
@@ -122,8 +121,7 @@ public class ClassFileWriter {
 
 	/** Saves the class file to disk */
 	public void save(String filename) throws IOException {
-		DataOutputStream s = new DataOutputStream(
-				new FileOutputStream(filename));
+		DataOutputStream s = new DataOutputStream(new FileOutputStream(filename));
 		try {
 			save(s);
 		} finally {

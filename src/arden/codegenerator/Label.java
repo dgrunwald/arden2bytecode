@@ -1,23 +1,22 @@
 package arden.codegenerator;
 
 /**
- * Repräsentiert eine Sprungmarke im Bytecode.
+ * Represents a jump label inside the byte code.
  * 
- * Verwendung: <br> 
- * {@code Label marke = new Label(); } <br> 
- * {@code methodWriter.jump(marke); // Springe vorwärts (zu noch nicht definierter
- * Marke) } <br> 
- * {@code ... // Generiere mehr Code } <br>
- * {@code methodWriter.mark(marke); // Plaziere Sprungmarke }
+ * Usage: <br> 
+ * {@code Label label = new Label(); } <br> 
+ * {@code methodWriter.jump(label); // Jump forwards (target label not yet defined) } <br> 
+ * {@code ... // generate more Code } <br>
+ * {@code methodWriter.mark(label); // Place jump label }
  * 
- * @author daniel
+ * @author Daniel Grunwald
  * 
  */
 public class Label {
-	/** Zielposition, auf die das Label zeigt, -1=noch nicht gesetzt */
+	/** Target position (byte index where the label is pointing to), -1=not yet set */
 	int markedPosition = -1;
-	/** Stackgröße an Zielposition, -1=noch unbekannt */
+	/** Stack size at target position, -1=currently unknown */
 	int stackSize = -1;
-	/** Am Anfang true, wird von markForwardOnly() auf false gesetzt um zu signalisieren, dass Rücksprünge verboten sind */
+	/** Initially true, is set to false by markForwardOnly() to signal that backward jumps are forbidden */
 	boolean allowJumps = true;
 }

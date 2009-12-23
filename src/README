@@ -1,0 +1,11 @@
+License: GPL (because arden.scc is GPL)
+
+
+To compile the parser in Eclipse:
+	1. Create an external tool configuration:
+		Location: javaw.exe (from your Java runtime)
+		Working directory: ${container_loc}
+		Arguments: -classpath ${project_loc}\tools\sablecc.jar org.sablecc.sablecc.SableCC ${resource_name}
+	
+	2. Select the file "arden.scc" and run SableCC.
+	3. Right-click "src" and press Refresh so that Eclipse loads the generated files.

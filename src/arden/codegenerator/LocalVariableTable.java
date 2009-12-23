@@ -6,20 +6,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * Speichert Variablennamen für Debugger.
+ * Stores variable names for debuggers.
  * 
- * @author daniel
+ * @author Daniel Grunwald
  * 
  */
 class LocalVariableTable {
 	final int attributeNameIndex;
 	private final ConstantPool pool;
 	private ArrayList<LocalVariable> variables = new ArrayList<LocalVariable>();
-	
-	static class LocalVariable
-	{
+
+	static class LocalVariable {
 		int index, nameIndex, descriptorIndex;
-		
+
 		public LocalVariable(int index, int nameIndex, int descriptorIndex) {
 			this.index = index;
 			this.nameIndex = nameIndex;
