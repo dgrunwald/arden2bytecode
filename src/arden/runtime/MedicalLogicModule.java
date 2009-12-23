@@ -21,10 +21,9 @@ public class MedicalLogicModule {
 	public MedicalLogicModuleImplementation createInstance(ExecutionContext context) throws InvocationTargetException {
 		if (context == null)
 			throw new IllegalArgumentException();
-		
+
 		// We know the class has an appropriate constructor because we compiled
-		// it,
-		// so wrap all the checked exceptions that should never occur.
+		// it, so wrap all the checked exceptions that should never occur.
 		Constructor<? extends MedicalLogicModuleImplementation> ctor;
 		try {
 			ctor = clazz.getConstructor(ExecutionContext.class);
@@ -41,6 +40,19 @@ public class MedicalLogicModule {
 			throw new RuntimeException(e);
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException(e);
+		}
+	}
+	
+	public ArdenValue run(ExecutionContext context) throws InvocationTargetException
+	{
+		MedicalLogicModuleImplementation impl = createInstance(context);
+		try {
+			if (impl.logic(context))
+				return impl.action(context);
+			else
+				return ArdenNull.INSTANCE;
+		} catch (Exception ex) {
+			throw new InvocationTargetException(ex);
 		}
 	}
 }

@@ -14,4 +14,7 @@ public abstract class MedicalLogicModuleImplementation {
 		if (context == null)
 			throw new IllegalArgumentException();
 	}
+	
+	public abstract boolean logic(ExecutionContext context);
+	public abstract ArdenValue action(ExecutionContext context);
 }
