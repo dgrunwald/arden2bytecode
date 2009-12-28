@@ -12,6 +12,8 @@ import arden.codegenerator.FieldReference;
 import arden.codegenerator.MethodWriter;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenString;
+import arden.runtime.ArdenValue;
+import arden.runtime.ExecutionContext;
 import arden.runtime.MedicalLogicModuleImplementation;
 
 /**
@@ -27,8 +29,11 @@ class CodeGenerator {
 	private HashMap<String, FieldReference> stringLiterals = new HashMap<String, FieldReference>();
 	private HashMap<Double, FieldReference> numberLiterals = new HashMap<Double, FieldReference>();
 	private int nextFieldIndex;
+	private boolean isFinished;
 
 	private MethodWriter getStaticInitializer() {
+		if (isFinished)
+			throw new IllegalStateException();
 		if (staticInitializer == null) {
 			staticInitializer = classFileWriter.createStaticInitializer();
 		}
@@ -94,8 +99,37 @@ class CodeGenerator {
 		this.classFileWriter = new ClassFileWriter(mlmName, MedicalLogicModuleImplementation.class);
 	}
 
+	public MethodWriter createConstructor() {
+		MethodWriter w = classFileWriter.createConstructor(Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class });
+		w.loadThis();
+		w.loadVariable(1);
+		try {
+			w.invokeConstructor(MedicalLogicModuleImplementation.class.getConstructor(ExecutionContext.class));
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+		return w;
+	}
+
+	public MethodWriter createLogic() {
+		return classFileWriter.createMethod("logic", Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class },
+				Boolean.TYPE);
+	}
+
+	public MethodWriter createAction() {
+		return classFileWriter.createMethod("action", Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class },
+				ArdenValue[].class);
+	}
+
 	/** Saves the class file */
 	public void save(DataOutput output) throws IOException {
+		if (!isFinished) {
+			if (staticInitializer != null)
+				staticInitializer.returnFromProcedure();
+			isFinished = true;
+		}
 		classFileWriter.save(output);
 	}
 
@@ -106,7 +140,7 @@ class CodeGenerator {
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			DataOutputStream s = new DataOutputStream(bos);
-			classFileWriter.save(s);
+			save(s);
 			s.close();
 			data = bos.toByteArray();
 		} catch (IOException e) {

@@ -42,15 +42,21 @@ public class MedicalLogicModule {
 			throw new RuntimeException(e);
 		}
 	}
-	
-	public ArdenValue run(ExecutionContext context) throws InvocationTargetException
+
+	/**
+	 * Executes the MLM.
+	 * 
+	 * @return Returns the value(s) provided by the "return" statement, or (Java)
+	 *         null if no return statement was executed.
+	 */
+	public ArdenValue[] run(ExecutionContext context) throws InvocationTargetException
 	{
 		MedicalLogicModuleImplementation impl = createInstance(context);
 		try {
 			if (impl.logic(context))
 				return impl.action(context);
 			else
-				return ArdenNull.INSTANCE;
+				return null;
 		} catch (Exception ex) {
 			throw new InvocationTargetException(ex);
 		}

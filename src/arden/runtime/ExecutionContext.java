@@ -11,5 +11,5 @@ public interface ExecutionContext {
 	ArdenValue read(String query);
 
 	// called by write statements
-	void write(String message);
+	void write(ArdenValue message);
 }

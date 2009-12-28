@@ -86,7 +86,8 @@ Helpers
   nosemicr = [nosemi + tab];
   ttext  = nosemi+ (semicol nosemi+)*;
   linktext = (nosemicr+ (semicol nosemicr+)* eol?)* nosemicr+ (semicol nosemicr+)*;
-  sstring = allnosemi+ (semicol allnosemi+)*;
+  simplestring = allnosemi+ (semicol allnosemi+)*;
+  sstring = simplestring+ ('"' '"' simplestring+)*;
   datamaptext = nosemibr+ (semicol nosemibr+)*;
 
    sign =   /* null */

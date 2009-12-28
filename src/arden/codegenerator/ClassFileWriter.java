@@ -79,7 +79,7 @@ public class ClassFileWriter {
 		AttributeInfo codeAttribute;
 
 		MethodInfo(String name, int modifiers, Class<?>[] parameters, Class<?> returnType) {
-			writer = new MethodWriter(pool, (modifiers & Modifier.STATIC) != Modifier.STATIC);
+			writer = new MethodWriter(pool, (modifiers & Modifier.STATIC) != Modifier.STATIC, parameters.length);
 			access_flags = (short) modifiers;
 			name_index = pool.getUtf8(name);
 			descriptor_index = pool.getUtf8(ConstantPool.createMethodDescriptor(parameters, returnType));

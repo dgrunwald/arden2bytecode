@@ -58,10 +58,10 @@ public class MethodWriter {
 	/**
 	 * MethodWriter constructor.
 	 */
-	public MethodWriter(ConstantPool pool, boolean isInstanceMethod) {
+	public MethodWriter(ConstantPool pool, boolean isInstanceMethod, int parameterCount) {
 		this.pool = pool;
 		this.isInstanceMethod = isInstanceMethod;
-		this.numLocals = isInstanceMethod ? 1 : 0;
+		this.numLocals = parameterCount + (isInstanceMethod ? 1 : 0);
 	}
 
 	/** Adjusts stackSize for one operation (to calculate maxStackSize) */
@@ -384,7 +384,7 @@ public class MethodWriter {
 	 * Stack: .. => .., this
 	 */
 	public void loadThis() {
-		if (isInstanceMethod)
+		if (!isInstanceMethod)
 			throw new IllegalArgumentException("Cannot load 'this' in static method.");
 		loadVariable(0);
 	}
@@ -723,18 +723,29 @@ public class MethodWriter {
 		}
 	}
 
-	/** Gibt 'return'-Instruktion aus. */
+	/** Emits the 'return' instruction. */
 	public void returnFromProcedure() {
 		emit(177); // return
 		unconditionalControlTransfer();
 	}
 
 	/**
-	 * Gibt 'areturn'-Instruktion aus.
+	 * Emits the 'ireturn' instruction.
 	 * 
 	 * Stack: .., returnvalue
 	 */
-	public void returnFromFunction() {
+	public void returnIntFromFunction() {
+		poppush(1, 0);
+		emit(172); // ireturn
+		unconditionalControlTransfer();
+	}
+
+	/**
+	 * Emits the 'areturn' instruction.
+	 * 
+	 * Stack: .., returnvalue
+	 */
+	public void returnObjectFromFunction() {
 		poppush(1, 0);
 		emit(176); // areturn
 		unconditionalControlTransfer();
@@ -874,6 +885,27 @@ public class MethodWriter {
 		poppush(1 + getStackSize(ctor.getParameterTypes()), 0);
 		emit(183); // invokespecial
 		emitUInt16(pool.getConstructor(ctor));
+	}
+
+	/**
+	 * Creates a new array.
+	 * 
+	 * Stack: .., size => .., arrayref
+	 */
+	public void newArray(Class<?> elementType) {
+		poppush(1, 1);
+		emit(189); // anewarray
+		emitUInt16(pool.getClass(elementType));
+	}
+
+	/**
+	 * Stores an object in an array.
+	 * 
+	 * Stack: .., arrayref, index, value => ..
+	 */
+	public void storeObjectToArray() {
+		poppush(3, 0);
+		emit(83); // aastore
 	}
 
 	/**

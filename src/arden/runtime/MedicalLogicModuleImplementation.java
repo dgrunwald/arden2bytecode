@@ -14,7 +14,15 @@ public abstract class MedicalLogicModuleImplementation {
 		if (context == null)
 			throw new IllegalArgumentException();
 	}
-	
+
+	/** Executes the logic block. */
 	public abstract boolean logic(ExecutionContext context);
-	public abstract ArdenValue action(ExecutionContext context);
+
+	/**
+	 * Executes the action block.
+	 * 
+	 * @return Returns the value(s) provided by the "return" statement, or (Java)
+	 *         null if no return statement was executed.
+	 */
+	public abstract ArdenValue[] action(ExecutionContext context);
 }
