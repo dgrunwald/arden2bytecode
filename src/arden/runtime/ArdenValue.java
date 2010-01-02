@@ -38,6 +38,7 @@ public abstract class ArdenValue {
 
 	/**
 	 * Compares this ArdenValue with another.
+	 * Does not implement Comparable interface because we have an additional return value MIN_VALUE with special meaning.
 	 * 
 	 * @return Returns Integer.MIN_VALUE if the types don't match or the type is
 	 *         not ordered. Returns -1 if this is less than rhs. Returns 0 if

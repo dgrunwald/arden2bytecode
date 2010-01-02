@@ -1,13 +1,9 @@
 package arden.compiler;
 
-import java.lang.reflect.Method;
 import java.util.List;
 
 import arden.compiler.node.*;
-import arden.runtime.ActionHelpers;
 import arden.runtime.ArdenValue;
-import arden.runtime.ExecutionContext;
-
 /**
  * Compiler for actions.
  * 
@@ -18,16 +14,6 @@ final class ActionCompiler extends VisitorBase {
 
 	public ActionCompiler(CompilerContext context) {
 		this.context = context;
-	}
-
-	public static Method getMethod(String name, Class<?>... parameterTypes) {
-		try {
-			return ActionHelpers.class.getMethod(name, parameterTypes);
-		} catch (SecurityException e) {
-			throw new RuntimeException(e);
-		} catch (NoSuchMethodException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	// action_slot =
@@ -100,7 +86,7 @@ final class ActionCompiler extends VisitorBase {
 		// action_statement = {write} write expr
 		context.writer.loadVariable(context.executionContextVariable);
 		node.getExpr().apply(new ExpressionCompiler(context));
-		context.writer.invokeStatic(getMethod("write", ExecutionContext.class, ArdenValue.class));
+		context.writer.invokeInstance(ExecutionContextMethods.write);
 	}
 
 	@Override
@@ -112,8 +98,9 @@ final class ActionCompiler extends VisitorBase {
 	@Override
 	public void caseAReturnActionStatement(AReturnActionStatement node) {
 		// action_statement = {return} return expr;
-		
-		// Special case: RETURN a, b; does not return a list, but multiple values.
+
+		// Special case: RETURN a, b; does not return a list, but multiple
+		// values.
 		// "RETURN (a, b);" and "RETURN a, b;" are not equivalent!
 		List<PExprSort> returnExpressions = ParseHelpers.toCommaSeparatedList(node.getExpr());
 		ExpressionCompiler c = new ExpressionCompiler(context);

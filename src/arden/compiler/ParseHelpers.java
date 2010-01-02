@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Locale;
 
 import arden.compiler.node.*;
+import arden.runtime.ArdenTime;
 
 /**
  * Static methods that do help using the parse tree.
@@ -36,7 +37,7 @@ final class ParseHelpers {
 		}
 		return output.toString();
 	}
-	
+
 	public static double getLiteralDoubleValue(PNumber number) {
 		String input = number.toString().replace(" ", "");
 		double d;
@@ -48,6 +49,22 @@ final class ParseHelpers {
 		if (Double.isInfinite(d) || Double.isNaN(d))
 			throw new RuntimeCompilerException("Invalid number literal: " + input);
 		return d;
+	}
+
+	public static long parseIsoDateTime(TIsoDateTime dateTime) {
+		try {
+			return ArdenTime.isoDateTimeFormat.parse(dateTime.getText()).getTime();
+		} catch (ParseException e) {
+			throw new RuntimeCompilerException(e.getMessage());
+		}
+	}
+	
+	public static long parseIsoDate(TIsoDate date) {
+		try {
+			return ArdenTime.isoDateFormat.parse(date.getText()).getTime();
+		} catch (ParseException e) {
+			throw new RuntimeCompilerException(e.getMessage());
+		}
 	}
 
 	/** Returns the list of comma-separated terms in the expression */

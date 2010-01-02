@@ -12,6 +12,7 @@ import arden.codegenerator.FieldReference;
 import arden.codegenerator.MethodWriter;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenString;
+import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 import arden.runtime.MedicalLogicModuleImplementation;
@@ -28,8 +29,10 @@ final class CodeGenerator {
 	private MethodWriter staticInitializer;
 	private HashMap<String, FieldReference> stringLiterals = new HashMap<String, FieldReference>();
 	private HashMap<Double, FieldReference> numberLiterals = new HashMap<Double, FieldReference>();
+	private HashMap<Long, FieldReference> timeLiterals = new HashMap<Long, FieldReference>();
 	private int nextFieldIndex;
 	private boolean isFinished;
+	private FieldReference nowField;
 
 	private MethodWriter getStaticInitializer() {
 		if (isFinished)
@@ -94,6 +97,33 @@ final class CodeGenerator {
 		}
 	}
 
+	/**
+	 * Gets a reference to the static field that stores an ArdenTime with the
+	 * specified value.
+	 */
+	public FieldReference getTimeLiteral(long value) {
+		try {
+			FieldReference ref = timeLiterals.get(value);
+			if (ref == null) {
+				ref = classFileWriter.declareField("literal" + (nextFieldIndex++), ArdenTime.class, Modifier.PRIVATE
+						| Modifier.STATIC | Modifier.FINAL);
+				timeLiterals.put(value, ref);
+				getStaticInitializer().newObject(ArdenTime.class);
+				getStaticInitializer().dup();
+				getStaticInitializer().loadLongConstant(value);
+
+				getStaticInitializer().invokeConstructor(ArdenTime.class.getConstructor(Long.TYPE));
+
+				getStaticInitializer().storeStaticField(ref);
+			}
+			return ref;
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public CodeGenerator(String mlmName) {
 		this.className = mlmName;
 		this.classFileWriter = new ClassFileWriter(mlmName, MedicalLogicModuleImplementation.class);
@@ -110,6 +140,10 @@ final class CodeGenerator {
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
+		w.loadThis();
+		w.loadVariable(1);
+		w.invokeInstance(ExecutionContextMethods.getCurrentTime);
+		w.storeInstanceField(getNowField());
 		return w;
 	}
 
@@ -121,6 +155,13 @@ final class CodeGenerator {
 	public MethodWriter createAction() {
 		return classFileWriter.createMethod("action", Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class },
 				ArdenValue[].class);
+	}
+
+	public FieldReference getNowField() {
+		if (nowField == null) {
+			nowField = classFileWriter.declareField("now", ArdenTime.class, Modifier.PRIVATE | Modifier.FINAL);
+		}
+		return nowField;
 	}
 
 	/** Saves the class file */

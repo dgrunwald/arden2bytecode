@@ -4,7 +4,7 @@ import arden.runtime.ArdenString;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 
-public class TestContext implements ExecutionContext {
+public class TestContext extends ExecutionContext {
 
 	@Override
 	public ArdenValue read(String query) {

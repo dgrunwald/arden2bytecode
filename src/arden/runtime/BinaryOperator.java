@@ -97,6 +97,27 @@ public abstract class BinaryOperator {
 		};
 	};
 
+	public static final BinaryOperator ADD = new NumericBinaryOperator("ADD") {
+		@Override
+		public double runNumeric(double lhs, double rhs) {
+			return lhs + rhs;
+		};
+	};
+
+	public static final BinaryOperator SUB = new NumericBinaryOperator("SUB") {
+		@Override
+		public double runNumeric(double lhs, double rhs) {
+			return lhs - rhs;
+		};
+	};
+
+	public static final BinaryOperator MUL = new NumericBinaryOperator("MUL") {
+		@Override
+		public double runNumeric(double lhs, double rhs) {
+			return lhs * rhs;
+		};
+	};
+
 	public static final BinaryOperator DIV = new NumericBinaryOperator("DIV") {
 		@Override
 		public double runNumeric(double lhs, double rhs) {

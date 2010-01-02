@@ -21,8 +21,8 @@ public abstract class MedicalLogicModuleImplementation {
 	/**
 	 * Executes the action block.
 	 * 
-	 * @return Returns the value(s) provided by the "return" statement, or (Java)
-	 *         null if no return statement was executed.
+	 * @return Returns the value(s) provided by the "return" statement, or
+	 *         (Java) null if no return statement was executed.
 	 */
 	public abstract ArdenValue[] action(ExecutionContext context);
 }

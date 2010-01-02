@@ -106,6 +106,16 @@ public class ExpressionTests {
 	}
 
 	@Test
+	public void UnaryPlus() throws Exception {
+		assertEval("(3.0, 4.0, null)", "+(3, 4, \"a\")");
+	}
+
+	@Test
+	public void UnaryMinus() throws Exception {
+		assertEval("(-3.0, -4.0, null, -12.0 months, -1.0 seconds)", "-(3, 4, \"a\", 1 year, 1 second)");
+	}
+
+	@Test
 	public void OrOperator() throws Exception {
 		Assert.assertSame(ArdenBoolean.TRUE, evalExpression("true or false"));
 		Assert.assertSame(ArdenBoolean.FALSE, evalExpression("false or false"));
@@ -159,5 +169,16 @@ public class ExpressionTests {
 		assertEval("true", "2 days < 1 year");
 		assertEval("true", "\"aaa\" < \"aab\"");
 		assertEval("null", "\"aaa\" < 1");
+	}
+
+	@Test
+	public void WhereOperator() throws Exception {
+		assertEval("(10.0, 30.0)", "(10,20,30,40) where (true,false,true,3)");
+		assertEval("1.0", "1.0 where true");
+		assertEval("(1.0, 2.0, 3.0)", "(1,2,3) where true");
+		assertEval("()", "(1,2,3) where false");
+		assertEval("(2.0, 3.0)", "(1,2,3) where it > 1.5");
+		assertEval("(1.0, 1.0)", "1 where (true,false,true)");
+		assertEval("null", "(1,2,3,4) where (true,false,true)");
 	}
 }

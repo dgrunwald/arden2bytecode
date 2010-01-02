@@ -10,6 +10,7 @@ import arden.runtime.ArdenNull;
 import arden.runtime.ArdenValue;
 import arden.runtime.BinaryOperator;
 import arden.runtime.ExpressionHelpers;
+import arden.runtime.UnaryOperator;
 
 /**
  * Compiler for expressions
@@ -33,13 +34,29 @@ final class ExpressionCompiler extends VisitorBase {
 		}
 	}
 
-	private void invokeBinaryOperator(BinaryOperator operator, Node lhs, Node rhs) {
+	private void invokeOperator(BinaryOperator operator, Node lhs, Node rhs) {
 		try {
 			Field field = BinaryOperator.class.getField(operator.toString());
 			Method run = BinaryOperator.class.getMethod("run", ArdenValue.class, ArdenValue.class);
 			context.writer.loadStaticField(field);
 			lhs.apply(this);
 			rhs.apply(this);
+			context.writer.invokeInstance(run);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private void invokeOperator(UnaryOperator operator, Node arg) {
+		try {
+			Field field = UnaryOperator.class.getField(operator.toString());
+			Method run = UnaryOperator.class.getMethod("run", ArdenValue.class);
+			context.writer.loadStaticField(field);
+			arg.apply(this);
 			context.writer.invokeInstance(run);
 		} catch (SecurityException e) {
 			throw new RuntimeException(e);
@@ -88,20 +105,31 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAMergeExprSort(AMergeExprSort node) {
-		// TODO Auto-generated method stub
-		super.caseAMergeExprSort(node);
+		// expr_sort = {merge} expr_where merge expr_sort
+		node.getExprWhere().apply(this);
+		node.getExprSort().apply(this);
+		context.writer.invokeStatic(getMethod("binaryComma", ArdenValue.class, ArdenValue.class));
+		context.writer.invokeStatic(getMethod("sortByTime", ArdenValue.class));
 	}
 
 	@Override
 	public void caseASortExprSort(ASortExprSort node) {
-		// TODO Auto-generated method stub
-		super.caseASortExprSort(node);
+		// expr_sort = {sort} sort expr_sort
+		node.getExprSort().apply(this);
+		context.writer.invokeStatic(getMethod("sortByData", ArdenValue.class));
 	}
 
 	@Override
 	public void caseASoptExprSort(ASoptExprSort node) {
-		// TODO Auto-generated method stub
-		super.caseASoptExprSort(node);
+		// expr_sort = {sopt} sort l_brk sort_option r_brk expr_sort
+		node.getExprSort().apply(this);
+		PSortOption sortOption = node.getSortOption();
+		if (sortOption instanceof ADataSortOption)
+			context.writer.invokeStatic(getMethod("sortByData", ArdenValue.class));
+		else if (sortOption instanceof ATimeSortOption)
+			context.writer.invokeStatic(getMethod("sortByTime", ArdenValue.class));
+		else
+			throw new RuntimeCompilerException("Unknown sort option: " + sortOption.toString());
 	}
 
 	// expr_where =
@@ -115,8 +143,15 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAWrangeExprWhere(AWrangeExprWhere node) {
-		// TODO Auto-generated method stub
-		super.caseAWrangeExprWhere(node);
+		// expr_where = {wrange} [this_range]:expr_range where
+		// [next_range]:expr_range
+		node.getThisRange().apply(this);
+		context.writer.dup();
+		int it = context.allocateItVariable();
+		context.writer.storeVariable(it);
+		node.getNextRange().apply(this);
+		context.writer.invokeStatic(getMethod("where", ArdenValue.class, ArdenValue.class));
+		context.popItVariable();
 	}
 
 	// expr_range =
@@ -140,7 +175,7 @@ final class ExpressionCompiler extends VisitorBase {
 	@Override
 	public void caseAOrExprOr(AOrExprOr node) {
 		// expr_or = {or} expr_or or expr_and
-		invokeBinaryOperator(BinaryOperator.OR, node.getExprOr(), node.getExprAnd());
+		invokeOperator(BinaryOperator.OR, node.getExprOr(), node.getExprAnd());
 	}
 
 	@Override
@@ -155,7 +190,7 @@ final class ExpressionCompiler extends VisitorBase {
 	@Override
 	public void caseAAndExprAnd(AAndExprAnd node) {
 		// expr_and = {and} expr_and and expr_not
-		invokeBinaryOperator(BinaryOperator.AND, node.getExprAnd(), node.getExprNot());
+		invokeOperator(BinaryOperator.AND, node.getExprAnd(), node.getExprNot());
 	}
 
 	@Override
@@ -226,7 +261,7 @@ final class ExpressionCompiler extends VisitorBase {
 			op = BinaryOperator.LT;
 		else
 			throw new RuntimeCompilerException("Unsupported comparison operator: " + compOp.toString());
-		invokeBinaryOperator(op, node.getFirstString(), node.getSecondString());
+		invokeOperator(op, node.getFirstString(), node.getSecondString());
 	}
 
 	@Override
@@ -319,26 +354,26 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAPlusExprPlus(APlusExprPlus node) {
-		// TODO Auto-generated method stub
-		super.caseAPlusExprPlus(node);
+		// expr_plus = {plus} expr_plus plus expr_times
+		invokeOperator(BinaryOperator.ADD, node.getExprPlus(), node.getExprTimes());
 	}
 
 	@Override
 	public void caseAMinusExprPlus(AMinusExprPlus node) {
-		// TODO Auto-generated method stub
-		super.caseAMinusExprPlus(node);
+		// expr_plus = {minus} expr_plus minus expr_times
+		invokeOperator(BinaryOperator.SUB, node.getExprPlus(), node.getExprTimes());
 	}
 
 	@Override
 	public void caseAPlustExprPlus(APlustExprPlus node) {
-		// TODO Auto-generated method stub
-		super.caseAPlustExprPlus(node);
+		// expr_plus = {plust} plus expr_times
+		invokeOperator(UnaryOperator.PLUS, node.getExprTimes());
 	}
 
 	@Override
 	public void caseAMintExprPlus(AMintExprPlus node) {
-		// TODO Auto-generated method stub
-		super.caseAMintExprPlus(node);
+		// expr_plus = {mint} minus expr_times
+		invokeOperator(UnaryOperator.MINUS, node.getExprTimes());
 	}
 
 	// expr_times =
@@ -353,14 +388,14 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseATpowExprTimes(ATpowExprTimes node) {
-		// TODO Auto-generated method stub
-		super.caseATpowExprTimes(node);
+		// expr_times = {tpow} expr_times times expr_power
+		invokeOperator(BinaryOperator.MUL, node.getExprTimes(), node.getExprPower());
 	}
 
 	@Override
 	public void caseADpowExprTimes(ADpowExprTimes node) {
 		// expr_times = {dpow} expr_times div expr_power
-		invokeBinaryOperator(BinaryOperator.DIV, node.getExprTimes(), node.getExprPower());
+		invokeOperator(BinaryOperator.DIV, node.getExprTimes(), node.getExprPower());
 	}
 
 	// expr_power =
@@ -421,14 +456,38 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseADurExprAgo(ADurExprAgo node) {
-		// TODO Auto-generated method stub
-		super.caseADurExprAgo(node);
+		// expr_ago = {dur} expr_duration
+		node.getExprDuration().apply(this);
 	}
 
 	@Override
 	public void caseAAgoExprAgo(AAgoExprAgo node) {
 		// TODO Auto-generated method stub
 		super.caseAAgoExprAgo(node);
+	}
+
+	// expr_duration = expr_function duration_op;
+	@Override
+	public void caseAExprDuration(AExprDuration node) {
+		UnaryOperator op;
+		PDurationOp durOp = node.getDurationOp();
+		if (durOp instanceof ADayDurationOp || durOp instanceof ADaysDurationOp)
+			op = UnaryOperator.DAYS;
+		else if (durOp instanceof AHourDurationOp || durOp instanceof AHoursDurationOp)
+			op = UnaryOperator.HOURS;
+		else if (durOp instanceof AMinDurationOp || durOp instanceof AMinsDurationOp)
+			op = UnaryOperator.MINUTES;
+		else if (durOp instanceof AMonthDurationOp || durOp instanceof AMonthsDurationOp)
+			op = UnaryOperator.MONTHS;
+		else if (durOp instanceof ASecDurationOp || durOp instanceof ASecsDurationOp)
+			op = UnaryOperator.SECONDS;
+		else if (durOp instanceof AWeekDurationOp || durOp instanceof AWeeksDurationOp)
+			op = UnaryOperator.WEEKS;
+		else if (durOp instanceof AYearDurationOp || durOp instanceof AYearsDurationOp)
+			op = UnaryOperator.YEARS;
+		else
+			throw new RuntimeCompilerException("Unsupported duration operator: " + durOp.toString());
+		invokeOperator(op, node.getExprFunction());
 	}
 
 	// expr_function =
@@ -566,8 +625,7 @@ final class ExpressionCompiler extends VisitorBase {
 	@Override
 	public void caseATimeExprFactorAtom(ATimeExprFactorAtom node) {
 		// expr_factor_atom = {time} time_value
-		// TODO Auto-generated method stub
-		super.caseATimeExprFactorAtom(node);
+		node.getTimeValue().apply(this);
 	}
 
 	@Override
@@ -594,9 +652,10 @@ final class ExpressionCompiler extends VisitorBase {
 		/* Value is NULL outside of a where */
 		/* clause and may be flagged as an */
 		/* error in some implementations. */
-
-		// TODO Auto-generated method stub
-		super.caseAItExprFactorAtom(node);
+		int it = context.getCurrentItVariable();
+		if (it < 0)
+			throw new RuntimeCompilerException("'" + node.getIt().toString() + "' is only valid within WHERE conditions");
+		context.writer.loadVariable(it);
 	}
 
 	@Override
@@ -642,5 +701,54 @@ final class ExpressionCompiler extends VisitorBase {
 		} catch (NoSuchFieldException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	// time_value =
+	// {now} now
+	// | {idt} iso_date_time
+	// | {idat} iso_date
+	// | {etim} eventtime
+	// | {ttim} triggertime
+	// | {ctim} currenttime;
+	@Override
+	public void caseANowTimeValue(ANowTimeValue node) {
+		// time_value = {now} now
+		context.writer.loadThis();
+		context.writer.loadInstanceField(context.codeGenerator.getNowField());
+	}
+
+	@Override
+	public void caseAIdtTimeValue(AIdtTimeValue node) {
+		// time_value = {idt} iso_date_time
+		long time = ParseHelpers.parseIsoDateTime(node.getIsoDateTime());
+		context.writer.loadStaticField(context.codeGenerator.getTimeLiteral(time));
+	}
+
+	@Override
+	public void caseAIdatTimeValue(AIdatTimeValue node) {
+		// time_value = {idat} iso_date
+		long time = ParseHelpers.parseIsoDate(node.getIsoDate());
+		context.writer.loadStaticField(context.codeGenerator.getTimeLiteral(time));
+	}
+
+	@Override
+	public void caseAEtimTimeValue(AEtimTimeValue node) {
+		// time_value = {etim} eventtime
+		context.writer.loadVariable(context.executionContextVariable);
+		context.writer.invokeInstance(ExecutionContextMethods.getEventTime);
+	}
+
+	@Override
+	public void caseATtimTimeValue(ATtimTimeValue node) {
+		// time_value = {ttim} triggertime
+		context.writer.loadVariable(context.executionContextVariable);
+		context.writer.invokeInstance(ExecutionContextMethods.getTriggerTime);
+	}
+
+	@Override
+	public void caseACtimTimeValue(ACtimTimeValue node) {
+		// time_value = {ctim} currenttime
+		context.writer.loadVariable(context.executionContextVariable);
+		context.writer.invokeInstance(ExecutionContextMethods.getCurrentTime);
 	}
 }
