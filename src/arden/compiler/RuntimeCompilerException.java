@@ -17,4 +17,10 @@ class RuntimeCompilerException extends RuntimeException {
 		this.line = position.getLine();
 		this.pos = position.getPos();
 	}
+
+	public RuntimeCompilerException(String message) {
+		super(message);
+		this.line = 0;
+		this.pos = 0;
+	}
 }

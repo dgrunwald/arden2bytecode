@@ -22,7 +22,7 @@ import arden.runtime.MedicalLogicModuleImplementation;
  * 
  * @author Daniel Grunwald
  */
-class CodeGenerator {
+final class CodeGenerator {
 	private String className;
 	private ClassFileWriter classFileWriter;
 	private MethodWriter staticInitializer;

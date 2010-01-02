@@ -15,7 +15,7 @@ import java.util.HashMap;
  * 
  * @author Daniel Grunwald
  */
-public class ConstantPool {
+public final class ConstantPool {
 	static final byte CONSTANT_Class = 7;
 	static final byte CONSTANT_Fieldref = 9;
 	static final byte CONSTANT_Methodref = 10;

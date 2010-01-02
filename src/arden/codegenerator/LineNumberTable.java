@@ -11,7 +11,7 @@ import java.util.ArrayList;
  * @author Daniel Grunwald
  * 
  */
-class LineNumberTable {
+final class LineNumberTable {
 	final int attributeNameIndex;
 	private ArrayList<Integer> programCounters = new ArrayList<Integer>();
 	private ArrayList<Integer> lineNumbers = new ArrayList<Integer>();

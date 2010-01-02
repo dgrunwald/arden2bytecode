@@ -8,7 +8,7 @@ import java.lang.reflect.InvocationTargetException;
  * 
  * @author Daniel Grunwald
  */
-public class MedicalLogicModule {
+public final class MedicalLogicModule {
 	Class<? extends MedicalLogicModuleImplementation> clazz;
 
 	public MedicalLogicModule(Class<? extends MedicalLogicModuleImplementation> clazz) {

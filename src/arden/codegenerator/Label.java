@@ -12,7 +12,7 @@ package arden.codegenerator;
  * @author Daniel Grunwald
  * 
  */
-public class Label {
+public final class Label {
 	/** Target position (byte index where the label is pointing to), -1=not yet set */
 	int markedPosition = -1;
 	/** Stack size at target position, -1=currently unknown */

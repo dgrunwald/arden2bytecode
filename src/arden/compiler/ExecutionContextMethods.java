@@ -6,7 +6,7 @@ import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 
 /** Contains references to the methods from the ExecutionContext interface */
-class ExecutionContextMethods {
+final class ExecutionContextMethods {
 	public static final Method write;
 
 	static {

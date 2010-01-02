@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * @author Daniel Grunwald
  * 
  */
-public class MethodWriter {
+public final class MethodWriter {
 	/** ConstantPool for method- and field references */
 	private ConstantPool pool;
 

@@ -23,7 +23,7 @@ import arden.runtime.MedicalLogicModule;
  * 
  * @author Daniel Grunwald
  */
-public class Compiler {
+public final class Compiler {
 	public MedicalLogicModule compileMlm(Reader input) throws CompilerException, IOException {
 		List<MedicalLogicModule> output = compile(input);
 		if (output.size() != 1)

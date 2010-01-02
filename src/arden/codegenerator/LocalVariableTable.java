@@ -11,7 +11,7 @@ import java.util.ArrayList;
  * @author Daniel Grunwald
  * 
  */
-class LocalVariableTable {
+final class LocalVariableTable {
 	final int attributeNameIndex;
 	private final ConstantPool pool;
 	private ArrayList<LocalVariable> variables = new ArrayList<LocalVariable>();

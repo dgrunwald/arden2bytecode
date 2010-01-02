@@ -1,17 +1,34 @@
 package arden.compiler;
 
+import java.lang.reflect.Method;
+
 import arden.compiler.node.*;
+import arden.runtime.ArdenBoolean;
+import arden.runtime.ArdenList;
+import arden.runtime.ArdenNull;
+import arden.runtime.ArdenValue;
+import arden.runtime.ExpressionHelpers;
 
 /**
  * Compiler for expressions
  * 
  * @author Daniel Grunwald
  */
-class ExpressionCompiler extends VisitorBase {
+final class ExpressionCompiler extends VisitorBase {
 	private final CompilerContext context;
 
 	public ExpressionCompiler(CompilerContext context) {
 		this.context = context;
+	}
+
+	public static Method getMethod(String name, Class<?>... parameterTypes) {
+		try {
+			return ExpressionHelpers.class.getMethod(name, parameterTypes);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	// expr =
@@ -26,14 +43,17 @@ class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAExsortExpr(AExsortExpr node) {
-		// TODO Auto-generated method stub
-		super.caseAExsortExpr(node);
+		// expr = {exsort} expr comma expr_sort
+		node.getExpr().apply(this);
+		node.getExprSort().apply(this);
+		context.writer.invokeStatic(getMethod("binaryComma", ArdenValue.class, ArdenValue.class));
 	}
 
 	@Override
 	public void caseACommaExpr(ACommaExpr node) {
-		// TODO Auto-generated method stub
-		super.caseACommaExpr(node);
+		// expr = {comma} comma expr_sort;
+		node.getExprSort().apply(this);
+		context.writer.invokeStatic(getMethod("unaryComma", ArdenValue.class));
 	}
 
 	// expr_sort =
@@ -495,8 +515,9 @@ class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseANumExprFactorAtom(ANumExprFactorAtom node) {
-		// TODO Auto-generated method stub
-		super.caseANumExprFactorAtom(node);
+		// expr_factor_atom = {num} P.number
+		double value = ParseHelpers.getLiteralDoubleValue(node.getNumber());
+		context.writer.loadStaticField(context.codeGenerator.getNumberLiteral(value));
 	}
 
 	@Override
@@ -508,20 +529,27 @@ class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseATimeExprFactorAtom(ATimeExprFactorAtom node) {
+		// expr_factor_atom = {time} time_value
 		// TODO Auto-generated method stub
 		super.caseATimeExprFactorAtom(node);
 	}
 
 	@Override
 	public void caseABoolExprFactorAtom(ABoolExprFactorAtom node) {
-		// TODO Auto-generated method stub
-		super.caseABoolExprFactorAtom(node);
+		// expr_factor_atom = {bool} boolean_value
+		node.getBooleanValue().apply(this);
 	}
 
 	@Override
 	public void caseANullExprFactorAtom(ANullExprFactorAtom node) {
-		// TODO Auto-generated method stub
-		super.caseANullExprFactorAtom(node);
+		// expr_factor_atom = {null} null
+		try {
+			context.writer.loadStaticField(ArdenNull.class.getDeclaredField("INSTANCE"));
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
@@ -538,13 +566,45 @@ class ExpressionCompiler extends VisitorBase {
 	@Override
 	public void caseAParExprFactorAtom(AParExprFactorAtom node) {
 		// expr_factor_atom = {par} l_par r_par
-		// TODO Auto-generated method stub
-		super.caseAParExprFactorAtom(node);
+		try {
+			context.writer.loadStaticField(ArdenList.class.getDeclaredField("EMPTY"));
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
 	public void caseAExpExprFactorAtom(AExpExprFactorAtom node) {
 		// expr_factor_atom = {exp} l_par expr r_par
 		node.getExpr().apply(this);
+	}
+
+	// boolean_value =
+	// {true} true
+	// | {false} false;
+	@Override
+	public void caseATrueBooleanValue(ATrueBooleanValue node) {
+		// boolean_value = {true} true
+		try {
+			context.writer.loadStaticField(ArdenBoolean.class.getDeclaredField("TRUE"));
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public void caseAFalseBooleanValue(AFalseBooleanValue node) {
+		// boolean_value = {false} false
+		try {
+			context.writer.loadStaticField(ArdenBoolean.class.getDeclaredField("FALSE"));
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

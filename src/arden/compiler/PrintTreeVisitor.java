@@ -5,7 +5,12 @@ import java.io.PrintStream;
 import arden.compiler.analysis.DepthFirstAdapter;
 import arden.compiler.node.Node;
 
-public class PrintTreeVisitor extends DepthFirstAdapter {
+/**
+ * Used to print the syntax tree for debugging purposes.
+ * 
+ * @author Daniel Grunwald
+ */
+public final class PrintTreeVisitor extends DepthFirstAdapter {
 	PrintStream out;
 	int indentation;
 	

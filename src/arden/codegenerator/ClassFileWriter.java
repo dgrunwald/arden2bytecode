@@ -13,7 +13,7 @@ import java.util.List;
  * 
  * @author Daniel Grunwald
  */
-public class ClassFileWriter {
+public final class ClassFileWriter {
 	ConstantPool pool = new ConstantPool();
 
 	int this_class;

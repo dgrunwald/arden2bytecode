@@ -13,7 +13,7 @@ import arden.runtime.ExecutionContext;
  * 
  * @author Daniel Grunwald
  */
-class ActionCompiler extends VisitorBase {
+final class ActionCompiler extends VisitorBase {
 	private final CompilerContext context;
 
 	public ActionCompiler(CompilerContext context) {

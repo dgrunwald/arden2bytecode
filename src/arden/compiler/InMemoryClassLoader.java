@@ -6,7 +6,7 @@ package arden.compiler;
  * 
  * @author Daniel Grunwald
  */
-class InMemoryClassLoader extends ClassLoader {
+final class InMemoryClassLoader extends ClassLoader {
 	String className;
 	byte[] data;
 	Class<?> loadedClass;

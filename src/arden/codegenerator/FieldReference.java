@@ -5,7 +5,7 @@ package arden.codegenerator;
  * 
  * @author Daniel Grunwald
  */
-public class FieldReference {
+public final class FieldReference {
 	final int index;
 
 	FieldReference(int index) {

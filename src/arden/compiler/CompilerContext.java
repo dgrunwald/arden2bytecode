@@ -7,7 +7,7 @@ import arden.codegenerator.MethodWriter;
  * 
  * @author Daniel Grunwald
  */
-class CompilerContext {
+final class CompilerContext {
 	public final CodeGenerator codeGenerator;
 	public final MethodWriter writer;
 	public final int executionContextVariable = 1;

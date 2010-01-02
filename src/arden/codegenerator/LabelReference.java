@@ -7,7 +7,7 @@ package arden.codegenerator;
  * 
  * @author Daniel Grunwald
  */
-class LabelReference {
+final class LabelReference {
 	/** the position of the first byte of the jump offset */
 	final int referencePosition;
 	/** the base position (start position of the jump instruction) */

@@ -1,7 +1,10 @@
 package arden.compiler;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import arden.compiler.node.*;
 
@@ -10,7 +13,8 @@ import arden.compiler.node.*;
  * 
  * @author Daniel Grunwald
  */
-class ParseHelpers {
+final class ParseHelpers {
+	/** Returns the value represented by a string literal. */
 	public static String getLiteralStringValue(TStringLiteral literal) {
 		String input = literal.getText();
 		if (input.length() < 2 || input.charAt(0) != '"' || input.charAt(input.length() - 1) != '"')
@@ -31,6 +35,19 @@ class ParseHelpers {
 			output.append(c);
 		}
 		return output.toString();
+	}
+	
+	public static double getLiteralDoubleValue(PNumber number) {
+		String input = number.toString().replace(" ", "");
+		double d;
+		try {
+			d = NumberFormat.getNumberInstance(Locale.ENGLISH).parse(input).doubleValue();
+		} catch (ParseException e) {
+			throw new RuntimeCompilerException(e.getMessage());
+		}
+		if (Double.isInfinite(d) || Double.isNaN(d))
+			throw new RuntimeCompilerException("Invalid number literal: " + input);
+		return d;
 	}
 
 	/** Returns the list of comma-separated terms in the expression */
