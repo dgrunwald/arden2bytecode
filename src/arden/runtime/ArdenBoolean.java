@@ -6,8 +6,43 @@ public final class ArdenBoolean extends ArdenValue {
 
 	public final boolean value;
 
-	public ArdenBoolean(boolean value, long primaryTime) {
+	private ArdenBoolean(boolean value, long primaryTime) {
 		super(primaryTime);
 		this.value = value;
+	}
+
+	public static ArdenBoolean create(boolean value, long primaryTime) {
+		if (primaryTime == NOPRIMARYTIME)
+			return value ? TRUE : FALSE;
+		else
+			return new ArdenBoolean(value, primaryTime);
+	}
+
+	@Override
+	public boolean isTrue() {
+		return value;
+	}
+
+	@Override
+	public boolean isFalse() {
+		return !value;
+	}
+
+	@Override
+	public String toString() {
+		return (value ? "true" : "false") + primaryTimeToString();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof ArdenBoolean)
+			return value == ((ArdenBoolean) obj).value;
+		else
+			return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return value ? 42 : 23;
 	}
 }

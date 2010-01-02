@@ -10,4 +10,22 @@ public final class ArdenDuration extends ArdenValue {
 		this.months = months;
 		this.seconds = seconds;
 	}
+	
+	@Override
+	public String toString() {
+		// TODO: implement this
+		throw new RuntimeException("NOT IMPLEMENTED");
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		// TODO: implement this
+		throw new RuntimeException("NOT IMPLEMENTED");
+	}
+
+	@Override
+	public int hashCode() {
+		// TODO: implement this
+		throw new RuntimeException("NOT IMPLEMENTED");
+	}
 }

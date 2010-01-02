@@ -1,5 +1,6 @@
 package arden.compiler;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import arden.compiler.node.*;
@@ -7,6 +8,7 @@ import arden.runtime.ArdenBoolean;
 import arden.runtime.ArdenList;
 import arden.runtime.ArdenNull;
 import arden.runtime.ArdenValue;
+import arden.runtime.BinaryOperator;
 import arden.runtime.ExpressionHelpers;
 
 /**
@@ -25,6 +27,23 @@ final class ExpressionCompiler extends VisitorBase {
 		try {
 			return ExpressionHelpers.class.getMethod(name, parameterTypes);
 		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private void invokeBinaryOperator(BinaryOperator operator, Node lhs, Node rhs) {
+		try {
+			Field field = BinaryOperator.class.getField(operator.toString());
+			Method run = BinaryOperator.class.getMethod("run", ArdenValue.class, ArdenValue.class);
+			context.writer.loadStaticField(field);
+			lhs.apply(this);
+			rhs.apply(this);
+			context.writer.invokeInstance(run);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchFieldException e) {
 			throw new RuntimeException(e);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
@@ -120,8 +139,8 @@ final class ExpressionCompiler extends VisitorBase {
 	// | {and} expr_and;
 	@Override
 	public void caseAOrExprOr(AOrExprOr node) {
-		// TODO Auto-generated method stub
-		super.caseAOrExprOr(node);
+		// expr_or = {or} expr_or or expr_and
+		invokeBinaryOperator(BinaryOperator.OR, node.getExprOr(), node.getExprAnd());
 	}
 
 	@Override
@@ -135,8 +154,8 @@ final class ExpressionCompiler extends VisitorBase {
 	// | {not} expr_not;
 	@Override
 	public void caseAAndExprAnd(AAndExprAnd node) {
-		// TODO Auto-generated method stub
-		super.caseAAndExprAnd(node);
+		// expr_and = {and} expr_and and expr_not
+		invokeBinaryOperator(BinaryOperator.AND, node.getExprAnd(), node.getExprNot());
 	}
 
 	@Override
@@ -189,8 +208,14 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseASimExprComparison(ASimExprComparison node) {
-		// TODO Auto-generated method stub
-		super.caseASimExprComparison(node);
+		// expr_comparison = [first_string]:expr_string simple_comp_op [second_string]:expr_string
+		BinaryOperator op;
+		PSimpleCompOp compOp = node.getSimpleCompOp();
+		if (compOp instanceof AEqSimpleCompOp || compOp instanceof AEqsSimpleCompOp)
+			op = BinaryOperator.EQ;
+		else
+			throw new RuntimeCompilerException("Unsupported comparison operator: " + compOp.toString());
+		invokeBinaryOperator(op, node.getFirstString(), node.getSecondString());
 	}
 
 	@Override
@@ -323,8 +348,8 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseADpowExprTimes(ADpowExprTimes node) {
-		// TODO Auto-generated method stub
-		super.caseADpowExprTimes(node);
+		// expr_times = {dpow} expr_times div expr_power
+		invokeBinaryOperator(BinaryOperator.DIV, node.getExprTimes(), node.getExprPower());
 	}
 
 	// expr_power =

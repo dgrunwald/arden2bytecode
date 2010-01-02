@@ -11,4 +11,19 @@ public final class ArdenString extends ArdenValue {
 		super(primaryTime);
 		this.value = value;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		b.append('"');
+		for (int i = 0; i < value.length(); i++) {
+			char c = value.charAt(i);
+			b.append(c);
+			if (c == '"')
+				b.append('"'); // double "
+		}
+		b.append('"');
+		b.append(primaryTimeToString());
+		return b.toString();
+	}
 }

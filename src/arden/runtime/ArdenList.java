@@ -8,4 +8,47 @@ public final class ArdenList extends ArdenValue {
 	public ArdenList(ArdenValue[] values) {
 		this.values = values;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		b.append('(');
+		if (values.length == 1) {
+			b.append(',');
+			b.append(values[0].toString());
+		} else if (values.length > 1) {
+			b.append(values[0].toString());
+			for (int i = 1; i < values.length; i++) {
+				b.append(", ");
+				b.append(values[i].toString());
+			}
+		}
+		b.append(')');
+		b.append(primaryTimeToString());
+		return b.toString();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof ArdenList))
+			return false;
+		ArdenList list = (ArdenList)obj;
+		if (list.values.length != values.length)
+			return false;
+		for (int i = 0; i < values.length; i++) {
+			if (!values[i].equals(list.values[i]))
+				return false;
+		}
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = 1;
+		for (ArdenValue val : values) {
+			result *= 27;
+			result += val.hashCode();
+		}
+		return result;
+	}
 }
