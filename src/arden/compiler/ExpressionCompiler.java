@@ -208,11 +208,22 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseASimExprComparison(ASimExprComparison node) {
-		// expr_comparison = [first_string]:expr_string simple_comp_op [second_string]:expr_string
+		// expr_comparison = [first_string]:expr_string simple_comp_op
+		// [second_string]:expr_string
 		BinaryOperator op;
 		PSimpleCompOp compOp = node.getSimpleCompOp();
 		if (compOp instanceof AEqSimpleCompOp || compOp instanceof AEqsSimpleCompOp)
 			op = BinaryOperator.EQ;
+		else if (compOp instanceof ANeSimpleCompOp || compOp instanceof ANesSimpleCompOp)
+			op = BinaryOperator.NE;
+		else if (compOp instanceof AGeSimpleCompOp || compOp instanceof AGesSimpleCompOp)
+			op = BinaryOperator.GE;
+		else if (compOp instanceof AGtSimpleCompOp || compOp instanceof AGtsSimpleCompOp)
+			op = BinaryOperator.GT;
+		else if (compOp instanceof ALeSimpleCompOp || compOp instanceof ALesSimpleCompOp)
+			op = BinaryOperator.LE;
+		else if (compOp instanceof ALtSimpleCompOp || compOp instanceof ALtsSimpleCompOp)
+			op = BinaryOperator.LT;
 		else
 			throw new RuntimeCompilerException("Unsupported comparison operator: " + compOp.toString());
 		invokeBinaryOperator(op, node.getFirstString(), node.getSecondString());

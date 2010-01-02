@@ -26,4 +26,18 @@ public final class ArdenNumber extends ArdenValue {
 	public int hashCode() {
 		return new Double(value).hashCode();
 	}
+
+	@Override
+	public int compareTo(ArdenValue rhs) {
+		if (rhs instanceof ArdenNumber) {
+			double rval = ((ArdenNumber) rhs).value;
+			if (value < rval)
+				return -1;
+			else if (value > rval)
+				return 1;
+			else
+				return 0;
+		}
+		return Integer.MIN_VALUE;
+	}
 }

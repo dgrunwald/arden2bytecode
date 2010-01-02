@@ -25,4 +25,10 @@ public final class ArdenTime extends ArdenValue {
 		// TODO: implement this
 		throw new RuntimeException("NOT IMPLEMENTED");
 	}
+
+	@Override
+	public int compareTo(ArdenValue rhs) {
+		// TODO: implement this
+		throw new RuntimeException("NOT IMPLEMENTED");
+	}
 }

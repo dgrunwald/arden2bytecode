@@ -128,10 +128,12 @@ public class ExpressionTests {
 	@Test
 	public void EqualsOperator() throws Exception {
 		assertEval("false", "1 = 2");
+		assertEval("false", "1 eq 2");
 		assertEval("(null, true, false)", "(1,2,\"a\") = (null,2,3)");
 		assertEval("null", "(3/0) = (3/0)");
-		// TODO: check what should happen for "5 = ()" 
-		//assertEval("null", "5 = ()"); maybe a bug in the specification? ignoring this case for now
+		// TODO: check what should happen for "5 = ()"
+		// assertEval("null", "5 = ()"); maybe a bug in the specification?
+		// ignoring this case for now
 		assertEval("null", "(1,2,3) = ()");
 		assertEval("()", "null = ()");
 		assertEval("()", "() = ()");
@@ -139,5 +141,23 @@ public class ExpressionTests {
 		assertEval("(null, null, null)", "(1,2,3) = null");
 		assertEval("null", "null = null");
 		assertEval("(true, true, false)", "(1,2,3) = (1,2,4)");
+	}
+
+	@Test
+	public void InEqualsOperator() throws Exception {
+		assertEval("true", "1 <> 2");
+		assertEval("true", "1 ne 2");
+		assertEval("(null, false, true)", "(1,2,\"a\") <> (null,2,3)");
+		assertEval("null", "(3/0) <> (3/0)");
+	}
+
+	@Test
+	public void LessThanOperator() throws Exception {
+		assertEval("true", "1 < 2");
+		assertEval("true", "1 lt 2");
+		assertEval("true", "1990-03-02T00:00:00 < 1990-03-10T00:00:00");
+		assertEval("true", "2 days < 1 year");
+		assertEval("true", "\"aaa\" < \"aab\"");
+		assertEval("null", "\"aaa\" < 1");
 	}
 }

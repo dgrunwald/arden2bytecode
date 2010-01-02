@@ -26,4 +26,13 @@ public final class ArdenString extends ArdenValue {
 		b.append(primaryTimeToString());
 		return b.toString();
 	}
+
+	@Override
+	public int compareTo(ArdenValue rhs) {
+		if (rhs instanceof ArdenString) {
+			return Integer.signum(value.compareTo(((ArdenString) rhs).value));
+		} else {
+			return Integer.MIN_VALUE;
+		}
+	}
 }

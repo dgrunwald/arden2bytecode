@@ -35,4 +35,15 @@ public abstract class ArdenValue {
 		else
 			return " (time=" + new ArdenTime(primaryTime, NOPRIMARYTIME).toString() + ")";
 	}
+
+	/**
+	 * Compares this ArdenValue with another.
+	 * 
+	 * @return Returns Integer.MIN_VALUE if the types don't match or the type is
+	 *         not ordered. Returns -1 if this is less than rhs. Returns 0 if
+	 *         this is equal to rhs. Returns 1 if this is larger than rhs.
+	 */
+	public int compareTo(ArdenValue rhs) {
+		return Integer.MIN_VALUE;
+	}
 }

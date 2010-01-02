@@ -43,6 +43,60 @@ public abstract class BinaryOperator {
 		};
 	};
 
+	public static final BinaryOperator NE = new BinaryOperator("NE") {
+		@Override
+		public ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			if (lhs instanceof ArdenNull || rhs instanceof ArdenNull)
+				return ArdenNull.create(newTime);
+			return ArdenBoolean.create(!lhs.equals(rhs), newTime);
+		};
+	};
+
+	public static final BinaryOperator LT = new BinaryOperator("LT") {
+		@Override
+		public ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			int cmp = lhs.compareTo(rhs);
+			if (cmp == Integer.MIN_VALUE)
+				return ArdenNull.create(newTime);
+			return ArdenBoolean.create(cmp < 0, newTime);
+		};
+	};
+
+	public static final BinaryOperator LE = new BinaryOperator("LE") {
+		@Override
+		public ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			int cmp = lhs.compareTo(rhs);
+			if (cmp == Integer.MIN_VALUE)
+				return ArdenNull.create(newTime);
+			return ArdenBoolean.create(cmp <= 0, newTime);
+		};
+	};
+
+	public static final BinaryOperator GT = new BinaryOperator("GT") {
+		@Override
+		public ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			int cmp = lhs.compareTo(rhs);
+			if (cmp == Integer.MIN_VALUE)
+				return ArdenNull.create(newTime);
+			return ArdenBoolean.create(cmp > 0, newTime);
+		};
+	};
+
+	public static final BinaryOperator GE = new BinaryOperator("GE") {
+		@Override
+		public ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			int cmp = lhs.compareTo(rhs);
+			if (cmp == Integer.MIN_VALUE)
+				return ArdenNull.create(newTime);
+			return ArdenBoolean.create(cmp >= 0, newTime);
+		};
+	};
+
 	public static final BinaryOperator DIV = new NumericBinaryOperator("DIV") {
 		@Override
 		public double runNumeric(double lhs, double rhs) {
