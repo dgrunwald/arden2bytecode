@@ -1,37 +1,37 @@
 package arden.tests;
 
-import java.lang.reflect.InvocationTargetException;
-
 import org.junit.Assert;
 import org.junit.Test;
 
-import arden.compiler.CompilerException;
 import arden.runtime.ArdenBoolean;
-import arden.runtime.ArdenList;
 import arden.runtime.ArdenNull;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenString;
-import arden.runtime.ArdenValue;
-import arden.runtime.MedicalLogicModule;
+import arden.runtime.ArdenTime;
 
-public class ExpressionTests {
-	public static ArdenValue evalExpression(String expressionCode) throws CompilerException, InvocationTargetException {
-		MedicalLogicModule mlm = ActionTests.parseAction("return (" + expressionCode + ")");
-		ArdenValue[] arr = mlm.run(new TestContext());
-		Assert.assertEquals(1, arr.length);
-		return arr[0];
-	}
-
-	public static void assertEval(String expectedResult, String expressionCode) throws CompilerException,
-			InvocationTargetException {
-		ArdenValue val = evalExpression(expressionCode);
-		Assert.assertEquals(expressionCode, expectedResult, val.toString());
-	}
-
+public class ExpressionTests extends ExpressionTestBase {
 	@Test
 	public void QuotationTest() throws Exception {
 		ArdenString s = (ArdenString) evalExpression("\"this string has one quotation mark: \"\" \"");
 		Assert.assertEquals("this string has one quotation mark: \" ", s.value);
+	}
+
+	@Test
+	public void StringWithTwoSpaces() throws Exception {
+		ArdenString s = (ArdenString) evalExpression("\"test  string");
+		Assert.assertEquals("test string", s.value);
+	}
+
+	@Test
+	public void StringWithLineBreak() throws Exception {
+		ArdenString s = (ArdenString) evalExpression("\"test\nstring");
+		Assert.assertEquals("test  string", s.value);
+	}
+
+	@Test
+	public void StringWithMultiLineBreak() throws Exception {
+		ArdenString s = (ArdenString) evalExpression("\"test  \n  \t \r\n  string");
+		Assert.assertEquals("test\nstring", s.value);
 	}
 
 	@Test
@@ -53,11 +53,84 @@ public class ExpressionTests {
 	public void NumberTests() throws Exception {
 		ArdenNumber num = (ArdenNumber) evalExpression("345.5");
 		Assert.assertEquals(345.5, num.value, 0);
+
+		num = (ArdenNumber) evalExpression("0.1");
+		Assert.assertEquals(0.1, num.value, 0);
+
+		num = (ArdenNumber) evalExpression("34.5E34");
+		Assert.assertEquals(34.5E34, num.value, 0);
+
+		num = (ArdenNumber) evalExpression("0.1e+4");
+		Assert.assertEquals(0.1e+4, num.value, 0);
+
+		num = (ArdenNumber) evalExpression("0.1e-4");
+		Assert.assertEquals(0.1e-4, num.value, 0);
+
+		num = (ArdenNumber) evalExpression(".3");
+		Assert.assertEquals(.3, num.value, 0);
+
+		num = (ArdenNumber) evalExpression("3.");
+		Assert.assertEquals(3., num.value, 0);
+
+		num = (ArdenNumber) evalExpression("3e10");
+		Assert.assertEquals(3e10, num.value, 0);
 	}
 
 	@Test
-	public void DivisionByZero() throws Exception {
-		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("3/0"));
+	public void TimeStampWithFractionalSeconds() throws Exception {
+		ArdenTime t = (ArdenTime) evalExpression("1989-01-01T13:30:00.123");
+		// TODO: test whether the time is represented correctly
+		// check that the time was interpreted as local time.
+	}
+
+	@Test
+	public void TimeStampWithFractionalSecondsUTC() throws Exception {
+		ArdenTime t = (ArdenTime) evalExpression("1989-01-01T13:30:00.123z");
+		// TODO: test whether the time is represented correctly
+		// check that the time was interpreted as UTC.
+	}
+
+	@Test
+	public void TimeCalculation() throws Exception {
+		assertEval("1993-05-18T00:00:00", "1800-01-01 + (1993-1800) years + 4 months + (17-1) days");
+	}
+
+	@Test
+	public void AdditionOperator() throws Exception {
+		assertEval("6.0", "4 + 2");
+		assertEval("()", "5 + ()");
+		assertEval("null", "(1,2,3) + ()");
+		assertEval("()", "null + ()");
+		assertEval("null", "5 + null");
+		assertEval("(null, null, null)", "(1,2,3) + null");
+		assertEval("null", "null + null");
+	}
+
+	@Test
+	public void DurationAdditionOperator() throws Exception {
+		assertEval("3.0 seconds", "1 second + 2 seconds");
+		assertEval("13.0 months", "1 month + 1 year");
+		assertEval("2629746.5 seconds", "1 month + 0.5 seconds");
+	}
+
+	@Test
+	public void TimeSecondAddition() throws Exception {
+		assertEval("1990-03-01T00:00:01", "1990-02-01T00:00:00 + 2419201 seconds");
+		assertEval("1990-03-15T00:00:00", "1990-03-13T00:00:00 + 2 days");
+		assertEval("1990-03-15T00:00:00", "2 days + 1990-03-13T00:00:00");
+	}
+
+	@Test
+	public void TimeMonthAddition() throws Exception {
+		assertEval("1991-02-28T00:00:00", "1991-01-31T00:00:00 + 1 month");
+		assertEval("1991-03-03T01:02:54.6", "1991-01-31T00:00:00 + 1.1 months");
+		assertEval("1993-02-28T00:00:00", "1993-01-31 + 1 month");
+		assertEval("1993-01-28T00:00:00", "1993-02-28 - 1 month");
+		assertEval("1990-11-26T22:57:05.4", "1991-01-31T00:00:00 - 2.1 months");
+		assertEval("1990-12-27T22:57:05.4", "1991-01-31T00:00:00 - 1.1 months");
+		assertEval("1991-04-26T22:57:05.4", "1991-04-30T00:00:00 - 0.1 months");
+
+		assertEval("1993-05-17T00:00:00", "0000-00-00 + 1993 years + 5 months + 17 days");
 	}
 
 	@Test
@@ -66,43 +139,14 @@ public class ExpressionTests {
 	}
 
 	@Test
-	public void EmptyList() throws Exception {
-		Assert.assertSame(ArdenList.EMPTY, evalExpression("()"));
-	}
+	public void SubtractionOperator() throws Exception {
+		assertEval("4.0", "6-2");
+		assertEval("1.0 seconds", "3 seconds - 2 seconds");
+		assertEval("1990-03-13T00:00:00", "1990-03-15T00:00:00 - 2 days");
+		assertEval("172800.0 seconds", "1990-03-15T00:00:00 - 1990-03-13T00:00:00");
 
-	@Test
-	public void SingleElementList() throws Exception {
-		ArdenList list = (ArdenList) evalExpression(",null");
-		Assert.assertEquals(1, list.values.length);
-		Assert.assertSame(ArdenNull.INSTANCE, list.values[0]);
-	}
-
-	@Test
-	public void UnaryCommaKeepsExistingList() throws Exception {
-		Assert.assertSame(ArdenList.EMPTY, evalExpression(",()"));
-	}
-
-	@Test
-	public void BinaryComma() throws Exception {
-		ArdenList list = (ArdenList) evalExpression("4,2");
-		Assert.assertEquals(2, list.values.length);
-		Assert.assertEquals(4, ((ArdenNumber) list.values[0]).value, 0);
-		Assert.assertEquals(2, ((ArdenNumber) list.values[1]).value, 0);
-	}
-
-	@Test
-	public void BinaryComma2() throws Exception {
-		ArdenList list = (ArdenList) evalExpression("(4,\"a\") , null");
-		Assert.assertEquals(3, list.values.length);
-		Assert.assertEquals(4, ((ArdenNumber) list.values[0]).value, 0);
-		Assert.assertEquals("a", ((ArdenString) list.values[1]).value);
-		Assert.assertSame(ArdenNull.INSTANCE, list.values[2]);
-	}
-
-	@Test
-	public void LeftAssociativeSubtraction() throws Exception {
-		ArdenNumber num = (ArdenNumber) evalExpression("3-4-5");
-		Assert.assertEquals(-6, num.value, 0);
+		assertEval("-6.0", "3-4-5");
+		assertEval("2419200.0 seconds", "1990-03-01T00:00:00 - 1990-02-01T00:00:00");
 	}
 
 	@Test
@@ -113,6 +157,27 @@ public class ExpressionTests {
 	@Test
 	public void UnaryMinus() throws Exception {
 		assertEval("(-3.0, -4.0, null, -12.0 months, -1.0 seconds)", "-(3, 4, \"a\", 1 year, 1 second)");
+	}
+
+	@Test
+	public void MultiplicationOperator() throws Exception {
+		assertEval("(8.0, 6.0 seconds, 6.0 months)", "(4*2, 3 * 2 seconds, 3 months * 2)");
+	}
+
+	@Test
+	public void DivisionOperator() throws Exception {
+		assertEval("0.5", "1/2");
+		assertEval("2629746.0", "1 month / 1 second");
+		assertEval("(4.0, 2.0 seconds, 120.0, 36.0)", "(8/2, 6 seconds / 3, 2 minutes / 1 second, 3 years / 1 month)");
+		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("3/0"));
+		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("2 seconds / 0"));
+		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("2 seconds / 0 seconds"));
+	}
+
+	@Test
+	public void ExponentiationOperator() throws Exception {
+		assertEval("9.0", "3 ** 2");
+		assertEval("2.0", "4 ** 0.5");
 	}
 
 	@Test
@@ -133,6 +198,11 @@ public class ExpressionTests {
 		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("true and null"));
 		Assert.assertSame(ArdenBoolean.FALSE, evalExpression("false and null"));
 		assertEval("(false, null, true, null)", "true and (false, null, true, 3)");
+	}
+
+	@Test
+	public void NotOperator() throws Exception {
+		assertEval("(false, true, null, null)", "not (true, false, null, 3)");
 	}
 
 	@Test
@@ -172,13 +242,16 @@ public class ExpressionTests {
 	}
 
 	@Test
-	public void WhereOperator() throws Exception {
-		assertEval("(10.0, 30.0)", "(10,20,30,40) where (true,false,true,3)");
-		assertEval("1.0", "1.0 where true");
-		assertEval("(1.0, 2.0, 3.0)", "(1,2,3) where true");
-		assertEval("()", "(1,2,3) where false");
-		assertEval("(2.0, 3.0)", "(1,2,3) where it > 1.5");
-		assertEval("(1.0, 1.0)", "1 where (true,false,true)");
-		assertEval("null", "(1,2,3,4) where (true,false,true)");
+	public void AfterOperator() throws Exception {
+		assertEval("1990-03-15T00:00:00", "2 days AFTER 1990-03-13T00:00:00");
+		assertEval("null", "2 days AFTER 1 day");
+
+		assertEval("2000-09-13T00:08:00", "2 days FROM 2000-09-11T00:08:00");
+	}
+
+	@Test
+	public void BeforeOperator() throws Exception {
+		assertEval("1990-03-11T00:00:00", "2 days BEFORE 1990-03-13T00:00:00");
+		assertEval("null", "2 days BEFORE 1 day");
 	}
 }

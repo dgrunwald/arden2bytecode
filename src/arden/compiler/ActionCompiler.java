@@ -7,6 +7,9 @@ import arden.runtime.ArdenValue;
 /**
  * Compiler for actions.
  * 
+ * Every actionBlock.apply(this) call will generate code that executes the action.
+ * The evaluation stack is empty between all apply calls.
+ * 
  * @author Daniel Grunwald
  */
 final class ActionCompiler extends VisitorBase {

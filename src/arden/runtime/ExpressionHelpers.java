@@ -1,5 +1,6 @@
 package arden.runtime;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -114,5 +115,128 @@ public final class ExpressionHelpers {
 			// condition not ArdenList:
 			return condition.isTrue() ? sequence : ArdenList.EMPTY;
 		}
+	}
+
+	/** implements the COUNT OF operator */
+	public static ArdenValue count(ArdenValue sequence) {
+		return new ArdenNumber(unaryComma(sequence).values.length);
+	}
+
+	static long getCommonTime(ArdenValue[] items) {
+		if (items.length == 0)
+			return ArdenValue.NOPRIMARYTIME;
+		long time = items[0].primaryTime;
+		for (int i = 1; i < items.length; i++) {
+			if (items[i].primaryTime != time)
+				return ArdenValue.NOPRIMARYTIME;
+		}
+		return time;
+	}
+
+	/** implements the EXIST operator */
+	public static ArdenValue exist(ArdenValue sequence) {
+		ArdenList input = unaryComma(sequence);
+		long primaryTime = getCommonTime(input.values);
+		for (ArdenValue val : input.values) {
+			if (!(val instanceof ArdenNull))
+				return ArdenBoolean.create(true, primaryTime);
+		}
+		return ArdenBoolean.create(false, primaryTime);
+	}
+
+	/** implements the SUM operator */
+	public static ArdenValue sum(ArdenValue sequence) {
+		ArdenList input = unaryComma(sequence);
+		if (input.values.length == 0)
+			return ArdenNumber.ZERO;
+		ArdenValue val = input.values[0];
+		for (int i = 1; i < input.values.length; i++) {
+			val = BinaryOperator.ADD.runElement(val, input.values[i]);
+		}
+		return val;
+	}
+
+	/** implements the MEDIAN operator */
+	public static ArdenValue median(ArdenValue sequence) {
+		ArdenValue sorted = sortByData(sequence);
+		if (!(sorted instanceof ArdenList))
+			return sorted; // error during sorting
+		ArdenValue[] values = ((ArdenList) sorted).values;
+		if (values.length == 0) {
+			return ArdenNull.INSTANCE;
+		} else if ((values.length % 2) == 1) {
+			return values[values.length / 2];
+		} else {
+			return average(binaryComma(values[values.length / 2 - 1], values[values.length / 2]));
+		}
+	}
+
+	/** implements the AVERAGE operator */
+	public static ArdenValue average(ArdenValue sequence) {
+		ArdenValue[] values = unaryComma(sequence).values;
+		if (values.length == 0)
+			return ArdenNull.INSTANCE;
+		if (values[0] instanceof ArdenNumber) {
+			double sum = 0;
+			for (ArdenValue element : values) {
+				if (!(element instanceof ArdenNumber))
+					return ArdenNull.INSTANCE;
+				sum += ((ArdenNumber) element).value;
+			}
+			return ArdenNumber.create(sum / values.length, getCommonTime(values));
+		} else if (values[0] instanceof ArdenTime) {
+			BigInteger sum = BigInteger.ZERO;
+			for (ArdenValue element : values) {
+				if (!(element instanceof ArdenTime))
+					return ArdenNull.INSTANCE;
+				sum = sum.add(BigInteger.valueOf(((ArdenTime) element).value));
+			}
+			sum = sum.divide(BigInteger.valueOf(values.length));
+			return new ArdenTime(sum.longValue(), getCommonTime(values));
+		} else if (values[0] instanceof ArdenDuration) {
+			double sum = ((ArdenDuration) values[0]).value;
+			boolean isMonths = ((ArdenDuration) values[0]).isMonths;
+			for (int i = 1; i < values.length; i++) {
+				if (!(values[i] instanceof ArdenDuration))
+					return ArdenNull.INSTANCE;
+				ArdenDuration d = (ArdenDuration) values[i];
+				if (isMonths && !d.isMonths) {
+					isMonths = false;
+					sum *= ArdenDuration.SECONDS_PER_MONTH;
+				}
+				if (isMonths)
+					sum += d.value;
+				else
+					sum += d.toSeconds();
+			}
+			return ArdenDuration.create(sum / values.length, isMonths, getCommonTime(values));
+		} else {
+			return ArdenNull.INSTANCE;
+		}
+	}
+
+	/** implements the VARIANCE operator */
+	public static ArdenValue variance(ArdenValue sequence) {
+		// unlike the other operators, VARIANCE doesn't automatically build
+		// 1-element-lists
+		if (!(sequence instanceof ArdenList))
+			return ArdenNull.INSTANCE;
+		ArdenValue[] values = ((ArdenList) sequence).values;
+		if (values.length == 0)
+			return ArdenNull.INSTANCE;
+		double sum = 0;
+		for (ArdenValue element : values) {
+			if (!(element instanceof ArdenNumber))
+				return ArdenNull.INSTANCE;
+			sum += ((ArdenNumber) element).value;
+		}
+		double avg = sum / values.length;
+		double diffsum = 0;
+		for (ArdenValue element : values) {
+			double diff = avg - ((ArdenNumber) element).value;
+			diffsum += diff * diff;
+		}
+		double variance = diffsum / values.length;
+		return ArdenNumber.create(variance, getCommonTime(values));
 	}
 }

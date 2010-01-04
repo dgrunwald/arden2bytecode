@@ -6,6 +6,16 @@ public abstract class UnaryOperator {
 
 	public abstract ArdenValue runElement(ArdenValue val);
 
+	public static final UnaryOperator NOT = new UnaryOperator("NOT") {
+		@Override
+		public ArdenValue runElement(ArdenValue val) {
+			if (val instanceof ArdenBoolean)
+				return ArdenBoolean.create(!((ArdenBoolean) val).value, val.primaryTime);
+			else
+				return ArdenNull.create(val.primaryTime);
+		};
+	};
+
 	public static final UnaryOperator PLUS = new UnaryOperator("PLUS") {
 		@Override
 		public ArdenValue runElement(ArdenValue val) {
@@ -20,10 +30,21 @@ public abstract class UnaryOperator {
 		@Override
 		public ArdenValue runElement(ArdenValue val) {
 			if (val instanceof ArdenNumber) {
-				return new ArdenNumber(-((ArdenNumber) val).value, val.primaryTime);
+				return ArdenNumber.create(-((ArdenNumber) val).value, val.primaryTime);
 			} else if (val instanceof ArdenDuration) {
 				ArdenDuration dur = (ArdenDuration) val;
-				return new ArdenDuration(-dur.value, dur.isMonths, dur.primaryTime);
+				return ArdenDuration.create(-dur.value, dur.isMonths, dur.primaryTime);
+			} else {
+				return ArdenNull.create(val.primaryTime);
+			}
+		};
+	};
+
+	public static final UnaryOperator SQRT = new UnaryOperator("SQRT") {
+		@Override
+		public ArdenValue runElement(ArdenValue val) {
+			if (val instanceof ArdenNumber) {
+				return ArdenNumber.create(Math.sqrt(((ArdenNumber) val).value), val.primaryTime);
 			} else {
 				return ArdenNull.create(val.primaryTime);
 			}

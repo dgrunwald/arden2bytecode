@@ -80,6 +80,7 @@ Helpers
   digit          = ['0'..'9'];
   /* no spaces are permitted between elements */
   ddigits         = digit+;
+  exponent = ('e' | 'E') ('+' | '-')? ddigits;
 
   letter                = [['a'..'z']+['A'..'Z']];
 
@@ -89,12 +90,6 @@ Helpers
   simplestring = allnosemi+ (semicol allnosemi+)*;
   sstring = simplestring+ ('"' '"' simplestring+)*;
   datamaptext = nosemibr+ (semicol nosemibr+)*;
-
-   sign =   /* null */
-
-                | '+'
-                | '-'
-   ;
 
    fractional_seconds =  /* no spaces are permitted between elements */
                         '.' ddigits
@@ -439,7 +434,7 @@ Tokens
 
   /* no spaces are permitted between elements */
   /* null */
-  exponent = (e sign ddigits)?;
+  number_with_exponent = (ddigits ('.' ddigits?)? exponent) | ('.' ddigits exponent);
 
 
   /* no spaces are permitted between elements */
@@ -968,7 +963,8 @@ main_comp_op =
       {tcomp}  temporal_comp_op
     | {rcomp}  range_comp_op
     | {ucomp}  unary_comp_op
-    | {bcomp}  binary_comp_op expr_string;
+    | {bcomp}  binary_comp_op expr_string
+    | {incomp} in_comp_op;
 
 
 /*  the WITHIN TO operator will accept any ordered parameter,      */
@@ -1002,15 +998,14 @@ binary_comp_op =
       {lt}      less than
     | {gt}      greater than
     | {ge}      greater than or equal
-    | {le}      less than or equal
-    | {in}      in;
+    | {le}      less than or equal;
 
 of_func_op =
       {ofr}    of_read_func_op
     | {ofnr}   of_noread_func_op;
 
 in_comp_op =
-                in;
+                in expr_string;
 
 of_read_func_op =
       {avge}    average
@@ -1263,13 +1258,10 @@ action_elseif =
     | {elseif}  elseif action_if_then_else2;
 
 number =
-      {dexp}    digits exponent
+      {dexp}    number_with_exponent
     | {dig}     digits
-    | {ddote}   digits dot exponent
     | {ddot}    digits dot
-    | {ddotde}  [whole]:digits dot [decimal]:digits exponent
     | {ddotd}   [whole]:digits dot [decimal]:digits
-    | {dotde}   dot digits exponent
     | {dotd}    dot digits;
                 /* no spaces are permitted between elements */
 

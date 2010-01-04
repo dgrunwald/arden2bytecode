@@ -1,15 +1,24 @@
 package arden.runtime;
 
 public final class ArdenNumber extends ArdenValue {
+	public static final ArdenNumber ZERO = new ArdenNumber(0);
+
 	public final double value;
 
 	public ArdenNumber(double value) {
 		this.value = value;
 	}
 
-	public ArdenNumber(double value, long primaryTime) {
+	private ArdenNumber(double value, long primaryTime) {
 		super(primaryTime);
 		this.value = value;
+	}
+
+	public static ArdenValue create(double value, long primaryTime) {
+		if (Double.isNaN(value) || Double.isInfinite(value))
+			return ArdenNull.create(primaryTime);
+		else
+			return new ArdenNumber(value, primaryTime);
 	}
 
 	@Override

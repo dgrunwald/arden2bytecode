@@ -7,6 +7,10 @@ package arden.runtime;
 public abstract class BinaryOperator {
 	private final String name;
 
+	/**
+	 * Runs the operator for a single element (both lhs and rhs must be
+	 * non-lists)
+	 */
 	public abstract ArdenValue runElement(ArdenValue lhs, ArdenValue rhs);
 
 	public static final BinaryOperator OR = new BinaryOperator("OR") {
@@ -97,32 +101,148 @@ public abstract class BinaryOperator {
 		};
 	};
 
-	public static final BinaryOperator ADD = new NumericBinaryOperator("ADD") {
+	public static final BinaryOperator ADD = new BinaryOperator("ADD") {
 		@Override
-		public double runNumeric(double lhs, double rhs) {
-			return lhs + rhs;
+		public ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			if (lhs instanceof ArdenNumber && rhs instanceof ArdenNumber) {
+				double newValue = ((ArdenNumber) lhs).value + ((ArdenNumber) rhs).value;
+				return ArdenNumber.create(newValue, newTime);
+			} else if (lhs instanceof ArdenDuration && rhs instanceof ArdenDuration) {
+				ArdenDuration left = (ArdenDuration) lhs;
+				ArdenDuration right = (ArdenDuration) rhs;
+				if (left.isMonths == right.isMonths)
+					return ArdenDuration.create(left.value + right.value, left.isMonths, newTime);
+				else
+					return ArdenDuration.seconds(left.toSeconds() + right.toSeconds(), newTime);
+			} else if (lhs instanceof ArdenTime && rhs instanceof ArdenDuration) {
+				ArdenTime time = (ArdenTime) lhs;
+				ArdenDuration dur = (ArdenDuration) rhs;
+				if (dur.isMonths) {
+					long result = time.addMonths(dur.value);
+					return new ArdenTime(result, newTime);
+				} else {
+					long milliseconds = (long) (1000 * dur.value);
+					return new ArdenTime(time.value + milliseconds);
+				}
+			} else if (lhs instanceof ArdenDuration && rhs instanceof ArdenTime) {
+				return runElement(rhs, lhs);
+			} else {
+				return ArdenNull.create(newTime);
+			}
 		};
 	};
 
-	public static final BinaryOperator SUB = new NumericBinaryOperator("SUB") {
+	public static final BinaryOperator SUB = new BinaryOperator("SUB") {
 		@Override
-		public double runNumeric(double lhs, double rhs) {
-			return lhs - rhs;
+		public ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			if (lhs instanceof ArdenNumber && rhs instanceof ArdenNumber) {
+				double newValue = ((ArdenNumber) lhs).value - ((ArdenNumber) rhs).value;
+				return ArdenNumber.create(newValue, newTime);
+			} else if (lhs instanceof ArdenDuration && rhs instanceof ArdenDuration) {
+				ArdenDuration left = (ArdenDuration) lhs;
+				ArdenDuration right = (ArdenDuration) rhs;
+				if (left.isMonths == right.isMonths)
+					return ArdenDuration.create(left.value - right.value, left.isMonths, newTime);
+				else
+					return ArdenDuration.seconds(left.toSeconds() - right.toSeconds(), newTime);
+			} else if (lhs instanceof ArdenTime && rhs instanceof ArdenDuration) {
+				ArdenTime time = (ArdenTime) lhs;
+				ArdenDuration dur = (ArdenDuration) rhs;
+				if (dur.isMonths) {
+					long result = time.addMonths(-dur.value);
+					return new ArdenTime(result, newTime);
+				} else {
+					long milliseconds = (long) (1000 * dur.value);
+					return new ArdenTime(time.value - milliseconds);
+				}
+			} else if (lhs instanceof ArdenTime && rhs instanceof ArdenTime) {
+				long milliseconds = ((ArdenTime) lhs).value - ((ArdenTime) rhs).value;
+				return ArdenDuration.seconds(milliseconds / 1000.0, newTime);
+			} else {
+				return ArdenNull.create(newTime);
+			}
 		};
 	};
 
-	public static final BinaryOperator MUL = new NumericBinaryOperator("MUL") {
+	public static final BinaryOperator MUL = new BinaryOperator("MUL") {
 		@Override
-		public double runNumeric(double lhs, double rhs) {
-			return lhs * rhs;
+		public ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			if (lhs instanceof ArdenNumber && rhs instanceof ArdenNumber) {
+				double newValue = ((ArdenNumber) lhs).value * ((ArdenNumber) rhs).value;
+				return ArdenNumber.create(newValue, newTime);
+			} else if (lhs instanceof ArdenNumber && rhs instanceof ArdenDuration) {
+				ArdenNumber left = (ArdenNumber) lhs;
+				ArdenDuration right = (ArdenDuration) rhs;
+				return ArdenDuration.create(left.value * right.value, right.isMonths, newTime);
+			} else if (lhs instanceof ArdenDuration && rhs instanceof ArdenNumber) {
+				ArdenDuration left = (ArdenDuration) lhs;
+				ArdenNumber right = (ArdenNumber) rhs;
+				return ArdenDuration.create(left.value * right.value, left.isMonths, newTime);
+			} else {
+				return ArdenNull.create(newTime);
+			}
 		};
 	};
 
-	public static final BinaryOperator DIV = new NumericBinaryOperator("DIV") {
+	public static final BinaryOperator DIV = new BinaryOperator("DIV") {
 		@Override
-		public double runNumeric(double lhs, double rhs) {
-			return lhs / rhs;
+		public ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			if (lhs instanceof ArdenNumber && rhs instanceof ArdenNumber) {
+				double newValue = ((ArdenNumber) lhs).value / ((ArdenNumber) rhs).value;
+				return ArdenNumber.create(newValue, newTime);
+			} else if (lhs instanceof ArdenDuration && rhs instanceof ArdenDuration) {
+				ArdenDuration left = (ArdenDuration) lhs;
+				ArdenDuration right = (ArdenDuration) rhs;
+				if (left.isMonths == right.isMonths)
+					return ArdenNumber.create(left.value / right.value, newTime);
+				else
+					return ArdenNumber.create(left.toSeconds() / right.toSeconds(), newTime);
+			} else if (lhs instanceof ArdenDuration && rhs instanceof ArdenNumber) {
+				ArdenDuration left = (ArdenDuration) lhs;
+				ArdenNumber right = (ArdenNumber) rhs;
+				return ArdenDuration.create(left.value / right.value, left.isMonths, newTime);
+			} else {
+				return ArdenNull.create(newTime);
+			}
 		};
+	};
+
+	public static final BinaryOperator POW = new BinaryOperator("POW") {
+		@Override
+		public final ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			if (lhs instanceof ArdenNumber && rhs instanceof ArdenNumber) {
+				double result = Math.pow(((ArdenNumber) lhs).value, ((ArdenNumber) rhs).value);
+				return ArdenNumber.create(result, newTime);
+			}
+			return ArdenNull.create(newTime);
+		}
+	};
+
+	public static final BinaryOperator AFTER = new BinaryOperator("AFTER") {
+		@Override
+		public final ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			if (lhs instanceof ArdenDuration && rhs instanceof ArdenTime) {
+				return ADD.runElement(rhs, lhs);
+			}
+			return ArdenNull.create(newTime);
+		}
+	};
+
+	public static final BinaryOperator BEFORE = new BinaryOperator("BEFORE") {
+		@Override
+		public final ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
+			if (lhs instanceof ArdenDuration && rhs instanceof ArdenTime) {
+				return SUB.runElement(rhs, lhs);
+			}
+			return ArdenNull.create(newTime);
+		}
 	};
 
 	public BinaryOperator(String name) {
@@ -174,24 +294,5 @@ public abstract class BinaryOperator {
 	@Override
 	public String toString() {
 		return name;
-	}
-
-	static abstract class NumericBinaryOperator extends BinaryOperator {
-		public NumericBinaryOperator(String name) {
-			super(name);
-		}
-
-		@Override
-		public final ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
-			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
-			if (lhs instanceof ArdenNumber && rhs instanceof ArdenNumber) {
-				double result = runNumeric(((ArdenNumber) lhs).value, ((ArdenNumber) rhs).value);
-				if (!Double.isNaN(result) && !Double.isInfinite(result))
-					return new ArdenNumber(result, newTime);
-			}
-			return ArdenNull.create(newTime);
-		}
-
-		public abstract double runNumeric(double lhs, double rhs);
 	}
 }

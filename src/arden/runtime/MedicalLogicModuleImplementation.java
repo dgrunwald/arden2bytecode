@@ -2,7 +2,7 @@ package arden.runtime;
 
 /**
  * Base class for compiled logic etc. The compiler creates derived classes. An
- * instance of the derived class will be created whenever
+ * instance of the derived class will be created whenever the MLM is executed.
  * 
  * @author Daniel Grunwald
  */

@@ -91,6 +91,6 @@ public final class Compiler {
 		action.loadNull();
 		action.returnObjectFromFunction();
 
-		return new MedicalLogicModule(codeGen.loadClassFromMemory());
+		return new CompiledMlm(codeGen.loadClassFromMemory());
 	}
 }

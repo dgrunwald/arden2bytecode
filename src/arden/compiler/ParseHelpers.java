@@ -1,10 +1,8 @@
 package arden.compiler;
 
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import arden.compiler.node.*;
 import arden.runtime.ArdenTime;
@@ -42,8 +40,8 @@ final class ParseHelpers {
 		String input = number.toString().replace(" ", "");
 		double d;
 		try {
-			d = NumberFormat.getNumberInstance(Locale.ENGLISH).parse(input).doubleValue();
-		} catch (ParseException e) {
+			d = Double.parseDouble(input);
+		} catch (NumberFormatException e) {
 			throw new RuntimeCompilerException(e.getMessage());
 		}
 		if (Double.isInfinite(d) || Double.isNaN(d))

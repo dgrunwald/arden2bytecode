@@ -13,12 +13,19 @@ import arden.runtime.ExpressionHelpers;
 import arden.runtime.UnaryOperator;
 
 /**
- * Compiler for expressions
+ * Compiler for expressions.
+ * 
+ * Every expression.apply(this) call will generate code that pushes the
+ * expression's result value onto the evaluation stack.
  * 
  * @author Daniel Grunwald
  */
 final class ExpressionCompiler extends VisitorBase {
 	private final CompilerContext context;
+
+	public CompilerContext getContext() {
+		return context;
+	}
 
 	public ExpressionCompiler(CompilerContext context) {
 		this.context = context;
@@ -34,37 +41,61 @@ final class ExpressionCompiler extends VisitorBase {
 		}
 	}
 
-	private void invokeOperator(BinaryOperator operator, Node lhs, Node rhs) {
+	public void loadOperator(BinaryOperator operator) {
 		try {
 			Field field = BinaryOperator.class.getField(operator.toString());
-			Method run = BinaryOperator.class.getMethod("run", ArdenValue.class, ArdenValue.class);
 			context.writer.loadStaticField(field);
-			lhs.apply(this);
-			rhs.apply(this);
-			context.writer.invokeInstance(run);
 		} catch (SecurityException e) {
 			throw new RuntimeException(e);
 		} catch (NoSuchFieldException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void invokeLoadedBinaryOperator() {
+		try {
+			Method run = BinaryOperator.class.getMethod("run", ArdenValue.class, ArdenValue.class);
+			context.writer.invokeInstance(run);
+		} catch (SecurityException e) {
 			throw new RuntimeException(e);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private void invokeOperator(UnaryOperator operator, Node arg) {
+	public void invokeOperator(BinaryOperator operator, Node lhs, Node rhs) {
+		loadOperator(operator);
+		lhs.apply(this);
+		rhs.apply(this);
+		invokeLoadedBinaryOperator();
+	}
+
+	public void loadOperator(UnaryOperator operator) {
 		try {
 			Field field = UnaryOperator.class.getField(operator.toString());
-			Method run = UnaryOperator.class.getMethod("run", ArdenValue.class);
 			context.writer.loadStaticField(field);
-			arg.apply(this);
-			context.writer.invokeInstance(run);
 		} catch (SecurityException e) {
 			throw new RuntimeException(e);
 		} catch (NoSuchFieldException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	public void invokeLoadedUnaryOperator() {
+		try {
+			Method run = UnaryOperator.class.getMethod("run", ArdenValue.class);
+			context.writer.invokeInstance(run);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public void invokeOperator(UnaryOperator operator, Node arg) {
+		loadOperator(operator);
+		arg.apply(this);
+		invokeLoadedUnaryOperator();
 	}
 
 	// expr =
@@ -204,8 +235,8 @@ final class ExpressionCompiler extends VisitorBase {
 	// | {comp} expr_comparison;
 	@Override
 	public void caseANotExprNot(ANotExprNot node) {
-		// TODO Auto-generated method stub
-		super.caseANotExprNot(node);
+		// expr_not = {not} not expr_comparison
+		invokeOperator(UnaryOperator.NOT, node.getExprComparison());
 	}
 
 	@Override
@@ -266,26 +297,30 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAIsExprComparison(AIsExprComparison node) {
-		// TODO Auto-generated method stub
-		super.caseAIsExprComparison(node);
+		// expr_comparison = {is} expr_string P.is main_comp_op
+		node.getMainCompOp().apply(new ComparisonCompiler(this, node.getExprString()));
 	}
 
 	@Override
 	public void caseAInotExprComparison(AInotExprComparison node) {
-		// TODO Auto-generated method stub
-		super.caseAInotExprComparison(node);
+		// expr_comparison = {inot} expr_string P.is not main_comp_op
+		loadOperator(UnaryOperator.NOT);
+		node.getMainCompOp().apply(new ComparisonCompiler(this, node.getExprString()));
+		invokeLoadedUnaryOperator();
 	}
 
 	@Override
 	public void caseAInExprComparison(AInExprComparison node) {
-		// TODO Auto-generated method stub
-		super.caseAInExprComparison(node);
+		// expr_comparison = {in} expr_string in_comp_op
+		node.getInCompOp().apply(new ComparisonCompiler(this, node.getExprString()));
 	}
 
 	@Override
 	public void caseANinExprComparison(ANinExprComparison node) {
-		// TODO Auto-generated method stub
-		super.caseANinExprComparison(node);
+		// expr_comparison = {nin} expr_string not in_comp_op
+		loadOperator(UnaryOperator.NOT);
+		node.getInCompOp().apply(new ComparisonCompiler(this, node.getExprString()));
+		invokeLoadedUnaryOperator();
 	}
 
 	@Override
@@ -411,8 +446,7 @@ final class ExpressionCompiler extends VisitorBase {
 		// expr_power = {exp} [base]:expr_function dexp [exp]:expr_function
 		// Exponent (second arguement) must be an expression that evaluates to a
 		// scalar number
-		// TODO Auto-generated method stub
-		super.caseAExpExprPower(node);
+		invokeOperator(BinaryOperator.POW, node.getBase(), node.getExp());
 	}
 
 	// expr_before =
@@ -428,20 +462,21 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseABeforeExprBefore(ABeforeExprBefore node) {
-		// TODO Auto-generated method stub
-		super.caseABeforeExprBefore(node);
+		// expr_before = {before} expr_duration before expr_ago
+		invokeOperator(BinaryOperator.BEFORE, node.getExprDuration(), node.getExprAgo());
 	}
 
 	@Override
 	public void caseAAfterExprBefore(AAfterExprBefore node) {
-		// TODO Auto-generated method stub
-		super.caseAAfterExprBefore(node);
+		// expr_before = {after} expr_duration after expr_ago
+		invokeOperator(BinaryOperator.AFTER, node.getExprDuration(), node.getExprAgo());
 	}
 
 	@Override
 	public void caseAFromExprBefore(AFromExprBefore node) {
-		// TODO Auto-generated method stub
-		super.caseAFromExprBefore(node);
+		// expr_before = {from} expr_duration from expr_ago
+		// FROM and AFTER both do the same (duration + time)
+		invokeOperator(BinaryOperator.AFTER, node.getExprDuration(), node.getExprAgo());
 	}
 
 	// expr_ago =
@@ -462,8 +497,12 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAAgoExprAgo(AAgoExprAgo node) {
-		// TODO Auto-generated method stub
-		super.caseAAgoExprAgo(node);
+		// expr_ago = {ago} expr_duration ago
+		loadOperator(BinaryOperator.BEFORE);
+		node.getExprDuration().apply(this);
+		context.writer.loadThis();
+		context.writer.loadInstanceField(context.codeGenerator.getNowField());
+		invokeLoadedBinaryOperator();
 	}
 
 	// expr_duration = expr_function duration_op;
@@ -511,14 +550,14 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAOfexprExprFunction(AOfexprExprFunction node) {
-		// TODO Auto-generated method stub
-		super.caseAOfexprExprFunction(node);
+		// expr_function = {ofexpr} of_func_op expr_function
+		node.getOfFuncOp().apply(new UnaryOperatorCompiler(this, node.getExprFunction()));
 	}
 
 	@Override
 	public void caseAOfofexprExprFunction(AOfofexprExprFunction node) {
-		// TODO Auto-generated method stub
-		super.caseAOfofexprExprFunction(node);
+		// expr_function = {ofofexpr} of_func_op of expr_function
+		node.getOfFuncOp().apply(new UnaryOperatorCompiler(this, node.getExprFunction()));
 	}
 
 	@Override
@@ -654,7 +693,8 @@ final class ExpressionCompiler extends VisitorBase {
 		/* error in some implementations. */
 		int it = context.getCurrentItVariable();
 		if (it < 0)
-			throw new RuntimeCompilerException("'" + node.getIt().toString() + "' is only valid within WHERE conditions");
+			throw new RuntimeCompilerException("'" + node.getIt().toString()
+					+ "' is only valid within WHERE conditions");
 		context.writer.loadVariable(it);
 	}
 

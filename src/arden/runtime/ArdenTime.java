@@ -52,4 +52,9 @@ public final class ArdenTime extends ArdenValue {
 		}
 		return Integer.MIN_VALUE;
 	}
+
+	long addMonths(double months) {
+		// TODO: implement this
+		throw new RuntimeException("time+month not implemented");
+	}
 }
