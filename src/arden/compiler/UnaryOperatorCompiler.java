@@ -10,6 +10,7 @@ import arden.compiler.node.AOfnrOfFuncOp;
 import arden.compiler.node.AOfrOfFuncOp;
 import arden.compiler.node.AStdvOfNoreadFuncOp;
 import arden.compiler.node.ASumOfReadFuncOp;
+import arden.compiler.node.ATimeOfNoreadFuncOp;
 import arden.compiler.node.AVarOfNoreadFuncOp;
 import arden.compiler.node.Node;
 import arden.runtime.ArdenValue;
@@ -18,10 +19,10 @@ import arden.runtime.UnaryOperator;
 /**
  * Compiler for unary function operators (of_func_op and related productions).
  * 
- * Every operator.apply(this) call will generate code that pushes the
- * operator's result value onto the evaluation stack.
- * The parent compiler is used to generate code for the specified argument. Every possible codepath
- * will emit code that evaluates the argument exactly once.
+ * Every operator.apply(this) call will generate code that pushes the operator's
+ * result value onto the evaluation stack. The parent compiler is used to
+ * generate code for the specified argument. Every possible codepath will emit
+ * code that evaluates the argument exactly once.
  * 
  * @author Daniel Grunwald
  */
@@ -146,7 +147,7 @@ final class UnaryOperatorCompiler extends VisitorBase {
 	// | {uc} uppercase
 	// | {lc} lowercase;
 	// TODO: add missing definitions from this production
-	
+
 	@Override
 	public void caseAStdvOfNoreadFuncOp(AStdvOfNoreadFuncOp node) {
 		parent.loadOperator(UnaryOperator.SQRT);
@@ -154,10 +155,15 @@ final class UnaryOperatorCompiler extends VisitorBase {
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("variance", ArdenValue.class));
 		parent.invokeLoadedUnaryOperator();
 	}
-	
+
 	@Override
 	public void caseAVarOfNoreadFuncOp(AVarOfNoreadFuncOp node) {
 		argument.apply(parent);
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("variance", ArdenValue.class));
+	}
+
+	@Override
+	public void caseATimeOfNoreadFuncOp(ATimeOfNoreadFuncOp node) {
+		parent.invokeOperator(UnaryOperator.TIME, argument);
 	}
 }

@@ -10,6 +10,7 @@ import arden.runtime.ArdenNull;
 import arden.runtime.ArdenValue;
 import arden.runtime.BinaryOperator;
 import arden.runtime.ExpressionHelpers;
+import arden.runtime.TernaryOperator;
 import arden.runtime.UnaryOperator;
 
 /**
@@ -41,6 +42,36 @@ final class ExpressionCompiler extends VisitorBase {
 		}
 	}
 
+	public void loadOperator(TernaryOperator operator) {
+		try {
+			Field field = TernaryOperator.class.getField(operator.toString());
+			context.writer.loadStaticField(field);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void invokeLoadedTernaryOperator() {
+		try {
+			Method run = TernaryOperator.class.getMethod("run", ArdenValue.class, ArdenValue.class, ArdenValue.class);
+			context.writer.invokeInstance(run);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void invokeOperator(TernaryOperator operator, Switchable arg1, Switchable arg2, Switchable arg3) {
+		loadOperator(operator);
+		arg1.apply(this);
+		arg2.apply(this);
+		arg3.apply(this);
+		invokeLoadedTernaryOperator();
+	}
+
 	public void loadOperator(BinaryOperator operator) {
 		try {
 			Field field = BinaryOperator.class.getField(operator.toString());
@@ -63,7 +94,7 @@ final class ExpressionCompiler extends VisitorBase {
 		}
 	}
 
-	public void invokeOperator(BinaryOperator operator, Node lhs, Node rhs) {
+	public void invokeOperator(BinaryOperator operator, Switchable lhs, Switchable rhs) {
 		loadOperator(operator);
 		lhs.apply(this);
 		rhs.apply(this);
@@ -92,7 +123,7 @@ final class ExpressionCompiler extends VisitorBase {
 		}
 	}
 
-	public void invokeOperator(UnaryOperator operator, Node arg) {
+	public void invokeOperator(UnaryOperator operator, Switchable arg) {
 		loadOperator(operator);
 		arg.apply(this);
 		invokeLoadedUnaryOperator();
@@ -196,8 +227,10 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseASeqExprRange(ASeqExprRange node) {
-		// TODO Auto-generated method stub
-		super.caseASeqExprRange(node);
+		// expr_range = {seq} [this_or]:expr_or seqto [next_or]:expr_or
+		node.getThisOr().apply(this);
+		node.getNextOr().apply(this);
+		context.writer.invokeStatic(getMethod("seqto", ArdenValue.class, ArdenValue.class));
 	}
 
 	// expr_or =
@@ -256,8 +289,6 @@ final class ExpressionCompiler extends VisitorBase {
 	// | {nin} expr_string not in_comp_op
 	// | {occur} expr_string P.occur temporal_comp_op
 	// | {ocrnot} expr_string P.occur not temporal_comp_op
-	// | {range} expr_string P.occur range_comp_op
-	// | {rngnot} expr_string P.occur not range_comp_op
 	// | {match} [first_string]:expr_string matches pattern
 	// [second_string]:expr_string;
 	@Override
@@ -325,31 +356,37 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAOccurExprComparison(AOccurExprComparison node) {
-		// TODO Auto-generated method stub
-		super.caseAOccurExprComparison(node);
+		// expr_comparison = {occur} expr_string P.occur temporal_comp_op
+		node.getTemporalCompOp().apply(new ComparisonCompiler(this, new TimeOf(node.getExprString())));
 	}
 
 	@Override
 	public void caseAOcrnotExprComparison(AOcrnotExprComparison node) {
-		// TODO Auto-generated method stub
-		super.caseAOcrnotExprComparison(node);
+		// expr_comparison = {ocrnot} expr_string P.occur not temporal_comp_op
+		loadOperator(UnaryOperator.NOT);
+		node.getTemporalCompOp().apply(new ComparisonCompiler(this, new TimeOf(node.getExprString())));
+		invokeLoadedUnaryOperator();
 	}
 
-	@Override
-	public void caseARangeExprComparison(ARangeExprComparison node) {
-		// TODO Auto-generated method stub
-		super.caseARangeExprComparison(node);
-	}
+	class TimeOf implements Switchable {
+		final PExprString exprString;
 
-	@Override
-	public void caseARngnotExprComparison(ARngnotExprComparison node) {
-		// TODO Auto-generated method stub
-		super.caseARngnotExprComparison(node);
+		public TimeOf(PExprString exprString) {
+			this.exprString = exprString;
+		}
+
+		@Override
+		public void apply(Switch sw) {
+			if (sw != ExpressionCompiler.this)
+				throw new RuntimeException("unexpected switch");
+			invokeOperator(UnaryOperator.TIME, exprString);
+		}
 	}
 
 	@Override
 	public void caseAMatchExprComparison(AMatchExprComparison node) {
-		// TODO Auto-generated method stub
+		// expr_comparison = {match} [first_string]:expr_string matches pattern
+		// [second_string]:expr_string;
 		super.caseAMatchExprComparison(node);
 	}
 

@@ -239,4 +239,51 @@ public final class ExpressionHelpers {
 		double variance = diffsum / values.length;
 		return ArdenNumber.create(variance, getCommonTime(values));
 	}
+
+	/** implements the IS IN operator */
+	public static ArdenValue isIn(ArdenValue lhs, ArdenValue rhs) {
+		ArdenValue[] list = unaryComma(rhs).values;
+		if (lhs instanceof ArdenList) {
+			ArdenValue[] left = ((ArdenList) lhs).values;
+			ArdenValue[] result = new ArdenValue[left.length];
+			for (int i = 0; i < left.length; i++)
+				result[i] = isIn(left[i], list);
+			return new ArdenList(result);
+		} else {
+			return isIn(lhs, list);
+		}
+	}
+
+	private static ArdenBoolean isIn(ArdenValue lhs, ArdenValue[] list) {
+		for (ArdenValue val : list) {
+			if (lhs.equals(val)) {
+				if (val.primaryTime == lhs.primaryTime)
+					return ArdenBoolean.create(true, val.primaryTime);
+				else
+					return ArdenBoolean.TRUE;
+			}
+		}
+		return ArdenBoolean.FALSE;
+	}
+
+	/** implements the SEQTO operator */
+	public static ArdenValue seqto(ArdenValue lhs, ArdenValue rhs) {
+		if (!(lhs instanceof ArdenNumber) || !(rhs instanceof ArdenNumber))
+			return ArdenNull.INSTANCE;
+		// primary times are lost (as specified)
+		double lower = ((ArdenNumber) lhs).value;
+		double upper = ((ArdenNumber) rhs).value;
+		if (Math.floor(lower) != lower)
+			return ArdenNull.INSTANCE;
+		if (Math.floor(upper) != upper)
+			return ArdenNull.INSTANCE;
+		int lowerInt = (int) lower;
+		int upperInt = (int) upper;
+		if (lowerInt > upperInt)
+			return ArdenList.EMPTY;
+		ArdenValue[] result = new ArdenValue[upperInt - lowerInt + 1];
+		for (int i = 0; i < result.length; i++)
+			result[i] = new ArdenNumber(lowerInt + i);
+		return new ArdenList(result);
+	}
 }

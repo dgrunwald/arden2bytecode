@@ -92,7 +92,7 @@ public class ExpressionTests extends ExpressionTestBase {
 
 	@Test
 	public void TimeCalculation() throws Exception {
-		assertEval("1993-05-18T00:00:00", "1800-01-01 + (1993-1800) years + 4 months + (17-1) days");
+		assertEval("1993-05-17T00:00:00", "1800-01-01 + (1993-1800) years + 4 months + (17-1) days");
 	}
 
 	@Test
@@ -123,12 +123,13 @@ public class ExpressionTests extends ExpressionTestBase {
 	@Test
 	public void TimeMonthAddition() throws Exception {
 		assertEval("1991-02-28T00:00:00", "1991-01-31T00:00:00 + 1 month");
-		assertEval("1991-03-03T01:02:54.6", "1991-01-31T00:00:00 + 1.1 months");
+		assertEval("1991-03-03T01:02:54.600", "1991-01-31T00:00:00 + 1.1 months");
 		assertEval("1993-02-28T00:00:00", "1993-01-31 + 1 month");
+		assertEval("2000-02-29T00:00:00", "2000-01-31 + 1 month");
 		assertEval("1993-01-28T00:00:00", "1993-02-28 - 1 month");
-		assertEval("1990-11-26T22:57:05.4", "1991-01-31T00:00:00 - 2.1 months");
-		assertEval("1990-12-27T22:57:05.4", "1991-01-31T00:00:00 - 1.1 months");
-		assertEval("1991-04-26T22:57:05.4", "1991-04-30T00:00:00 - 0.1 months");
+		assertEval("1990-11-26T22:57:05.400", "1991-01-31T00:00:00 - 2.1 months");
+		assertEval("1990-12-27T22:57:05.400", "1991-01-31T00:00:00 - 1.1 months");
+		assertEval("1991-04-26T22:57:05.400", "1991-04-30T00:00:00 - 0.1 months");
 
 		assertEval("1993-05-17T00:00:00", "0000-00-00 + 1993 years + 5 months + 17 days");
 	}

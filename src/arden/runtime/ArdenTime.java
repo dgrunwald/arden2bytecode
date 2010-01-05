@@ -3,6 +3,7 @@ package arden.runtime;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 public final class ArdenTime extends ArdenValue {
 	/** Number of milliseconds since 1.1.1970, midnight GMT */
@@ -22,11 +23,16 @@ public final class ArdenTime extends ArdenValue {
 	}
 
 	public static final DateFormat isoDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+	public static final DateFormat isoDateTimeFormatWithMillis = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 	public static final DateFormat isoDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
 	@Override
 	public String toString() {
-		return isoDateTimeFormat.format(new Date(value)) + primaryTimeToString();
+		if (value % 1000 != 0) {
+			return isoDateTimeFormatWithMillis.format(new Date(value)) + primaryTimeToString();
+		} else {
+			return isoDateTimeFormat.format(new Date(value)) + primaryTimeToString();
+		}
 	}
 
 	@Override
@@ -53,8 +59,29 @@ public final class ArdenTime extends ArdenValue {
 		return Integer.MIN_VALUE;
 	}
 
-	long addMonths(double months) {
-		// TODO: implement this
-		throw new RuntimeException("time+month not implemented");
+	private long addMonths(double months) {
+		int wholeMonths = (int) months;
+		GregorianCalendar c = new GregorianCalendar();
+		c.setTimeInMillis(value);
+		c.add(GregorianCalendar.MONTH, wholeMonths);
+		return c.getTimeInMillis() + (long) ((months - wholeMonths) * 1000 * ArdenDuration.SECONDS_PER_MONTH);
+	}
+
+	long add(ArdenDuration dur) {
+		if (dur.isMonths) {
+			return addMonths(dur.value);
+		} else {
+			long milliseconds = (long) (1000 * dur.value);
+			return this.value + milliseconds;
+		}
+	}
+
+	long subtract(ArdenDuration dur) {
+		if (dur.isMonths) {
+			return addMonths(-dur.value);
+		} else {
+			long milliseconds = (long) (1000 * dur.value);
+			return this.value - milliseconds;
+		}
 	}
 }

@@ -785,8 +785,6 @@ expr_comparison =
     | {nin}     expr_string not in_comp_op
     | {occur}   expr_string P.occur temporal_comp_op
     | {ocrnot}  expr_string P.occur not temporal_comp_op
-    | {range}   expr_string P.occur range_comp_op
-    | {rngnot}  expr_string P.occur not range_comp_op
     | {match}   [first_string]:expr_string matches pattern [second_string]:expr_string;
 
 expr_find_string =
@@ -961,7 +959,6 @@ simple_comp_op =
 
 main_comp_op =
       {tcomp}  temporal_comp_op
-    | {rcomp}  range_comp_op
     | {ucomp}  unary_comp_op
     | {bcomp}  binary_comp_op expr_string
     | {incomp} in_comp_op;
@@ -970,13 +967,11 @@ main_comp_op =
 /*  the WITHIN TO operator will accept any ordered parameter,      */
 /*  including numbers, strings (single characters), times, Boolean */
 
-range_comp_op =
-                within [lower]:expr_string to [upper]:expr_string;
-
 temporal_comp_op =
       {prec}    within [left]:expr_string preceding [right]:expr_string
     | {fol}     within [left]:expr_string following [right]:expr_string
     | {sur}     within [left]:expr_string surrounding [right]:expr_string
+    | {within}  within [lower]:expr_string to [upper]:expr_string
     | {past}    within past expr_string
     | {same}    within same day as expr_string
     | {bef}     before expr_string
@@ -1178,8 +1173,6 @@ read_where =
       {map}     mapping_factor
     | {tmp}     mapping_factor where P.it P.occur temporal_comp_op
     | {ntmp}    mapping_factor where P.it P.occur not temporal_comp_op
-    | {rng}     mapping_factor where P.it P.occur range_comp_op
-    | {nrng}    mapping_factor where P.it P.occur not range_comp_op
     | {rdwhr}   l_par read_where r_par;
 
 mapping_factor =

@@ -128,6 +128,16 @@ public abstract class UnaryOperator {
 		};
 	};
 
+	public static final UnaryOperator TIME = new UnaryOperator("TIME") {
+		@Override
+		public ArdenValue runElement(ArdenValue val) {
+			if (val.primaryTime == ArdenValue.NOPRIMARYTIME)
+				return ArdenNull.INSTANCE;
+			else
+				return new ArdenTime(val.primaryTime, val.primaryTime);
+		};
+	};
+
 	public UnaryOperator(String name) {
 		this.name = name;
 	}

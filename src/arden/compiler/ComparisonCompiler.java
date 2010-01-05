@@ -1,22 +1,9 @@
 package arden.compiler;
 
-import arden.compiler.node.AAfterTemporalCompOp;
-import arden.compiler.node.AAtTemporalCompOp;
-import arden.compiler.node.ABcompMainCompOp;
-import arden.compiler.node.ABefTemporalCompOp;
-import arden.compiler.node.AEqualTemporalCompOp;
-import arden.compiler.node.AFolTemporalCompOp;
-import arden.compiler.node.AInCompOp;
-import arden.compiler.node.AIncompMainCompOp;
-import arden.compiler.node.APastTemporalCompOp;
-import arden.compiler.node.APrecTemporalCompOp;
-import arden.compiler.node.ARcompMainCompOp;
-import arden.compiler.node.ASameTemporalCompOp;
-import arden.compiler.node.ASurTemporalCompOp;
-import arden.compiler.node.ATcompMainCompOp;
-import arden.compiler.node.AUcompMainCompOp;
-import arden.compiler.node.Node;
+import arden.compiler.node.*;
+import arden.runtime.ArdenValue;
 import arden.runtime.BinaryOperator;
+import arden.runtime.TernaryOperator;
 
 /**
  * Compiler for 'Is' operators (main_comp_op and related productions).
@@ -30,10 +17,10 @@ import arden.runtime.BinaryOperator;
  */
 final class ComparisonCompiler extends VisitorBase {
 	private final ExpressionCompiler parent;
-	private final Node argument;
+	private final Switchable argument;
 	private final CompilerContext context;
 
-	public ComparisonCompiler(ExpressionCompiler parent, Node argument) {
+	public ComparisonCompiler(ExpressionCompiler parent, Switchable argument) {
 		this.parent = parent;
 		this.argument = argument;
 		this.context = parent.getContext();
@@ -41,19 +28,13 @@ final class ComparisonCompiler extends VisitorBase {
 
 	// main_comp_op =
 	// {tcomp} temporal_comp_op
-	// | {rcomp} range_comp_op
 	// | {ucomp} unary_comp_op
 	// | {bcomp} binary_comp_op expr_string
 	// | {incomp} in_comp_op;
 	@Override
 	public void caseATcompMainCompOp(ATcompMainCompOp node) {
+		// main_comp_op = {tcomp} temporal_comp_op
 		node.getTemporalCompOp().apply(this);
-	}
-
-	@Override
-	public void caseARcompMainCompOp(ARcompMainCompOp node) {
-		// TODO Auto-generated method stub
-		super.caseARcompMainCompOp(node);
 	}
 
 	@Override
@@ -64,12 +45,30 @@ final class ComparisonCompiler extends VisitorBase {
 
 	@Override
 	public void caseABcompMainCompOp(ABcompMainCompOp node) {
-		// TODO Auto-generated method stub
-		super.caseABcompMainCompOp(node);
+		// main_comp_op = {bcomp} binary_comp_op expr_string
+
+		// binary_comp_op =
+		// {lt} less than
+		// | {gt} greater than
+		// | {ge} greater than or equal
+		// | {le} less than or equal;
+		BinaryOperator op;
+		if (node.getBinaryCompOp() instanceof ALtBinaryCompOp)
+			op = BinaryOperator.LT;
+		else if (node.getBinaryCompOp() instanceof AGtBinaryCompOp)
+			op = BinaryOperator.GT;
+		else if (node.getBinaryCompOp() instanceof AGeBinaryCompOp)
+			op = BinaryOperator.GE;
+		else if (node.getBinaryCompOp() instanceof ALeBinaryCompOp)
+			op = BinaryOperator.LE;
+		else
+			throw new RuntimeException("Unknown binary_comp_op");
+		parent.invokeOperator(op, argument, node.getExprString());
 	}
 
 	@Override
 	public void caseAIncompMainCompOp(AIncompMainCompOp node) {
+		// main_comp_op = {incomp} in_comp_op
 		node.getInCompOp().apply(this);
 	}
 
@@ -77,6 +76,7 @@ final class ComparisonCompiler extends VisitorBase {
 	// {prec} within [left]:expr_string preceding [right]:expr_string
 	// | {fol} within [left]:expr_string following [right]:expr_string
 	// | {sur} within [left]:expr_string surrounding [right]:expr_string
+	// | {within} within [lower]:expr_string to [upper]:expr_string
 	// | {past} within past expr_string
 	// | {same} within same day as expr_string
 	// | {bef} before expr_string
@@ -85,44 +85,96 @@ final class ComparisonCompiler extends VisitorBase {
 	// | {at} at expr_string;
 	@Override
 	public void caseAPrecTemporalCompOp(APrecTemporalCompOp node) {
-		// TODO Auto-generated method stub
-		super.caseAPrecTemporalCompOp(node);
+		// temporal_comp_op =
+		// within [left]:expr_string preceding [right]:expr_string
+
+		// <n:time> IS WITHIN <n:duration> PRECEDING <n:time>
+		// => argument IS WITHIN (dur BEFORE time) TO time
+
+		parent.loadOperator(TernaryOperator.WITHINTO);
+		argument.apply(parent);
+		parent.loadOperator(BinaryOperator.BEFORE);
+		node.getLeft().apply(parent);
+		node.getRight().apply(parent);
+		// stack: WITHINTO, argument, BEFORE, dur, time
+		context.writer.dup_x2();
+		// stack: WITHINTO, argument, time, BEFORE, dur, time
+		parent.invokeLoadedBinaryOperator();
+		// stack: WITHINTO, argument, time, time2
+		context.writer.swap();
+		// stack: WITHINTO, argument, time2, time
+		parent.invokeLoadedTernaryOperator();
 	}
 
 	@Override
 	public void caseAFolTemporalCompOp(AFolTemporalCompOp node) {
-		// TODO Auto-generated method stub
-		super.caseAFolTemporalCompOp(node);
+		// temporal_comp_op =
+		// {fol} within [left]:expr_string following [right]:expr_string
+
+		// <n:time> IS WITHIN <n:duration> FOLLOWING <n:time>
+		// => argument IS WITHIN time TO (dur AFTER time)
+		parent.loadOperator(TernaryOperator.WITHINTO);
+		argument.apply(parent);
+		parent.loadOperator(BinaryOperator.AFTER);
+		node.getLeft().apply(parent);
+		node.getRight().apply(parent);
+		// stack: WITHINTO, argument, AFTER, dur, time
+		context.writer.dup_x2();
+		// stack: WITHINTO, argument, time, AFTER, dur, time
+		parent.invokeLoadedBinaryOperator();
+		// stack: WITHINTO, argument, time, time2
+		parent.invokeLoadedTernaryOperator();
 	}
 
 	@Override
 	public void caseASurTemporalCompOp(ASurTemporalCompOp node) {
-		// TODO Auto-generated method stub
-		super.caseASurTemporalCompOp(node);
+		// temporal_comp_op =
+		// {sur} within [left]:expr_string surrounding [right]:expr_string
+		parent.invokeOperator(TernaryOperator.WITHINSURROUNDING, argument, node.getLeft(), node.getRight());
+	}
+
+	@Override
+	public void caseAWithinTemporalCompOp(AWithinTemporalCompOp node) {
+		// temporal_comp_op = {within} within [lower]:expr_string to
+		// [upper]:expr_string
+		parent.invokeOperator(TernaryOperator.WITHINTO, argument, node.getLower(), node.getUpper());
 	}
 
 	@Override
 	public void caseAPastTemporalCompOp(APastTemporalCompOp node) {
-		// TODO Auto-generated method stub
-		super.caseAPastTemporalCompOp(node);
+		// temporal_comp_op = {past} within past expr_string
+		// (time IS WITHIN PAST dur)
+		// => (time IS WITHIN (dur BEFORE NOW) TO NOW)
+		parent.loadOperator(TernaryOperator.WITHINTO);
+		argument.apply(parent);
+		parent.loadOperator(BinaryOperator.BEFORE);
+		node.getExprString().apply(parent);
+		context.writer.loadInstanceField(context.codeGenerator.getNowField());
+		// Stack: WITHINTO, time, BEFORE, dur, now
+		parent.invokeLoadedBinaryOperator();
+		// Stack: WITHINTO, time, starttime
+		context.writer.loadInstanceField(context.codeGenerator.getNowField());
+		// Stack: WITHINTO, time, starttime, now
+		parent.invokeLoadedTernaryOperator();
 	}
 
 	@Override
 	public void caseASameTemporalCompOp(ASameTemporalCompOp node) {
+		// temporal_comp_op = {same} within same day as expr_string
 		// TODO Auto-generated method stub
 		super.caseASameTemporalCompOp(node);
 	}
 
 	@Override
 	public void caseABefTemporalCompOp(ABefTemporalCompOp node) {
-		// TODO Auto-generated method stub
-		super.caseABefTemporalCompOp(node);
+		// temporal_comp_op = {bef} before expr_string
+		parent.invokeOperator(BinaryOperator.ISBEFORE, argument, node.getExprString());
 	}
 
 	@Override
 	public void caseAAfterTemporalCompOp(AAfterTemporalCompOp node) {
-		// TODO Auto-generated method stub
-		super.caseAAfterTemporalCompOp(node);
+		// temporal_comp_op = {after} after expr_string
+		parent.invokeOperator(BinaryOperator.ISAFTER, argument, node.getExprString());
 	}
 
 	@Override
@@ -133,14 +185,16 @@ final class ComparisonCompiler extends VisitorBase {
 
 	@Override
 	public void caseAAtTemporalCompOp(AAtTemporalCompOp node) {
-		// TODO Auto-generated method stub
-		super.caseAAtTemporalCompOp(node);
+		// temporal_comp_op = {at} at expr_string
+		// OCCURRED AT is synonym for OCCURRED EQUAL
+		parent.invokeOperator(BinaryOperator.EQ, argument, node.getExprString());
 	}
 
 	// in_comp_op = in expr_string;
 	@Override
 	public void caseAInCompOp(AInCompOp node) {
-		// TODO Auto-generated method stub
-		super.caseAInCompOp(node);
+		argument.apply(parent);
+		node.getExprString().apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("isIn", ArdenValue.class, ArdenValue.class));
 	}
 }

@@ -529,6 +529,16 @@ public final class MethodWriter {
 	}
 
 	/**
+	 * Dupliziert die obersten beiden Wert auf dem Stack.
+	 * 
+	 * Stack: .., y, x => .., y, x, y, x
+	 */
+	public void dup2() {
+		poppush(2, 4);
+		emit(92); // dup2
+	}
+
+	/**
 	 * Dupliziert den obersten Wert auf dem Stack und fügt ihn an dritter
 	 * Position ein.
 	 * 
@@ -537,6 +547,30 @@ public final class MethodWriter {
 	public void dup_x1() {
 		poppush(2, 3);
 		emit(90); // dup_x1
+	}
+
+	/**
+	 * Duplicates the top two-word item on the stack and inserts the duplicate
+	 * before the previous (single-word) item on the stack. Alternatively, this
+	 * instruction could also be used to duplicate two single-word items and
+	 * insert them before the third single-word item on the stack.
+	 * 
+	 * Stack: .., z, y, x => .., x, y, z, y, x
+	 */
+	public void dup2_x1() {
+		poppush(3, 5);
+		emit(93); // dup2_x1
+	}
+
+	/**
+	 * Dupliziert den obersten Wert auf dem Stack und fügt ihn an vierter
+	 * Position ein.
+	 * 
+	 * Stack: .., z, y, x => .., x, z, y, x
+	 */
+	public void dup_x2() {
+		poppush(3, 4);
+		emit(91); // dup_x2
 	}
 
 	/**

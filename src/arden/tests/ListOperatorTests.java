@@ -118,4 +118,13 @@ public class ListOperatorTests extends ExpressionTestBase {
 		assertEval("null", "STDDEV 3");
 		assertEval("null", "STDDEV ()");
 	}
+
+	@Test
+	public void SeqtoOperator() throws Exception {
+		assertEval("(2.0, 3.0, 4.0)", "2 SEQTO 4");
+		assertEval("()", "4 SEQTO 2");
+		assertEval("null", "4.5 SEQTO 2");
+		assertEval("(,2.0)", "2 SEQTO 2");
+		assertEval("(-3.0, -2.0, -1.0)", "-3 SEQTO -1");
+	}
 }
