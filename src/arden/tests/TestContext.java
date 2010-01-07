@@ -14,7 +14,7 @@ public class TestContext extends ExecutionContext {
 	StringBuilder b = new StringBuilder();
 
 	@Override
-	public void write(ArdenValue message) {
+	public void write(ArdenValue message, String destination) {
 		b.append(((ArdenString)message).value);
 		b.append("\n");
 	}

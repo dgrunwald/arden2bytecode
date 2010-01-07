@@ -107,7 +107,6 @@ public final class ClassFileWriter {
 			throw new ClassFileLimitExceededException("Too many methods.");
 		MethodInfo info = new MethodInfo(name, modifiers, parameters, returnType);
 		methods.add(info);
-		info.writer.enableLineNumberTable();
 		return info.writer;
 	}
 

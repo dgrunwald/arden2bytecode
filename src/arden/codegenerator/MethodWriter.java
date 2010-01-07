@@ -269,6 +269,7 @@ public final class MethodWriter {
 		if (lineNumberTable != null)
 			throw new IllegalStateException("Line number table is already enabled.");
 		lineNumberTable = new LineNumberTable(pool);
+		localVariableTable = new LocalVariableTable(pool);
 	}
 
 	/**
@@ -277,9 +278,8 @@ public final class MethodWriter {
 	 * von Debuggern verwendet wird.
 	 */
 	public void defineLocalVariable(int vindex, String name, Class<?> type) {
-		if (localVariableTable == null)
-			localVariableTable = new LocalVariableTable(pool);
-		localVariableTable.addEntry(vindex, name, ConstantPool.createFieldDescriptor(type));
+		if (localVariableTable != null)
+			localVariableTable.addEntry(vindex, name, ConstantPool.createFieldDescriptor(type));
 	}
 
 	/**
@@ -574,7 +574,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Vertauscht die oberen beiden Elemente auf dem Stack
+	 * Swaps the top two elements on the stack
 	 * 
 	 * Stack: .., x, y => .., y, x
 	 */
@@ -596,14 +596,14 @@ public final class MethodWriter {
 		stackSize = -1;
 	}
 
-	/** Unbedingter Sprung zum angegebenen Label. */
+	/** Unconditional jump to Label. */
 	public void jump(Label label) {
 		emitJump(167, label); // goto
 		unconditionalControlTransfer();
 	}
 
 	/**
-	 * Springe zum Label, wenn Wert gleich 0 ist.
+	 * Jump to Label, if value is 0.
 	 * 
 	 * Stack: .., int => ..
 	 */
@@ -613,7 +613,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Springe zum Label, wenn Wert ungleich 0 ist.
+	 * Jump to Label, if value is not 0.
 	 * 
 	 * Stack: .., int => ..
 	 */
@@ -623,7 +623,17 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Springe zum Label, wenn Referenz gleich null ist.
+	 * Jump to Label, if lhs is less than rhs.
+	 * 
+	 * Stack: .., lhs (int), rhs (int) => ..
+	 */
+	public void jumpIfLessThan(Label label) {
+		poppush(2, 0);
+		emitJump(161, label); // if_icmplt
+	}
+
+	/**
+	 * Jump to Label, if reference is null.
 	 * 
 	 * Stack: .., objectref => ..
 	 */
@@ -633,7 +643,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Springe zum Label, wenn Referenze ungleich null ist.
+	 * Jump to Label, if reference is not null.
 	 * 
 	 * Stack: .., objectref => ..
 	 */
@@ -643,7 +653,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Springe zum Label, wenn Referenzen auf das gleiche Objekt zeigen.
+	 * Jump to Label, if references point to the same object.
 	 * 
 	 * Stack: .., obj1, obj2 => ..
 	 */
@@ -653,7 +663,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Springe zum Label, wenn Referenzen auf unterschiedliche Objekte zeigen.
+	 * Jump to Label, if references point to different objects.
 	 * 
 	 * Stack: .., obj1, obj2 => ..
 	 */
@@ -782,6 +792,17 @@ public final class MethodWriter {
 	public void returnObjectFromFunction() {
 		poppush(1, 0);
 		emit(176); // areturn
+		unconditionalControlTransfer();
+	}
+
+	/**
+	 * Emits the 'dreturn' instruction.
+	 * 
+	 * Stack: .., returnvalue
+	 */
+	public void returnDoubleFromFunction() {
+		poppush(2, 0);
+		emit(175); // dreturn
 		unconditionalControlTransfer();
 	}
 
@@ -940,6 +961,26 @@ public final class MethodWriter {
 	public void storeObjectToArray() {
 		poppush(3, 0);
 		emit(83); // aastore
+	}
+
+	/**
+	 * Loads an object from an array.
+	 * 
+	 * Stack: .., arrayref, index => .., value
+	 */
+	public void loadObjectFromArray() {
+		poppush(2, 1);
+		emit(50); // aaload
+	}
+
+	/**
+	 * Gets the length of an array.
+	 * 
+	 * Stack: .., arrayref => .., length
+	 */
+	public void arrayLength() {
+		poppush(1, 1);
+		emit(190); // arraylength
 	}
 
 	/**

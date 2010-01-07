@@ -6,10 +6,13 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
+import java.util.Locale;
 
 import arden.codegenerator.ClassFileWriter;
 import arden.codegenerator.FieldReference;
+import arden.codegenerator.Label;
 import arden.codegenerator.MethodWriter;
+import arden.compiler.node.TIdentifier;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenString;
 import arden.runtime.ArdenTime;
@@ -30,6 +33,7 @@ final class CodeGenerator {
 	private HashMap<String, FieldReference> stringLiterals = new HashMap<String, FieldReference>();
 	private HashMap<Double, FieldReference> numberLiterals = new HashMap<Double, FieldReference>();
 	private HashMap<Long, FieldReference> timeLiterals = new HashMap<Long, FieldReference>();
+	private HashMap<String, Variable> variables = new HashMap<String, Variable>();
 	private int nextFieldIndex;
 	private boolean isFinished;
 	private FieldReference nowField;
@@ -129,22 +133,24 @@ final class CodeGenerator {
 		this.classFileWriter = new ClassFileWriter(mlmName, MedicalLogicModuleImplementation.class);
 	}
 
+	MethodWriter ctor;
+	Label ctorUserCodeLabel = new Label();
+	Label ctorInitCodeLabel = new Label();
+
 	public MethodWriter createConstructor() {
-		MethodWriter w = classFileWriter.createConstructor(Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class });
-		w.loadThis();
-		w.loadVariable(1);
+		ctor = classFileWriter.createConstructor(Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class });
+		ctor.loadThis();
+		ctor.loadVariable(1);
 		try {
-			w.invokeConstructor(MedicalLogicModuleImplementation.class.getConstructor(ExecutionContext.class));
+			ctor.invokeConstructor(MedicalLogicModuleImplementation.class.getConstructor(ExecutionContext.class));
 		} catch (SecurityException e) {
 			throw new RuntimeException(e);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
-		w.loadThis();
-		w.loadVariable(1);
-		w.invokeInstance(ExecutionContextMethods.getCurrentTime);
-		w.storeInstanceField(getNowField());
-		return w;
+		ctor.jump(ctorInitCodeLabel);
+		ctor.mark(ctorUserCodeLabel);
+		return ctor;
 	}
 
 	public MethodWriter createLogic() {
@@ -157,6 +163,10 @@ final class CodeGenerator {
 				ArdenValue[].class);
 	}
 
+	public MethodWriter createUrgency() {
+		return classFileWriter.createMethod("getUrgency", Modifier.PUBLIC, new Class<?>[] {}, Double.TYPE);
+	}
+
 	public FieldReference getNowField() {
 		if (nowField == null) {
 			nowField = classFileWriter.declareField("now", ArdenTime.class, Modifier.PRIVATE | Modifier.FINAL);
@@ -164,11 +174,51 @@ final class CodeGenerator {
 		return nowField;
 	}
 
+	/** Gets the variable with the specified name, or null if it does not exist. */
+	public Variable getVariable(String name) {
+		return variables.get(name.toLowerCase(Locale.ENGLISH));
+	}
+
+	/**
+	 * Gets the variable with the specified name, or throws a
+	 * RuntimeCompilerException if it does not exist.
+	 */
+	public Variable getVariableOrShowError(TIdentifier identifier) {
+		Variable var = getVariable(identifier.getText());
+		if (var == null)
+			throw new RuntimeCompilerException(identifier, "Unknown variable: " + identifier.getText());
+		return var;
+	}
+
+	/** Creates a new variable. */
+	public void addVariable(Variable var) {
+		if (getVariable(var.name) != null)
+			throw new RuntimeCompilerException("A variable with the name '" + var.name + "' already exists.");
+		variables.put(var.name.toLowerCase(Locale.ENGLISH), var);
+	}
+
+	public void deleteVariable(Variable var) {
+		if (getVariable(var.name) != var)
+			throw new RuntimeException("Cannot delete variable that does not exist");
+		variables.remove(var.name.toLowerCase(Locale.ENGLISH));
+	}
+
 	/** Saves the class file */
 	public void save(DataOutput output) throws IOException {
 		if (!isFinished) {
 			if (staticInitializer != null)
 				staticInitializer.returnFromProcedure();
+
+			ctor.returnFromProcedure();
+			ctor.markForwardJumpsOnly(ctorInitCodeLabel);
+			if (nowField != null) {
+				ctor.loadThis();
+				ctor.loadVariable(1);
+				ctor.invokeInstance(ExecutionContextMethods.getCurrentTime);
+				ctor.storeInstanceField(nowField);
+			}
+			ctor.jump(ctorUserCodeLabel);
+
 			isFinished = true;
 		}
 		classFileWriter.save(output);

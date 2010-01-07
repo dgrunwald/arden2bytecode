@@ -28,6 +28,11 @@ public abstract class ArdenValue {
 	public boolean isFalse() {
 		return false;
 	}
+	
+	/** Gets the elements that a FOR loop will iterate through */
+	public ArdenValue[] getElements() {
+		return new ArdenValue[] { this };
+	}
 
 	protected final String primaryTimeToString() {
 		if (primaryTime == NOPRIMARYTIME)

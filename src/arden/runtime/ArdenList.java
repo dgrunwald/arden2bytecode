@@ -10,6 +10,11 @@ public final class ArdenList extends ArdenValue {
 	}
 
 	@Override
+	public ArdenValue[] getElements() {
+		return values;
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
 		b.append('(');
@@ -27,12 +32,12 @@ public final class ArdenList extends ArdenValue {
 		b.append(primaryTimeToString());
 		return b.toString();
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof ArdenList))
 			return false;
-		ArdenList list = (ArdenList)obj;
+		ArdenList list = (ArdenList) obj;
 		if (list.values.length != values.length)
 			return false;
 		for (int i = 0; i < values.length; i++) {

@@ -16,6 +16,11 @@ public final class ArdenNull extends ArdenValue {
 	}
 
 	@Override
+	public ArdenValue[] getElements() {
+		return ArdenList.EMPTY.values;
+	}
+
+	@Override
 	public String toString() {
 		return "null" + primaryTimeToString();
 	}

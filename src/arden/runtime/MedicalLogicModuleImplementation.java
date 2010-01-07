@@ -25,4 +25,9 @@ public abstract class MedicalLogicModuleImplementation {
 	 *         (Java) null if no return statement was executed.
 	 */
 	public abstract ArdenValue[] action(ExecutionContext context);
+
+	/** Gets the urgency. */
+	public double getUrgency() {
+		return 50;
+	}
 }

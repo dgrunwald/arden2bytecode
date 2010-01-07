@@ -10,10 +10,19 @@ import arden.codegenerator.MethodWriter;
 import arden.compiler.analysis.DepthFirstAdapter;
 import arden.compiler.lexer.Lexer;
 import arden.compiler.lexer.LexerException;
+import arden.compiler.node.AIdUrgencyVal;
 import arden.compiler.node.AKnowledgeBody;
 import arden.compiler.node.AKnowledgeCategory;
 import arden.compiler.node.AMlm;
+import arden.compiler.node.ANumUrgencyVal;
+import arden.compiler.node.AUrgUrgencySlot;
+import arden.compiler.node.PActionSlot;
+import arden.compiler.node.PDataSlot;
+import arden.compiler.node.PLogicSlot;
+import arden.compiler.node.PUrgencySlot;
+import arden.compiler.node.PUrgencyVal;
 import arden.compiler.node.Start;
+import arden.compiler.node.TIdentifier;
 import arden.compiler.parser.Parser;
 import arden.compiler.parser.ParserException;
 import arden.runtime.MedicalLogicModule;
@@ -24,6 +33,16 @@ import arden.runtime.MedicalLogicModule;
  * @author Daniel Grunwald
  */
 public final class Compiler {
+	private boolean enableDebugging = true;
+
+	public boolean getEnableDebugging() {
+		return enableDebugging;
+	}
+
+	public void setEnableDebugging(boolean value) {
+		enableDebugging = value;
+	}
+
 	public MedicalLogicModule compileMlm(Reader input) throws CompilerException, IOException {
 		List<MedicalLogicModule> output = compile(input);
 		if (output.size() != 1)
@@ -73,24 +92,62 @@ public final class Compiler {
 		AKnowledgeCategory knowledgeCategory = (AKnowledgeCategory) mlm.getKnowledgeCategory();
 		AKnowledgeBody knowledge = (AKnowledgeBody) knowledgeCategory.getKnowledgeBody();
 
-		System.out.println(knowledge.toString());
-		knowledge.apply(new PrintTreeVisitor(System.out));
+//		System.out.println(knowledge.toString());
+//		knowledge.apply(new PrintTreeVisitor(System.out));
 
 		CodeGenerator codeGen = new CodeGenerator("xyz");
-		codeGen.createConstructor().returnFromProcedure();
 
+		compileData(codeGen, knowledge.getDataSlot());
+		compileLogic(codeGen, knowledge.getLogicSlot());
+		compileAction(codeGen, knowledge.getActionSlot());
+		compileUrgency(codeGen, knowledge.getUrgencySlot());
+
+		return new CompiledMlm(codeGen.loadClassFromMemory());
+	}
+
+	void compileData(CodeGenerator codeGen, PDataSlot dataSlot) {
+		MethodWriter ctor = codeGen.createConstructor();
+		if (enableDebugging)
+			ctor.enableLineNumberTable();
+		ctor.returnFromProcedure();
+	}
+
+	void compileLogic(CodeGenerator codeGen, PLogicSlot logicSlot) {
 		MethodWriter logic = codeGen.createLogic();
+		if (enableDebugging)
+			logic.enableLineNumberTable();
 		logic.loadIntegerConstant(1);
 		logic.returnIntFromFunction();
+	}
 
+	void compileAction(CodeGenerator codeGen, PActionSlot actionSlot) {
 		MethodWriter action = codeGen.createAction();
-		if (knowledge.getActionSlot() != null) {
+		if (enableDebugging)
+			action.enableLineNumberTable();
+		if (actionSlot != null) {
 			CompilerContext context = new CompilerContext(codeGen, action);
-			knowledge.getActionSlot().apply(new ActionCompiler(context));
+			actionSlot.apply(new ActionCompiler(context));
 		}
 		action.loadNull();
 		action.returnObjectFromFunction();
+	}
 
-		return new CompiledMlm(codeGen.loadClassFromMemory());
+	void compileUrgency(CodeGenerator codeGen, PUrgencySlot urgencySlot) {
+		if (urgencySlot instanceof AUrgUrgencySlot) {
+			PUrgencyVal val = ((AUrgUrgencySlot) urgencySlot).getUrgencyVal();
+			MethodWriter urgency = codeGen.createUrgency();
+			if (enableDebugging)
+				urgency.enableLineNumberTable();
+			if (val instanceof ANumUrgencyVal) {
+				urgency.loadDoubleConstant(ParseHelpers.getLiteralDoubleValue(((ANumUrgencyVal) val).getNumber()));
+			} else if (val instanceof AIdUrgencyVal) {
+				TIdentifier ident = ((AIdUrgencyVal) val).getIdentifier();
+				Variable var = codeGen.getVariableOrShowError(ident);
+				throw new RuntimeCompilerException(ident, "Urgency cannot use this type of variable.");
+			} else {
+				throw new RuntimeException("Unknown urgency value");
+			}
+			urgency.returnDoubleFromFunction();
+		}
 	}
 }

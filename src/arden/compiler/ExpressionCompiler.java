@@ -2,6 +2,7 @@ package arden.compiler;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import arden.compiler.node.*;
 import arden.runtime.ArdenBoolean;
@@ -30,6 +31,18 @@ final class ExpressionCompiler extends VisitorBase {
 
 	public ExpressionCompiler(CompilerContext context) {
 		this.context = context;
+	}
+
+	public void buildArrayForCommaSeparatedExpression(PExpr expr) {
+		List<PExprSort> returnExpressions = ParseHelpers.toCommaSeparatedList(expr);
+		context.writer.loadIntegerConstant(returnExpressions.size());
+		context.writer.newArray(ArdenValue.class);
+		for (int i = 0; i < returnExpressions.size(); i++) {
+			context.writer.dup();
+			context.writer.loadIntegerConstant(i);
+			returnExpressions.get(i).apply(this);
+			context.writer.storeObjectToArray();
+		}
 	}
 
 	public static Method getMethod(String name, Class<?>... parameterTypes) {
@@ -680,8 +693,12 @@ final class ExpressionCompiler extends VisitorBase {
 	// | {exp} l_par expr r_par;
 	@Override
 	public void caseAIdExprFactorAtom(AIdExprFactorAtom node) {
-		// TODO Auto-generated method stub
-		super.caseAIdExprFactorAtom(node);
+		// expr_factor_atom = {id} identifier
+		String name = node.getIdentifier().getText();
+		Variable var = context.codeGenerator.getVariable(name);
+		if (var == null)
+			throw new RuntimeCompilerException(node.getIdentifier(), "Unknown variable: " + name);
+		var.loadValue(context, node.getIdentifier());
 	}
 
 	@Override
