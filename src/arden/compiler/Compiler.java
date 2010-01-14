@@ -3,10 +3,10 @@ package arden.compiler;
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import arden.codegenerator.MethodWriter;
 import arden.compiler.analysis.DepthFirstAdapter;
 import arden.compiler.lexer.Lexer;
 import arden.compiler.lexer.LexerException;
@@ -25,7 +25,9 @@ import arden.compiler.node.Start;
 import arden.compiler.node.TIdentifier;
 import arden.compiler.parser.Parser;
 import arden.compiler.parser.ParserException;
+import arden.runtime.ArdenValue;
 import arden.runtime.MedicalLogicModule;
+import arden.runtime.RuntimeHelpers;
 
 /**
  * The main class of the compiler.
@@ -92,8 +94,8 @@ public final class Compiler {
 		AKnowledgeCategory knowledgeCategory = (AKnowledgeCategory) mlm.getKnowledgeCategory();
 		AKnowledgeBody knowledge = (AKnowledgeBody) knowledgeCategory.getKnowledgeBody();
 
-//		System.out.println(knowledge.toString());
-//		knowledge.apply(new PrintTreeVisitor(System.out));
+		// System.out.println(knowledge.toString());
+		// knowledge.apply(new PrintTreeVisitor(System.out));
 
 		CodeGenerator codeGen = new CodeGenerator("xyz");
 
@@ -105,49 +107,65 @@ public final class Compiler {
 		return new CompiledMlm(codeGen.loadClassFromMemory());
 	}
 
-	void compileData(CodeGenerator codeGen, PDataSlot dataSlot) {
-		MethodWriter ctor = codeGen.createConstructor();
+	private void compileData(CodeGenerator codeGen, PDataSlot dataSlot) {
+		CompilerContext context = codeGen.createConstructor();
 		if (enableDebugging)
-			ctor.enableLineNumberTable();
-		ctor.returnFromProcedure();
+			context.writer.enableLineNumberTable();
+		dataSlot.apply(new DataCompiler(context));
+		context.writer.returnFromProcedure();
 	}
 
-	void compileLogic(CodeGenerator codeGen, PLogicSlot logicSlot) {
-		MethodWriter logic = codeGen.createLogic();
+	private void compileLogic(CodeGenerator codeGen, PLogicSlot logicSlot) {
+		CompilerContext context = codeGen.createLogic();
 		if (enableDebugging)
-			logic.enableLineNumberTable();
-		logic.loadIntegerConstant(1);
-		logic.returnIntFromFunction();
+			context.writer.enableLineNumberTable();
+		context.writer.loadIntegerConstant(1);
+		context.writer.returnIntFromFunction();
 	}
 
-	void compileAction(CodeGenerator codeGen, PActionSlot actionSlot) {
-		MethodWriter action = codeGen.createAction();
+	private void compileAction(CodeGenerator codeGen, PActionSlot actionSlot) {
+		CompilerContext context = codeGen.createAction();
 		if (enableDebugging)
-			action.enableLineNumberTable();
+			context.writer.enableLineNumberTable();
 		if (actionSlot != null) {
-			CompilerContext context = new CompilerContext(codeGen, action);
 			actionSlot.apply(new ActionCompiler(context));
 		}
-		action.loadNull();
-		action.returnObjectFromFunction();
+		context.writer.loadNull();
+		context.writer.returnObjectFromFunction();
 	}
 
-	void compileUrgency(CodeGenerator codeGen, PUrgencySlot urgencySlot) {
+	private void compileUrgency(CodeGenerator codeGen, PUrgencySlot urgencySlot) {
 		if (urgencySlot instanceof AUrgUrgencySlot) {
 			PUrgencyVal val = ((AUrgUrgencySlot) urgencySlot).getUrgencyVal();
-			MethodWriter urgency = codeGen.createUrgency();
+			CompilerContext context = codeGen.createUrgency();
 			if (enableDebugging)
-				urgency.enableLineNumberTable();
+				context.writer.enableLineNumberTable();
 			if (val instanceof ANumUrgencyVal) {
-				urgency.loadDoubleConstant(ParseHelpers.getLiteralDoubleValue(((ANumUrgencyVal) val).getNumber()));
+				context.writer.loadDoubleConstant(ParseHelpers
+						.getLiteralDoubleValue(((ANumUrgencyVal) val).getNumber()));
 			} else if (val instanceof AIdUrgencyVal) {
 				TIdentifier ident = ((AIdUrgencyVal) val).getIdentifier();
 				Variable var = codeGen.getVariableOrShowError(ident);
-				throw new RuntimeCompilerException(ident, "Urgency cannot use this type of variable.");
+				if (var instanceof DataVariable) {
+					var.loadValue(context, ident);
+					context.writer.invokeStatic(getRuntimeHelper("urgencyGetPrimitiveValue", ArdenValue.class));
+				} else {
+					throw new RuntimeCompilerException(ident, "Urgency cannot use this type of variable.");
+				}
 			} else {
 				throw new RuntimeException("Unknown urgency value");
 			}
-			urgency.returnDoubleFromFunction();
+			context.writer.returnDoubleFromFunction();
+		}
+	}
+
+	static Method getRuntimeHelper(String name, Class<?>... parameterTypes) {
+		try {
+			return RuntimeHelpers.class.getMethod(name, parameterTypes);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
 		}
 	}
 }

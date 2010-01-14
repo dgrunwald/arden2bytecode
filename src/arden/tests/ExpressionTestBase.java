@@ -11,7 +11,7 @@ import arden.runtime.MedicalLogicModule;
 public class ExpressionTestBase {
 	public static ArdenValue evalExpression(String expressionCode) throws CompilerException, InvocationTargetException {
 		MedicalLogicModule mlm = ActionTests.parseAction("return (" + expressionCode + ")");
-		ArdenValue[] arr = mlm.run(new TestContext());
+		ArdenValue[] arr = mlm.run(new TestContext(), null);
 		Assert.assertEquals(1, arr.length);
 		return arr[0];
 	}

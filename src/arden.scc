@@ -87,7 +87,7 @@ Helpers
   nosemicr = [nosemi + tab];
   ttext  = nosemi+ (semicol nosemi+)*;
   linktext = (nosemicr+ (semicol nosemicr+)* eol?)* nosemicr+ (semicol nosemicr+)*;
-  simplestring = allnosemi+ (semicol allnosemi+)*;
+  simplestring = [all - '"']+;
   sstring = simplestring+ ('"' '"' simplestring+)*;
   datamaptext = nosemibr+ (semicol nosemibr+)*;
 
@@ -428,7 +428,7 @@ Tokens
   /****** lexical constructs ******/
 
   /* any string of characters enclosed in double quotes (" ASCII 22) with nested "" but without semicolons */
-  {normal, link} string_literal = '"' sstring '"';
+  {normal, link} string_literal = '"' sstring? '"';
 
   digits = ddigits;
 

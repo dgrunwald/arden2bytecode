@@ -415,8 +415,10 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAOrExprString(AOrExprString node) {
-		// TODO Auto-generated method stub
-		super.caseAOrExprString(node);
+		// expr_string logor expr_plus
+		node.getExprString().apply(this);
+		node.getExprPlus().apply(this);
+		context.writer.invokeStatic(getMethod("concat", ArdenValue.class, ArdenValue.class));
 	}
 
 	@Override

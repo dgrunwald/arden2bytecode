@@ -45,21 +45,21 @@ public class ActionTests {
 	public void SimpleWrite() throws Exception {
 		TestContext context = new TestContext();
 		MedicalLogicModule mlm = parseAction("write \"Hello, World\"");
-		mlm.run(context);
+		mlm.run(context, null);
 		Assert.assertEquals("Hello, World\n", context.getOutputText());
 	}
 
 	@Test
 	public void EmptyProgram() throws Exception {
 		MedicalLogicModule mlm = parseAction("");
-		ArdenValue[] result = mlm.run(new TestContext());
+		ArdenValue[] result = mlm.run(new TestContext(), null);
 		Assert.assertNull(result);
 	}
 
 	@Test
 	public void SimpleReturn() throws Exception {
 		MedicalLogicModule mlm = parseAction("return \"A\"");
-		ArdenValue[] result = mlm.run(new TestContext());
+		ArdenValue[] result = mlm.run(new TestContext(), null);
 		Assert.assertEquals(1, result.length);
 		Assert.assertEquals("A", ((ArdenString)result[0]).value);
 	}
@@ -67,7 +67,7 @@ public class ActionTests {
 	@Test
 	public void MultipleReturn() throws Exception {
 		MedicalLogicModule mlm = parseAction("return \"A\", \"B\"");
-		ArdenValue[] result = mlm.run(new TestContext());
+		ArdenValue[] result = mlm.run(new TestContext(), null);
 		Assert.assertEquals(2, result.length);
 		Assert.assertEquals("A", ((ArdenString)result[0]).value);
 		Assert.assertEquals("B", ((ArdenString)result[1]).value);

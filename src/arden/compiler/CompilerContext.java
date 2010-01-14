@@ -12,16 +12,26 @@ import arden.codegenerator.MethodWriter;
 final class CompilerContext {
 	public final CodeGenerator codeGenerator;
 	public final MethodWriter writer;
-	public final int executionContextVariable = 1;
-	private int nextFreeVariable = 2;
+	public final int executionContextVariable;
+	public final int selfMLMVariable;
+	private int nextFreeVariable;
 	/** Stack of currently active 'it' variables */
 	private Stack<Integer> itVariables = new Stack<Integer>();
 	/** Stack of 'it' variables that are free for reuse */
 	private Stack<Integer> freeItVariables = new Stack<Integer>();
 
-	public CompilerContext(CodeGenerator codeGenerator, MethodWriter writer) {
+	public CompilerContext(CodeGenerator codeGenerator, MethodWriter writer, int parameters) {
 		this.codeGenerator = codeGenerator;
 		this.writer = writer;
+		if (parameters >= 1)
+			executionContextVariable = 1;
+		else
+			executionContextVariable = -1;
+		if (parameters >= 2)
+			selfMLMVariable = 2;
+		else
+			selfMLMVariable = -1;
+		nextFreeVariable = parameters + 1;
 	}
 
 	/** Allocates a new variable slot in the current Java method. */

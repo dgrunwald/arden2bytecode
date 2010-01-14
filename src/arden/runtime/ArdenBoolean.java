@@ -19,6 +19,11 @@ public final class ArdenBoolean extends ArdenValue {
 	}
 
 	@Override
+	public ArdenValue setTime(long newPrimaryTime) {
+		return create(value, newPrimaryTime);
+	}
+	
+	@Override
 	public boolean isTrue() {
 		return value;
 	}
@@ -30,7 +35,7 @@ public final class ArdenBoolean extends ArdenValue {
 
 	@Override
 	public String toString() {
-		return (value ? "true" : "false") + primaryTimeToString();
+		return value ? "true" : "false";
 	}
 
 	@Override

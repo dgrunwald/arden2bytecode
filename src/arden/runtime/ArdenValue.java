@@ -12,6 +12,8 @@ public abstract class ArdenValue {
 		this.primaryTime = primaryTime;
 	}
 
+	public abstract ArdenValue setTime(long newPrimaryTime);
+
 	/**
 	 * Returns whether this value is 'true' in a boolean context. Returns 'true'
 	 * for boolean true; false for everything else (even for the list ",true")
@@ -28,22 +30,16 @@ public abstract class ArdenValue {
 	public boolean isFalse() {
 		return false;
 	}
-	
+
 	/** Gets the elements that a FOR loop will iterate through */
 	public ArdenValue[] getElements() {
 		return new ArdenValue[] { this };
 	}
 
-	protected final String primaryTimeToString() {
-		if (primaryTime == NOPRIMARYTIME)
-			return "";
-		else
-			return " (time=" + new ArdenTime(primaryTime, NOPRIMARYTIME).toString() + ")";
-	}
-
 	/**
-	 * Compares this ArdenValue with another.
-	 * Does not implement Comparable interface because we have an additional return value MIN_VALUE with special meaning.
+	 * Compares this ArdenValue with another. Does not implement Comparable
+	 * interface because we have an additional return value MIN_VALUE with
+	 * special meaning.
 	 * 
 	 * @return Returns Integer.MIN_VALUE if the types don't match or the type is
 	 *         not ordered. Returns -1 if this is less than rhs. Returns 0 if

@@ -5,7 +5,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 /**
- * Static helper methods for ExpressionCompiler.
+ * Static helper methods for ExpressionCompiler (mostly operators with special
+ * list handling).
  * 
  * @author Daniel Grunwald
  */
@@ -285,5 +286,16 @@ public final class ExpressionHelpers {
 		for (int i = 0; i < result.length; i++)
 			result[i] = new ArdenNumber(lowerInt + i);
 		return new ArdenList(result);
+	}
+
+	public static ArdenString concat(ArdenValue lhs, ArdenValue rhs) {
+		return new ArdenString(toString(lhs) + toString(rhs));
+	}
+
+	private static String toString(ArdenValue val) {
+		if (val instanceof ArdenString)
+			return ((ArdenString) val).value;
+		else
+			return val.toString();
 	}
 }

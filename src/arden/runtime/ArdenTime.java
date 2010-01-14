@@ -22,6 +22,11 @@ public final class ArdenTime extends ArdenValue {
 		this.value = value;
 	}
 
+	@Override
+	public ArdenValue setTime(long newPrimaryTime) {
+		return new ArdenTime(value, newPrimaryTime);
+	}
+
 	public static final DateFormat isoDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 	public static final DateFormat isoDateTimeFormatWithMillis = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 	public static final DateFormat isoDateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -29,9 +34,9 @@ public final class ArdenTime extends ArdenValue {
 	@Override
 	public String toString() {
 		if (value % 1000 != 0) {
-			return isoDateTimeFormatWithMillis.format(new Date(value)) + primaryTimeToString();
+			return isoDateTimeFormatWithMillis.format(new Date(value));
 		} else {
-			return isoDateTimeFormat.format(new Date(value)) + primaryTimeToString();
+			return isoDateTimeFormat.format(new Date(value));
 		}
 	}
 

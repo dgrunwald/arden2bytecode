@@ -45,22 +45,22 @@ public class ListOperatorTests extends ExpressionTestBase {
 
 	@Test
 	public void WhereOperator() throws Exception {
-		assertEval("(10.0, 30.0)", "(10,20,30,40) where (true,false,true,3)");
-		assertEval("1.0", "1.0 where true");
-		assertEval("(1.0, 2.0, 3.0)", "(1,2,3) where true");
+		assertEval("(10,30)", "(10,20,30,40) where (true,false,true,3)");
+		assertEval("1", "1.0 where true");
+		assertEval("(1,2,3)", "(1,2,3) where true");
 		assertEval("()", "(1,2,3) where false");
-		assertEval("(2.0, 3.0)", "(1,2,3) where it > 1.5");
-		assertEval("(1.0, 3.0)", "(1,2,3) where they are not equal 2");
-		assertEval("(1.0, 1.0)", "1 where (true,false,true)");
+		assertEval("(2,3)", "(1,2,3) where it > 1.5");
+		assertEval("(1,3)", "(1,2,3) where they are not equal 2");
+		assertEval("(1,1)", "1 where (true,false,true)");
 		assertEval("null", "(1,2,3,4) where (true,false,true)");
 	}
 
 	@Test
 	public void CountOperator() throws Exception {
-		assertEval("4.0", "COUNT (12,13,14,null)");
-		assertEval("1.0", "COUNT \"asdf\"");
-		assertEval("0.0", "COUNT ()");
-		assertEval("1.0", "COUNT null");
+		assertEval("4", "COUNT (12,13,14,null)");
+		assertEval("1", "COUNT \"asdf\"");
+		assertEval("0", "COUNT ()");
+		assertEval("1", "COUNT null");
 	}
 
 	@Test
@@ -73,40 +73,40 @@ public class ListOperatorTests extends ExpressionTestBase {
 
 	@Test
 	public void AverageOperator() throws Exception {
-		assertEval("14.0", "AVERAGE (12,13,17)");
-		assertEval("3.0", "AVERAGE 3.0");
+		assertEval("14", "AVERAGE (12,13,17)");
+		assertEval("3", "AVERAGE 3.0");
 		assertEval("null", "AVERAGE ()");
 		assertEval("1990-03-11T03:10:00", "AVERAGE (1990-03-10T03:10:00, 1990-03-12T03:10:00)");
-		assertEval("4.0 seconds", "AVERAGE (2 seconds, 3 seconds, 7 seconds)");
+		assertEval("4 seconds", "AVERAGE (2 seconds, 3 seconds, 7 seconds)");
 		assertEval("null", "AVERAGE (2, 3 seconds)");
 		assertEval("1.57784765E7 seconds", "AVERAGE (1 second, 1 year)");
 	}
 
 	@Test
 	public void MedianOperator() throws Exception {
-		assertEval("13.0", "MEDIAN (12,17,13)");
-		assertEval("3.0", "MEDIAN 3.0");
+		assertEval("13", "MEDIAN (12,17,13)");
+		assertEval("3", "MEDIAN 3.0");
 		assertEval("null", "MEDIAN ()");
 		assertEval("1990-03-11T03:10:00", "MEDIAN (1990-03-10T03:10:00, 1990-03-11T03:10:00, 1990-03-28T03:10:00)");
 		assertEval("1990-03-11T03:10:00", "MEDIAN (1990-03-10T03:10:00, 1990-03-12T03:10:00)");
-		assertEval("3.0 seconds", "MEDIAN (2 seconds, 3 seconds, 7 years)");
-		assertEval("5.0 months", "MEDIAN (2 seconds, 3 months, 7 months, 2 years)");
-		assertEval("12.0 months", "MEDIAN (2 seconds, 1 year, 7 years)");
+		assertEval("3 seconds", "MEDIAN (2 seconds, 3 seconds, 7 years)");
+		assertEval("5 months", "MEDIAN (2 seconds, 3 months, 7 months, 2 years)");
+		assertEval("1 year", "MEDIAN (2 seconds, 1 year, 7 years)");
 	}
 
 	@Test
 	public void SumOperator() throws Exception {
-		assertEval("39.0", "SUM (12,13,14)");
-		assertEval("3.0", "SUM 3");
-		assertEval("0.0", "SUM ()");
-		assertEval("7.0 months", "SUM (1 month, 6 months)");
+		assertEval("39", "SUM (12,13,14)");
+		assertEval("3", "SUM 3");
+		assertEval("0", "SUM ()");
+		assertEval("7 months", "SUM (1 month, 6 months)");
 	}
 
 	@Test
 	public void VarianceOperator() throws Exception {
 		// assertEval("2.5", "VARIANCE (12,13,14,15,16)"); // TODO: spec bug?
 		// should be 2.0 according to manual calculation
-		assertEval("0.0", "VARIANCE (,3)");
+		assertEval("0", "VARIANCE (,3)");
 		assertEval("null", "VARIANCE 3");
 		assertEval("null", "VARIANCE ()");
 	}
@@ -121,10 +121,10 @@ public class ListOperatorTests extends ExpressionTestBase {
 
 	@Test
 	public void SeqtoOperator() throws Exception {
-		assertEval("(2.0, 3.0, 4.0)", "2 SEQTO 4");
+		assertEval("(2,3,4)", "2 SEQTO 4");
 		assertEval("()", "4 SEQTO 2");
 		assertEval("null", "4.5 SEQTO 2");
-		assertEval("(,2.0)", "2 SEQTO 2");
-		assertEval("(-3.0, -2.0, -1.0)", "-3 SEQTO -1");
+		assertEval("(,2)", "2 SEQTO 2");
+		assertEval("(-3,-2,-1)", "-3 SEQTO -1");
 	}
 }

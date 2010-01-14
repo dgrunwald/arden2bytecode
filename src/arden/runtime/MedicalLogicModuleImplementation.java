@@ -7,13 +7,10 @@ package arden.runtime;
  * @author Daniel Grunwald
  */
 public abstract class MedicalLogicModuleImplementation {
-	public MedicalLogicModuleImplementation(ExecutionContext context) {
-		// All derived classes are expected to have a constructor taking a
-		// context,
-		// which should call this constructor.
-		if (context == null)
-			throw new IllegalArgumentException();
-	}
+	// All derived classes are expected to have a constructor taking:
+	// (ExecutionContext context, MedicalLogicModule self, ArdenValue[]
+	// arguments)
+	// None of the arguments may be null.
 
 	/** Executes the logic block. */
 	public abstract boolean logic(ExecutionContext context);
@@ -28,6 +25,6 @@ public abstract class MedicalLogicModuleImplementation {
 
 	/** Gets the urgency. */
 	public double getUrgency() {
-		return 50;
+		return RuntimeHelpers.DEFAULT_URGENCY;
 	}
 }

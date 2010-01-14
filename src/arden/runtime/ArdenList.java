@@ -8,7 +8,15 @@ public final class ArdenList extends ArdenValue {
 	public ArdenList(ArdenValue[] values) {
 		this.values = values;
 	}
-
+	
+	@Override
+	public ArdenValue setTime(long newPrimaryTime) {
+		ArdenValue[] newValues = new ArdenValue[values.length];
+		for (int i = 0; i < values.length; i++)
+			newValues[i] = values[i].setTime(newPrimaryTime);
+		return new ArdenList(newValues);
+	}
+	
 	@Override
 	public ArdenValue[] getElements() {
 		return values;
@@ -24,12 +32,11 @@ public final class ArdenList extends ArdenValue {
 		} else if (values.length > 1) {
 			b.append(values[0].toString());
 			for (int i = 1; i < values.length; i++) {
-				b.append(", ");
+				b.append(',');
 				b.append(values[i].toString());
 			}
 		}
 		b.append(')');
-		b.append(primaryTimeToString());
 		return b.toString();
 	}
 

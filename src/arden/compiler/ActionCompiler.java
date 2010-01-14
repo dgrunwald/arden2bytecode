@@ -65,8 +65,13 @@ final class ActionCompiler extends VisitorBase {
 	public void caseAForActionStatement(AForActionStatement node) {
 		// action_statement =
 		// {for} for identifier in expr do action_block semicolon enddo
-		context.writer.sequencePoint(node.getFor().getLine());
-		node.getExpr().apply(new ExpressionCompiler(context));
+		compileForStatement(context, node.getFor(), node.getIdentifier(), node.getExpr(), node.getActionBlock(), this);
+	}
+
+	public static void compileForStatement(CompilerContext context, TFor tFor, TIdentifier identifier,
+			PExpr collectionExpr, Switchable block, Switch blockCompiler) {
+		context.writer.sequencePoint(tFor.getLine());
+		collectionExpr.apply(new ExpressionCompiler(context));
 		try {
 			context.writer.invokeInstance(ArdenValue.class.getMethod("getElements"));
 		} catch (SecurityException e) {
@@ -80,12 +85,12 @@ final class ActionCompiler extends VisitorBase {
 		context.writer.loadIntegerConstant(0);
 		context.writer.storeIntVariable(loopIndexVar);
 
-		String varName = node.getIdentifier().getText();
+		String varName = identifier.getText();
 		if (context.codeGenerator.getVariable(varName) != null)
-			throw new RuntimeCompilerException(node.getIdentifier(), "A variable with the name '" + varName
+			throw new RuntimeCompilerException(identifier, "A variable with the name '" + varName
 					+ "' is already defined at this location.");
 
-		ForLoopVariable newLoopVariable = new ForLoopVariable(varName, context.allocateVariable());
+		ForLoopVariable newLoopVariable = new ForLoopVariable(identifier, context.allocateVariable());
 		context.codeGenerator.addVariable(newLoopVariable);
 		context.writer.defineLocalVariable(newLoopVariable.variableIndex, varName, ArdenValue.class);
 
@@ -100,7 +105,7 @@ final class ActionCompiler extends VisitorBase {
 		context.writer.loadObjectFromArray();
 		context.writer.storeVariable(newLoopVariable.variableIndex);
 
-		node.getActionBlock().apply(this);
+		block.apply(blockCompiler);
 
 		// if (loopIndexVar < arrayVar.length) goto loopBody;
 		context.writer.markForwardJumpsOnly(loopCondition);
@@ -116,11 +121,16 @@ final class ActionCompiler extends VisitorBase {
 	@Override
 	public void caseAWhileActionStatement(AWhileActionStatement node) {
 		// action_statement = {while} while expr do action_block semicolon enddo
+		compileWhileStatement(context, node.getWhile(), node.getExpr(), node.getActionBlock(), this);
+	}
+
+	public static void compileWhileStatement(CompilerContext context, TWhile tWhile, PExpr expr, Switchable block,
+			Switch blockCompiler) {
 		Label start = new Label();
 		Label end = new Label();
 		context.writer.mark(start);
-		context.writer.sequencePoint(node.getWhile().getLine());
-		node.getExpr().apply(new ExpressionCompiler(context));
+		context.writer.sequencePoint(tWhile.getLine());
+		expr.apply(new ExpressionCompiler(context));
 		try {
 			context.writer.invokeInstance(ArdenValue.class.getMethod("isTrue"));
 		} catch (SecurityException e) {
@@ -129,7 +139,7 @@ final class ActionCompiler extends VisitorBase {
 			throw new RuntimeException(e);
 		}
 		context.writer.jumpIfZero(end);
-		node.getActionBlock().apply(this);
+		block.apply(blockCompiler);
 		context.writer.jump(start);
 		context.writer.markForwardJumpsOnly(end);
 	}
@@ -171,8 +181,8 @@ final class ActionCompiler extends VisitorBase {
 		if (!(destination instanceof DestinationVariable))
 			throw new RuntimeCompilerException(node.getIdentifier(), "'" + node.getIdentifier().getText()
 					+ "' is not a valid destination variable.");
-		String destinationMapping = ((DestinationVariable) destination).mapping;
-		context.writer.loadStringConstant(destinationMapping);
+		PMappingFactor destinationMapping = ((DestinationVariable) destination).mapping;
+		context.writer.loadStringConstant(ParseHelpers.getStringForMapping(destinationMapping));
 		context.writer.invokeInstance(ExecutionContextMethods.write);
 	}
 
@@ -193,7 +203,12 @@ final class ActionCompiler extends VisitorBase {
 	// expr then action_block semicolon action_elseif;
 	@Override
 	public void caseAActionIfThenElse2(AActionIfThenElse2 node) {
-		node.getExpr().apply(new ExpressionCompiler(context));
+		compileIfStatement(context, node.getExpr(), node.getActionBlock(), node.getActionElseif(), this);
+	}
+
+	public static void compileIfStatement(CompilerContext context, PExpr expr, Switchable trueBlock,
+			Switchable falseBlock, Switch blockCompiler) {
+		expr.apply(new ExpressionCompiler(context));
 		try {
 			context.writer.invokeInstance(ArdenValue.class.getMethod("isTrue"));
 		} catch (SecurityException e) {
@@ -204,9 +219,9 @@ final class ActionCompiler extends VisitorBase {
 		Label falseLabel = new Label();
 		Label endLabel = new Label();
 		context.writer.jumpIfZero(falseLabel);
-		node.getActionBlock().apply(this);
+		trueBlock.apply(blockCompiler);
 		context.writer.markForwardJumpsOnly(falseLabel);
-		node.getActionElseif().apply(this);
+		falseBlock.apply(blockCompiler);
 		context.writer.markForwardJumpsOnly(endLabel);
 	}
 
@@ -244,7 +259,11 @@ final class ActionCompiler extends VisitorBase {
 
 	private void performCall(TCall call, TIdentifier ident, PExpr arguments) {
 		Variable var = context.codeGenerator.getVariableOrShowError(ident);
-		var.call(context, call, arguments, currentCallDelay);
-		context.writer.pop();
+		if (currentCallDelay != null) {
+			var.callWithDelay(context, call, arguments, currentCallDelay);
+		} else {
+			var.call(context, call, arguments);
+			context.writer.pop(); // remove unused return value from stack
+		}
 	}
 }

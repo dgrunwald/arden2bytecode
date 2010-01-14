@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -13,11 +14,13 @@ import arden.codegenerator.FieldReference;
 import arden.codegenerator.Label;
 import arden.codegenerator.MethodWriter;
 import arden.compiler.node.TIdentifier;
+import arden.runtime.ArdenNull;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenString;
 import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
+import arden.runtime.MedicalLogicModule;
 import arden.runtime.MedicalLogicModuleImplementation;
 
 /**
@@ -137,12 +140,12 @@ final class CodeGenerator {
 	Label ctorUserCodeLabel = new Label();
 	Label ctorInitCodeLabel = new Label();
 
-	public MethodWriter createConstructor() {
-		ctor = classFileWriter.createConstructor(Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class });
+	public CompilerContext createConstructor() {
+		ctor = classFileWriter.createConstructor(Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class,
+				MedicalLogicModule.class, ArdenValue[].class });
 		ctor.loadThis();
-		ctor.loadVariable(1);
 		try {
-			ctor.invokeConstructor(MedicalLogicModuleImplementation.class.getConstructor(ExecutionContext.class));
+			ctor.invokeConstructor(MedicalLogicModuleImplementation.class.getConstructor());
 		} catch (SecurityException e) {
 			throw new RuntimeException(e);
 		} catch (NoSuchMethodException e) {
@@ -150,28 +153,47 @@ final class CodeGenerator {
 		}
 		ctor.jump(ctorInitCodeLabel);
 		ctor.mark(ctorUserCodeLabel);
-		return ctor;
+		return new CompilerContext(this, ctor, 3);
 	}
 
-	public MethodWriter createLogic() {
-		return classFileWriter.createMethod("logic", Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class },
-				Boolean.TYPE);
+	public CompilerContext createLogic() {
+		MethodWriter w = classFileWriter.createMethod("logic", Modifier.PUBLIC,
+				new Class<?>[] { ExecutionContext.class }, Boolean.TYPE);
+		return new CompilerContext(this, w, 1);
 	}
 
-	public MethodWriter createAction() {
-		return classFileWriter.createMethod("action", Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class },
-				ArdenValue[].class);
+	public CompilerContext createAction() {
+		MethodWriter w = classFileWriter.createMethod("action", Modifier.PUBLIC,
+				new Class<?>[] { ExecutionContext.class }, ArdenValue[].class);
+		return new CompilerContext(this, w, 1);
 	}
 
-	public MethodWriter createUrgency() {
-		return classFileWriter.createMethod("getUrgency", Modifier.PUBLIC, new Class<?>[] {}, Double.TYPE);
+	public CompilerContext createUrgency() {
+		MethodWriter w = classFileWriter.createMethod("getUrgency", Modifier.PUBLIC, new Class<?>[] {}, Double.TYPE);
+		return new CompilerContext(this, w, 0);
 	}
 
 	public FieldReference getNowField() {
 		if (nowField == null) {
-			nowField = classFileWriter.declareField("now", ArdenTime.class, Modifier.PRIVATE | Modifier.FINAL);
+			nowField = classFileWriter.declareField("now", ArdenValue.class, Modifier.PRIVATE | Modifier.FINAL);
 		}
 		return nowField;
+	}
+
+	public FieldReference createField(String name, Class<?> type, int modifiers) {
+		return classFileWriter.declareField(name, type, modifiers);
+	}
+
+	private ArrayList<FieldReference> fieldsNeedingInitialization = new ArrayList<FieldReference>();
+
+	/**
+	 * Creates a field of type ArdenValue that is initialized to
+	 * ArdenNull.INSTANCE.
+	 */
+	public FieldReference createInitializedField(String name, int modifiers) {
+		FieldReference f = classFileWriter.declareField(name, ArdenValue.class, modifiers);
+		fieldsNeedingInitialization.add(f);
+		return f;
 	}
 
 	/** Gets the variable with the specified name, or null if it does not exist. */
@@ -193,7 +215,8 @@ final class CodeGenerator {
 	/** Creates a new variable. */
 	public void addVariable(Variable var) {
 		if (getVariable(var.name) != null)
-			throw new RuntimeCompilerException("A variable with the name '" + var.name + "' already exists.");
+			throw new RuntimeCompilerException(var.definitionPosition, "A variable with the name '" + var.name
+					+ "' already exists.");
 		variables.put(var.name.toLowerCase(Locale.ENGLISH), var);
 	}
 
@@ -216,6 +239,17 @@ final class CodeGenerator {
 				ctor.loadVariable(1);
 				ctor.invokeInstance(ExecutionContextMethods.getCurrentTime);
 				ctor.storeInstanceField(nowField);
+				for (FieldReference fieldToInit : fieldsNeedingInitialization) {
+					ctor.loadThis();
+					try {
+						ctor.loadStaticField(ArdenNull.class.getField("INSTANCE"));
+					} catch (SecurityException e) {
+						throw new RuntimeException(e);
+					} catch (NoSuchFieldException e) {
+						throw new RuntimeException(e);
+					}
+					ctor.storeInstanceField(fieldToInit);
+				}
 			}
 			ctor.jump(ctorUserCodeLabel);
 

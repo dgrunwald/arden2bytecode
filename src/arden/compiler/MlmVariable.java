@@ -1,33 +1,49 @@
 package arden.compiler;
 
+import arden.codegenerator.FieldReference;
 import arden.compiler.node.PExpr;
+import arden.compiler.node.TIdentifier;
 import arden.compiler.node.Token;
+import arden.runtime.ArdenValue;
+import arden.runtime.ExecutionContext;
+import arden.runtime.MedicalLogicModule;
 
 /** MLM Variables */
 final class MlmVariable extends Variable {
-	final String institution;
+	final FieldReference mlmField;
 
-	public MlmVariable(String name, String institution) {
-		super(name);
-		this.institution = institution;
+	public MlmVariable(TIdentifier varName, FieldReference mlmField) {
+		super(varName);
+		this.mlmField = mlmField;
 	}
 
 	@Override
-	public void call(CompilerContext context, Token errorPosition, PExpr arguments, PExpr delay) {
+	public void call(CompilerContext context, Token errorPosition, PExpr arguments) {
 		context.writer.sequencePoint(errorPosition.getLine());
+		context.writer.loadThis();
+		context.writer.loadInstanceField(mlmField);
 		context.writer.loadVariable(context.executionContextVariable);
-		context.writer.loadStringConstant(name);
-		context.writer.loadStringConstant(institution);
 		if (arguments != null) {
 			new ExpressionCompiler(context).buildArrayForCommaSeparatedExpression(arguments);
 		} else {
 			context.writer.loadNull();
 		}
-		if (delay != null) {
-			delay.apply(new ExpressionCompiler(context));
+		context.writer.invokeStatic(Compiler.getRuntimeHelper("call", MedicalLogicModule.class,
+				ExecutionContext.class, ArdenValue[].class));
+	}
+
+	@Override
+	public void callWithDelay(CompilerContext context, Token errorPosition, PExpr arguments, PExpr delay) {
+		context.writer.sequencePoint(errorPosition.getLine());
+		context.writer.loadVariable(context.executionContextVariable);
+		context.writer.loadThis();
+		context.writer.loadInstanceField(mlmField);
+		if (arguments != null) {
+			new ExpressionCompiler(context).buildArrayForCommaSeparatedExpression(arguments);
 		} else {
 			context.writer.loadNull();
 		}
-		context.writer.invokeInstance(ExecutionContextMethods.call);
+		delay.apply(new ExpressionCompiler(context));
+		context.writer.invokeInstance(ExecutionContextMethods.callWithDelay);
 	}
 }

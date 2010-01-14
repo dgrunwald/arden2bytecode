@@ -13,6 +13,11 @@ public final class ArdenString extends ArdenValue {
 	}
 
 	@Override
+	public ArdenValue setTime(long newPrimaryTime) {
+		return new ArdenString(value, newPrimaryTime);
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
 		b.append('"');
@@ -23,7 +28,6 @@ public final class ArdenString extends ArdenValue {
 				b.append('"'); // double "
 		}
 		b.append('"');
-		b.append(primaryTimeToString());
 		return b.toString();
 	}
 

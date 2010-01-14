@@ -35,8 +35,39 @@ public final class ArdenDuration extends ArdenValue {
 	}
 
 	@Override
+	public ArdenValue setTime(long newPrimaryTime) {
+		return create(value, isMonths, newPrimaryTime);
+	}
+
+	@Override
 	public String toString() {
-		return value + " " + (isMonths ? "months" : "seconds") + primaryTimeToString();
+		String unit;
+		double val = value;
+		if (isMonths) {
+			unit = "months";
+			if (val % 12 == 0) {
+				val /= 12;
+				unit = "years";
+			}
+		} else {
+			unit = "seconds";
+			if (val % 60 == 0) {
+				val /= 60;
+				unit = "minutes";
+				if (val % 60 == 0) {
+					val /= 60;
+					unit = "hours";
+					if (val % 24 == 0) {
+						val /= 24;
+						unit = "days";
+					}
+				}
+			}
+		}
+		if (val == 1)
+			return "1 " + unit.substring(0, unit.length() - 1);
+		else
+			return ArdenNumber.toString(val) + " " + unit;
 	}
 
 	@Override

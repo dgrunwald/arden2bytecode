@@ -18,19 +18,31 @@ public class ExpressionTests extends ExpressionTestBase {
 
 	@Test
 	public void StringWithTwoSpaces() throws Exception {
-		ArdenString s = (ArdenString) evalExpression("\"test  string");
-		Assert.assertEquals("test string", s.value);
-	}
-
-	@Test
-	public void StringWithLineBreak() throws Exception {
-		ArdenString s = (ArdenString) evalExpression("\"test\nstring");
+		ArdenString s = (ArdenString) evalExpression("\"test  string\"");
 		Assert.assertEquals("test  string", s.value);
 	}
 
 	@Test
+	public void StringWithLineBreak() throws Exception {
+		ArdenString s = (ArdenString) evalExpression("\"test\nstring\"");
+		Assert.assertEquals("test string", s.value);
+	}
+
+	@Test
+	public void StringWithLineBreakAndWhiteSpace() throws Exception {
+		ArdenString s = (ArdenString) evalExpression("\"test \n\tstring\"");
+		Assert.assertEquals("test string", s.value);
+	}
+
+	@Test
+	public void EmptyString() throws Exception {
+		ArdenString s = (ArdenString) evalExpression("\"\"");
+		Assert.assertEquals("", s.value);
+	}
+
+	@Test
 	public void StringWithMultiLineBreak() throws Exception {
-		ArdenString s = (ArdenString) evalExpression("\"test  \n  \t \r\n  string");
+		ArdenString s = (ArdenString) evalExpression("\"test  \n  \t \r\n  string\"");
 		Assert.assertEquals("test\nstring", s.value);
 	}
 
@@ -97,19 +109,19 @@ public class ExpressionTests extends ExpressionTestBase {
 
 	@Test
 	public void AdditionOperator() throws Exception {
-		assertEval("6.0", "4 + 2");
+		assertEval("6", "4 + 2");
 		assertEval("()", "5 + ()");
 		assertEval("null", "(1,2,3) + ()");
 		assertEval("()", "null + ()");
 		assertEval("null", "5 + null");
-		assertEval("(null, null, null)", "(1,2,3) + null");
+		assertEval("(null,null,null)", "(1,2,3) + null");
 		assertEval("null", "null + null");
 	}
 
 	@Test
 	public void DurationAdditionOperator() throws Exception {
-		assertEval("3.0 seconds", "1 second + 2 seconds");
-		assertEval("13.0 months", "1 month + 1 year");
+		assertEval("3 seconds", "1 second + 2 seconds");
+		assertEval("13 months", "1 month + 1 year");
 		assertEval("2629746.5 seconds", "1 month + 0.5 seconds");
 	}
 
@@ -141,35 +153,35 @@ public class ExpressionTests extends ExpressionTestBase {
 
 	@Test
 	public void SubtractionOperator() throws Exception {
-		assertEval("4.0", "6-2");
-		assertEval("1.0 seconds", "3 seconds - 2 seconds");
+		assertEval("4", "6-2");
+		assertEval("1 second", "3 seconds - 2 seconds");
 		assertEval("1990-03-13T00:00:00", "1990-03-15T00:00:00 - 2 days");
-		assertEval("172800.0 seconds", "1990-03-15T00:00:00 - 1990-03-13T00:00:00");
+		assertEval("2 days", "1990-03-15T00:00:00 - 1990-03-13T00:00:00");
 
-		assertEval("-6.0", "3-4-5");
-		assertEval("2419200.0 seconds", "1990-03-01T00:00:00 - 1990-02-01T00:00:00");
+		assertEval("-6", "3-4-5");
+		assertEval("28 days", "1990-03-01T00:00:00 - 1990-02-01T00:00:00");
 	}
 
 	@Test
 	public void UnaryPlus() throws Exception {
-		assertEval("(3.0, 4.0, null)", "+(3, 4, \"a\")");
+		assertEval("(3,4,null)", "+(3, 4, \"a\")");
 	}
 
 	@Test
 	public void UnaryMinus() throws Exception {
-		assertEval("(-3.0, -4.0, null, -12.0 months, -1.0 seconds)", "-(3, 4, \"a\", 1 year, 1 second)");
+		assertEval("(-3,-4,null,-1 years,-1 seconds)", "-(3, 4, \"a\", 1 year, 1 second)");
 	}
 
 	@Test
 	public void MultiplicationOperator() throws Exception {
-		assertEval("(8.0, 6.0 seconds, 6.0 months)", "(4*2, 3 * 2 seconds, 3 months * 2)");
+		assertEval("(8,6 hours,6 months)", "(4*2, 3 * 2 hours, 3 months * 2)");
 	}
 
 	@Test
 	public void DivisionOperator() throws Exception {
 		assertEval("0.5", "1/2");
-		assertEval("2629746.0", "1 month / 1 second");
-		assertEval("(4.0, 2.0 seconds, 120.0, 36.0)", "(8/2, 6 seconds / 3, 2 minutes / 1 second, 3 years / 1 month)");
+		assertEval("2629746", "1 month / 1 second");
+		assertEval("(4,3 minutes,120,36)", "(8/2, 6 hours / 120, 2 minutes / 1 second, 3 years / 1 month)");
 		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("3/0"));
 		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("2 seconds / 0"));
 		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("2 seconds / 0 seconds"));
@@ -177,8 +189,8 @@ public class ExpressionTests extends ExpressionTestBase {
 
 	@Test
 	public void ExponentiationOperator() throws Exception {
-		assertEval("9.0", "3 ** 2");
-		assertEval("2.0", "4 ** 0.5");
+		assertEval("9", "3 ** 2");
+		assertEval("2", "4 ** 0.5");
 	}
 
 	@Test
@@ -189,7 +201,7 @@ public class ExpressionTests extends ExpressionTestBase {
 		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("false or null"));
 		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("false or 3.4"));
 		assertEval("()", "() or ()");
-		assertEval("(true, true)", "(true, false) or (false, true)");
+		assertEval("(true,true)", "(true,false) or (false,true)");
 	}
 
 	@Test
@@ -198,19 +210,19 @@ public class ExpressionTests extends ExpressionTestBase {
 		Assert.assertSame(ArdenBoolean.FALSE, evalExpression("true and false"));
 		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("true and null"));
 		Assert.assertSame(ArdenBoolean.FALSE, evalExpression("false and null"));
-		assertEval("(false, null, true, null)", "true and (false, null, true, 3)");
+		assertEval("(false,null,true,null)", "true and (false, null, true, 3)");
 	}
 
 	@Test
 	public void NotOperator() throws Exception {
-		assertEval("(false, true, null, null)", "not (true, false, null, 3)");
+		assertEval("(false,true,null,null)", "not (true, false, null, 3)");
 	}
 
 	@Test
 	public void EqualsOperator() throws Exception {
 		assertEval("false", "1 = 2");
 		assertEval("false", "1 eq 2");
-		assertEval("(null, true, false)", "(1,2,\"a\") = (null,2,3)");
+		assertEval("(null,true,false)", "(1,2,\"a\") = (null,2,3)");
 		assertEval("null", "(3/0) = (3/0)");
 		// TODO: check what should happen for "5 = ()"
 		// assertEval("null", "5 = ()"); maybe a bug in the specification?
@@ -219,16 +231,16 @@ public class ExpressionTests extends ExpressionTestBase {
 		assertEval("()", "null = ()");
 		assertEval("()", "() = ()");
 		assertEval("null", "5 = null");
-		assertEval("(null, null, null)", "(1,2,3) = null");
+		assertEval("(null,null,null)", "(1,2,3) = null");
 		assertEval("null", "null = null");
-		assertEval("(true, true, false)", "(1,2,3) = (1,2,4)");
+		assertEval("(true,true,false)", "(1,2,3) = (1,2,4)");
 	}
 
 	@Test
 	public void InEqualsOperator() throws Exception {
 		assertEval("true", "1 <> 2");
 		assertEval("true", "1 ne 2");
-		assertEval("(null, false, true)", "(1,2,\"a\") <> (null,2,3)");
+		assertEval("(null,false,true)", "(1,2,\"a\") <> (null,2,3)");
 		assertEval("null", "(3/0) <> (3/0)");
 	}
 
@@ -254,5 +266,17 @@ public class ExpressionTests extends ExpressionTestBase {
 	public void BeforeOperator() throws Exception {
 		assertEval("1990-03-11T00:00:00", "2 days BEFORE 1990-03-13T00:00:00");
 		assertEval("null", "2 days BEFORE 1 day");
+	}
+
+	@Test
+	public void StringConcat() throws Exception {
+		assertEval("\"ab\"", "\"a\" || \"b\"");
+		assertEval("\"null3\"", "null || 3");
+		assertEval("\"45\"", "4 || 5");
+		assertEval("\"4.7four\"", "4.7 || \"four\"");
+		assertEval("\"true\"", "true || \"\"");
+		assertEval("\"3 days left\"", "3 days || \" left\"");
+		assertEval("\"on 1990-03-15T13:45:01\"", "\"on \" || 1990-03-15T13:45:01");
+		assertEval("\"list=(1,2,3)\"", "\"list=\" || (1,2,3)");
 	}
 }

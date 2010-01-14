@@ -22,8 +22,21 @@ public final class ArdenNumber extends ArdenValue {
 	}
 
 	@Override
+	public ArdenValue setTime(long newPrimaryTime) {
+		return create(value, newPrimaryTime);
+	}
+
+	@Override
 	public String toString() {
-		return Double.toString(value) + primaryTimeToString();
+		return toString(value);
+	}
+
+	public static String toString(double num) {
+		int i = (int) num;
+		if (i == num)
+			return Integer.toString(i);
+		else
+			return Double.toString(num);
 	}
 
 	@Override

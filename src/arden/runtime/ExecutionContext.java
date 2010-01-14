@@ -26,26 +26,31 @@ public class ExecutionContext {
 	}
 
 	/**
-	 * Calls another MLM.
+	 * Retrieves another MLM.
 	 * 
 	 * @param name
-	 *            The mlmname of the called MLM.
+	 *            The name of the requested MLM.
 	 * @param institution
-	 *            The institution of the called MLM. null if no institution was
-	 *            specified.
+	 *            The institution of the requested MLM.
+	 * @return The requested MLM.
+	 */
+	public MedicalLogicModule findModule(String name, String institution) {
+		return null;
+	}
+
+	/**
+	 * Calls another MLM using a delay.
+	 * 
+	 * @param mlm
+	 *            The MLM that should be called.
 	 * @param arguments
 	 *            The arguments being passed. Can be null if no arguments were
 	 *            specified.
 	 * @param delay
-	 *            The delay for calling the MLM (as ArdenDuration). When null is
-	 *            passed, callMLM should wait until the executed MLM returns.
-	 *            When a non-null duration is passed, callMLM should return null
-	 *            immediately before starting execution of the called MLM.
-	 * @return Returns the return value(s) of the called MLM. These are returned
-	 *         only when calling without delay.
+	 *            The delay for calling the MLM (as ArdenDuration).
 	 */
-	public ArdenValue[] call(String name, String institution, ArdenValue[] arguments, ArdenValue delay) {
-		throw new RuntimeException("CALL not implemented");
+	public void callWithDelay(MedicalLogicModule mlm, ArdenValue[] arguments, ArdenValue delay) {
+		throw new RuntimeException("callWithDelay not implemented");
 	}
 
 	private ArdenTime eventtime = new ArdenTime(new Date());

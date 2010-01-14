@@ -161,8 +161,7 @@ final class ComparisonCompiler extends VisitorBase {
 	@Override
 	public void caseASameTemporalCompOp(ASameTemporalCompOp node) {
 		// temporal_comp_op = {same} within same day as expr_string
-		// TODO Auto-generated method stub
-		super.caseASameTemporalCompOp(node);
+		parent.invokeOperator(BinaryOperator.WITHINSAMEDAY, argument, node.getExprString());
 	}
 
 	@Override

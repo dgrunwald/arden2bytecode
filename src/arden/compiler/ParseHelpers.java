@@ -22,9 +22,19 @@ final class ParseHelpers {
 		for (int i = 1; i < input.length() - 1; i++) {
 			char c = input.charAt(i);
 			if (c == '\r' || c == '\n') {
-				// TODO: implement this feature
 				// (see spec for special rules in this case)
-				throw new RuntimeCompilerException(literal, "Linebreak in strings not yet supported");
+				while (output.length() > 0 && isWhitespace(output.charAt(output.length() - 1)))
+					output.deleteCharAt(output.length() - 1);
+				int numLineFeed = 0;
+				while (isWhitespace(c)) {
+					if (c == '\n')
+						numLineFeed++;
+					c = input.charAt(++i);
+				}
+				if (numLineFeed > 1)
+					output.append('\n');
+				else
+					output.append(' ');
 			}
 			if (c == '"') {
 				i += 1;
@@ -34,6 +44,14 @@ final class ParseHelpers {
 			output.append(c);
 		}
 		return output.toString();
+	}
+
+	private static boolean isWhitespace(char c) {
+		return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+	}
+
+	public static String getStringForMapping(PMappingFactor mapping) {
+		return ((AMappingFactor) mapping).getDataMapping().getText();
 	}
 
 	public static double getLiteralDoubleValue(PNumber number) {
@@ -56,7 +74,7 @@ final class ParseHelpers {
 			throw new RuntimeCompilerException(e.getMessage());
 		}
 	}
-	
+
 	public static long parseIsoDate(TIsoDate date) {
 		try {
 			return ArdenTime.isoDateFormat.parse(date.getText()).getTime();

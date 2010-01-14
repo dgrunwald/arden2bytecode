@@ -1,5 +1,6 @@
 package arden.compiler;
 
+import arden.compiler.node.TIdentifier;
 import arden.compiler.node.Token;
 
 /**
@@ -10,7 +11,7 @@ import arden.compiler.node.Token;
 final class ForLoopVariable extends Variable {
 	final int variableIndex;
 
-	public ForLoopVariable(String name, int variableIndex) {
+	public ForLoopVariable(TIdentifier name, int variableIndex) {
 		super(name);
 		this.variableIndex = variableIndex;
 	}
