@@ -4,9 +4,16 @@ import java.lang.reflect.Modifier;
 
 import arden.codegenerator.FieldReference;
 import arden.compiler.node.*;
-import arden.runtime.ArdenValue;
 import arden.runtime.MedicalLogicModule;
 
+/**
+ * Compiler for data block.
+ * 
+ * Every dataBlock.apply(this) call will generate code that executes the
+ * statements. The evaluation stack is empty between all apply calls.
+ * 
+ * @author Daniel Grunwald
+ */
 final class DataCompiler extends VisitorBase {
 	private final CompilerContext context;
 
@@ -266,43 +273,23 @@ final class DataCompiler extends VisitorBase {
 
 	/** Assigns the argument to the variable. */
 	private void assignArgument(LeftHandSideResult lhs) {
+		// TODO: implement
 		throw new RuntimeCompilerException(lhs.getPosition(), "ARGUMENT is not yet implemented");
 	}
 
 	/** Assigns a read phrase to the variable. */
 	private void assign(LeftHandSideResult lhs, PReadPhrase readPhrase) {
+		// TODO: implement
 		throw new RuntimeCompilerException(lhs.getPosition(), "READ is not yet implemented");
 	}
 
 	/** Assigns a call phrase to the variable. */
 	private void assign(LeftHandSideResult lhs, PCallPhrase readPhrase) {
+		// TODO: implement
 		throw new RuntimeCompilerException(lhs.getPosition(), "CALL is not yet implemented");
 	}
 
 	private void assign(LeftHandSideResult lhs, PExpr expr) {
-		if (lhs instanceof LeftHandSideIdentifier) {
-			TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
-			Variable v = context.codeGenerator.getVariable(ident.getText());
-			if (v == null) {
-				FieldReference f = context.codeGenerator.createInitializedField(ident.getText(), Modifier.PRIVATE);
-				v = new DataVariable(ident, f);
-				context.codeGenerator.addVariable(v);
-			}
-			expr.apply(new ExpressionCompiler(context));
-			v.saveValue(context, ident);
-		} else if (lhs instanceof LeftHandSideTimeOfIdentifier) {
-			TIdentifier ident = ((LeftHandSideTimeOfIdentifier) lhs).identifier;
-			Variable v = context.codeGenerator.getVariableOrShowError(ident);
-			v.loadValue(context, ident);
-			expr.apply(new ExpressionCompiler(context));
-			context.writer.invokeStatic(Compiler.getRuntimeHelper("changeTime", ArdenValue.class, ArdenValue.class));
-			v.saveValue(context, ident);
-		} else if (lhs instanceof LeftHandSideNow) {
-			context.writer.loadThis();
-			expr.apply(new ExpressionCompiler(context));
-			context.writer.storeInstanceField(context.codeGenerator.getNowField());
-		} else {
-			throw new RuntimeException("Unknown LHS result");
-		}
+		lhs.assign(context, expr);
 	}
 }

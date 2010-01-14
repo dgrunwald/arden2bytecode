@@ -119,7 +119,9 @@ public final class Compiler {
 		CompilerContext context = codeGen.createLogic();
 		if (enableDebugging)
 			context.writer.enableLineNumberTable();
-		context.writer.loadIntegerConstant(1);
+		logicSlot.apply(new LogicCompiler(context));
+		// CONCLUDE FALSE; is default
+		context.writer.loadIntegerConstant(0);
 		context.writer.returnIntFromFunction();
 	}
 
