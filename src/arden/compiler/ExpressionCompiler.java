@@ -312,8 +312,8 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAFindExprComparison(AFindExprComparison node) {
-		// TODO Auto-generated method stub
-		super.caseAFindExprComparison(node);
+		// expr_comparison = {find} expr_find_string
+		node.getExprFindString().apply(this);
 	}
 
 	@Override
@@ -425,6 +425,33 @@ final class ExpressionCompiler extends VisitorBase {
 	public void caseAFormExprString(AFormExprString node) {
 		// TODO Auto-generated method stub
 		super.caseAFormExprString(node);
+	}
+
+	// expr_find_string =
+	// {istr} find [substring]:expr_string T.in T.string
+	// [fullstring]:expr_string string_search_start
+	// | {str} find [substring]:expr_string T.string [fullstring]:expr_string
+	// string_search_start;
+	@Override
+	public void caseAIstrExprFindString(AIstrExprFindString node) {
+		findString(node.getSubstring(), node.getFullstring(), node.getStringSearchStart());
+	}
+
+	@Override
+	public void caseAStrExprFindString(AStrExprFindString node) {
+		findString(node.getSubstring(), node.getFullstring(), node.getStringSearchStart());
+	}
+
+	private void findString(PExprString substring, PExprString fullstring, PStringSearchStart stringSearchStart) {
+		loadOperator(TernaryOperator.FINDSTRING);
+		substring.apply(this);
+		fullstring.apply(this);
+		if (stringSearchStart instanceof AAtStringSearchStart) {
+			((AAtStringSearchStart) stringSearchStart).getExprPlus().apply(this);
+		} else {
+			context.writer.loadStaticField(context.codeGenerator.getNumberLiteral(1));
+		}
+		invokeLoadedTernaryOperator();
 	}
 
 	// expr_plus =

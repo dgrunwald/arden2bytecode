@@ -37,14 +37,17 @@ import arden.runtime.RuntimeHelpers;
 public final class Compiler {
 	private boolean enableDebugging = true;
 
+	/** Gets whether the compiler will output debug information (line numbers) */
 	public boolean getEnableDebugging() {
 		return enableDebugging;
 	}
 
+	/** Sets whether the compiler will output debug information (line numbers) */
 	public void setEnableDebugging(boolean value) {
 		enableDebugging = value;
 	}
 
+	/** Compiles a single MLM given in the input stream. */
 	public MedicalLogicModule compileMlm(Reader input) throws CompilerException, IOException {
 		List<MedicalLogicModule> output = compile(input);
 		if (output.size() != 1)
@@ -52,6 +55,7 @@ public final class Compiler {
 		return output.get(0);
 	}
 
+	/** Compiles a list of MLMs given in the input stream. */
 	public List<MedicalLogicModule> compile(Reader input) throws CompilerException, IOException {
 		Lexer lexer = new Lexer(new PushbackReader(input, 1024));
 		Parser parser = new Parser(lexer);
@@ -66,6 +70,7 @@ public final class Compiler {
 		return compile(syntaxTree);
 	}
 
+	/** Compiles a list of MLMs given in the syntax tree. */
 	public List<MedicalLogicModule> compile(Start syntaxTree) throws CompilerException {
 		try {
 			final ArrayList<MedicalLogicModule> output = new ArrayList<MedicalLogicModule>();
@@ -82,6 +87,7 @@ public final class Compiler {
 		}
 	}
 
+	/** Compiles a single MLMs given in the syntax tree. */
 	public MedicalLogicModule compileMlm(AMlm mlm) throws CompilerException {
 		try {
 			return doCompileMlm(mlm);
@@ -90,7 +96,7 @@ public final class Compiler {
 		}
 	}
 
-	private MedicalLogicModule doCompileMlm(AMlm mlm) {
+	private CompiledMlm doCompileMlm(AMlm mlm) {
 		AKnowledgeCategory knowledgeCategory = (AKnowledgeCategory) mlm.getKnowledgeCategory();
 		AKnowledgeBody knowledge = (AKnowledgeBody) knowledgeCategory.getKnowledgeBody();
 

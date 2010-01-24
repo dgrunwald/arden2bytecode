@@ -27,9 +27,32 @@ public abstract class TernaryOperator {
 		// => argument IS WITHIN (dur BEFORE time) TO (dur AFTER time)
 		@Override
 		public ArdenValue runElement(ArdenValue arg1, ArdenValue arg2, ArdenValue arg3) {
-			return WITHINTO.runElement(arg1, 
-					BinaryOperator.BEFORE.runElement(arg2, arg3),
-					BinaryOperator.AFTER.runElement(arg2, arg3));
+			return WITHINTO.runElement(arg1, BinaryOperator.BEFORE.runElement(arg2, arg3), BinaryOperator.AFTER
+					.runElement(arg2, arg3));
+		};
+	};
+
+	public static final TernaryOperator FINDSTRING = new TernaryOperator("FINDSTRING") {
+		// FIND <n:string> IN STRING <n:string> STARTING AT <n:number>
+		@Override
+		public ArdenValue runElement(ArdenValue arg1, ArdenValue arg2, ArdenValue arg3) {
+			if (arg1 instanceof ArdenString && arg2 instanceof ArdenString && arg3 instanceof ArdenNumber) {
+				String needle = ((ArdenString) arg1).value;
+				String haystack = ((ArdenString) arg2).value;
+				double start = ((ArdenNumber) arg3).value;
+				int startInt = (int) start;
+				if (start != startInt)
+					return ArdenNull.INSTANCE;
+				int result;
+				if (startInt >= 1 && startInt <= haystack.length()) {
+					result = haystack.indexOf(needle, startInt - 1) + 1;
+				} else {
+					result = 0;
+				}
+				return ArdenNumber.create(result, ArdenValue.NOPRIMARYTIME);
+			} else {
+				return ArdenNull.INSTANCE;
+			}
 		};
 	};
 

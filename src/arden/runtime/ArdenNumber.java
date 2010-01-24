@@ -17,6 +17,8 @@ public final class ArdenNumber extends ArdenValue {
 	public static ArdenValue create(double value, long primaryTime) {
 		if (Double.isNaN(value) || Double.isInfinite(value))
 			return ArdenNull.create(primaryTime);
+		else if (value == 0 && primaryTime == NOPRIMARYTIME)
+			return ZERO;
 		else
 			return new ArdenNumber(value, primaryTime);
 	}

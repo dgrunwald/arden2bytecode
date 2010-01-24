@@ -138,6 +138,48 @@ public abstract class UnaryOperator {
 		};
 	};
 
+	public static final UnaryOperator ISNULL = new UnaryOperator("ISNULL") {
+		@Override
+		public ArdenValue runElement(ArdenValue val) {
+			return ArdenBoolean.create(val instanceof ArdenNull, val.primaryTime);
+		};
+	};
+
+	public static final UnaryOperator ISBOOLEAN = new UnaryOperator("ISBOOLEAN") {
+		@Override
+		public ArdenValue runElement(ArdenValue val) {
+			return ArdenBoolean.create(val instanceof ArdenBoolean, val.primaryTime);
+		};
+	};
+
+	public static final UnaryOperator ISNUMBER = new UnaryOperator("ISNUMBER") {
+		@Override
+		public ArdenValue runElement(ArdenValue val) {
+			return ArdenBoolean.create(val instanceof ArdenNumber, val.primaryTime);
+		};
+	};
+
+	public static final UnaryOperator ISTIME = new UnaryOperator("ISTIME") {
+		@Override
+		public ArdenValue runElement(ArdenValue val) {
+			return ArdenBoolean.create(val instanceof ArdenTime, val.primaryTime);
+		};
+	};
+
+	public static final UnaryOperator ISDURATION = new UnaryOperator("ISDURATION") {
+		@Override
+		public ArdenValue runElement(ArdenValue val) {
+			return ArdenBoolean.create(val instanceof ArdenDuration, val.primaryTime);
+		};
+	};
+
+	public static final UnaryOperator ISSTRING = new UnaryOperator("ISSTRING") {
+		@Override
+		public ArdenValue runElement(ArdenValue val) {
+			return ArdenBoolean.create(val instanceof ArdenString, val.primaryTime);
+		};
+	};
+
 	public UnaryOperator(String name) {
 		this.name = name;
 	}

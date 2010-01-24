@@ -288,6 +288,7 @@ public final class ExpressionHelpers {
 		return new ArdenList(result);
 	}
 
+	/** Implements the string concatenation operator || */
 	public static ArdenString concat(ArdenValue lhs, ArdenValue rhs) {
 		return new ArdenString(toString(lhs) + toString(rhs));
 	}
@@ -297,5 +298,14 @@ public final class ExpressionHelpers {
 			return ((ArdenString) val).value;
 		else
 			return val.toString();
+	}
+
+	/** Implements the IS LIST operator. */
+	public static ArdenBoolean isList(ArdenValue input) {
+		if (input instanceof ArdenList) {
+			return ArdenBoolean.create(true, getCommonTime(((ArdenList) input).values));
+		} else {
+			return ArdenBoolean.create(false, input.primaryTime);
+		}
 	}
 }

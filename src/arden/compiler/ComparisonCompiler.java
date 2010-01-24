@@ -4,6 +4,7 @@ import arden.compiler.node.*;
 import arden.runtime.ArdenValue;
 import arden.runtime.BinaryOperator;
 import arden.runtime.TernaryOperator;
+import arden.runtime.UnaryOperator;
 
 /**
  * Compiler for 'Is' operators (main_comp_op and related productions).
@@ -39,8 +40,8 @@ final class ComparisonCompiler extends VisitorBase {
 
 	@Override
 	public void caseAUcompMainCompOp(AUcompMainCompOp node) {
-		// TODO Auto-generated method stub
-		super.caseAUcompMainCompOp(node);
+		// main_comp_op = {ucomp} unary_comp_op
+		node.getUnaryCompOp().apply(this);
 	}
 
 	@Override
@@ -195,5 +196,65 @@ final class ComparisonCompiler extends VisitorBase {
 		argument.apply(parent);
 		node.getExprString().apply(parent);
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("isIn", ArdenValue.class, ArdenValue.class));
+	}
+
+	// unary_comp_op =
+	// {pres} present
+	// | {null} null
+	// | {bool} boolean
+	// | {num} T.number
+	// | {time} time
+	// | {dur} duration
+	// | {str} T.string
+	// | {list} list
+	@Override
+	public void caseAPresUnaryCompOp(APresUnaryCompOp node) {
+		// is present
+		parent.loadOperator(UnaryOperator.NOT);
+		parent.invokeOperator(UnaryOperator.ISNULL, argument);
+		parent.invokeLoadedUnaryOperator();
+	}
+
+	@Override
+	public void caseANullUnaryCompOp(ANullUnaryCompOp node) {
+		// is null
+		parent.invokeOperator(UnaryOperator.ISNULL, argument);
+	}
+
+	@Override
+	public void caseABoolUnaryCompOp(ABoolUnaryCompOp node) {
+		// is boolean
+		parent.invokeOperator(UnaryOperator.ISBOOLEAN, argument);
+	}
+
+	@Override
+	public void caseANumUnaryCompOp(ANumUnaryCompOp node) {
+		// is number
+		parent.invokeOperator(UnaryOperator.ISNUMBER, argument);
+	}
+
+	@Override
+	public void caseATimeUnaryCompOp(ATimeUnaryCompOp node) {
+		// is number
+		parent.invokeOperator(UnaryOperator.ISTIME, argument);
+	}
+
+	@Override
+	public void caseADurUnaryCompOp(ADurUnaryCompOp node) {
+		// is duration
+		parent.invokeOperator(UnaryOperator.ISDURATION, argument);
+	}
+
+	@Override
+	public void caseAStrUnaryCompOp(AStrUnaryCompOp node) {
+		// is string
+		parent.invokeOperator(UnaryOperator.ISSTRING, argument);
+	}
+	
+	@Override
+	public void caseAListUnaryCompOp(AListUnaryCompOp node) {
+		// is list
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("isList", ArdenValue.class));
 	}
 }

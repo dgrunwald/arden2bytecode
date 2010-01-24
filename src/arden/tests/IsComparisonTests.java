@@ -25,7 +25,7 @@ public class IsComparisonTests extends ExpressionTestBase {
 	public void IsLessThanOrEqual() throws Exception {
 		assertEval("false", "3 is less than or equal 2");
 		assertEval("true", "2 is less than or equal 2");
-		assertEval("true", "1 is less than 2");
+		assertEval("true", "1 is less than or equal 2");
 	}
 
 	@Test
@@ -75,6 +75,11 @@ public class IsComparisonTests extends ExpressionTestBase {
 		assertEval("true", "2 IS NOT IN (4,5,6)");
 		assertEval("(true,false)", "(3,4) IS NOT IN (4,5,6)");
 		assertEval("false", "null IS NOT IN (1/0, 2)");
+	}
+
+	@Test
+	public void WhereNotInTest() throws Exception {
+		assertEval("(1,3,5)", "(1 seqto 5) WHERE it IS NOT IN (2, 4)");
 	}
 
 	@Test
