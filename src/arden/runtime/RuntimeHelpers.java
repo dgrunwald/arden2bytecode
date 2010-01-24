@@ -48,4 +48,32 @@ public final class RuntimeHelpers {
 		else
 			return DatabaseQuery.NULL;
 	}
+
+	public static DatabaseQuery constrainQueryBefore(DatabaseQuery q, ArdenValue time) {
+		if (time instanceof ArdenTime)
+			return q.occursBefore((ArdenTime) time);
+		else
+			return DatabaseQuery.NULL;
+	}
+
+	public static DatabaseQuery constrainQueryNotBefore(DatabaseQuery q, ArdenValue time) {
+		if (time instanceof ArdenTime)
+			return q.occursNotBefore((ArdenTime) time);
+		else
+			return DatabaseQuery.NULL;
+	}
+
+	public static DatabaseQuery constrainQueryAfter(DatabaseQuery q, ArdenValue time) {
+		if (time instanceof ArdenTime)
+			return q.occursAfter((ArdenTime) time);
+		else
+			return DatabaseQuery.NULL;
+	}
+
+	public static DatabaseQuery constrainQueryNotAfter(DatabaseQuery q, ArdenValue time) {
+		if (time instanceof ArdenTime)
+			return q.occursNotAfter((ArdenTime) time);
+		else
+			return DatabaseQuery.NULL;
+	}
 }

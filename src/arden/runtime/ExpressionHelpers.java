@@ -288,8 +288,35 @@ public final class ExpressionHelpers {
 		return new ArdenList(result);
 	}
 
+	/** implements the INCREASE operator */
+	public static ArdenValue increase(ArdenValue input) {
+		ArdenValue[] inputs = unaryComma(input).values;
+		if (inputs.length == 0)
+			return ArdenNull.INSTANCE;
+		ArdenValue[] outputs = new ArdenValue[inputs.length - 1];
+		for (int i = 0; i < outputs.length; i++) {
+			outputs[i] = BinaryOperator.SUB.runElement(inputs[i + 1], inputs[i]).setTime(inputs[i + 1].primaryTime);
+		}
+		return new ArdenList(outputs);
+	}
+
+	/** implements the PERCENT INCREASE operator */
+	public static ArdenValue percentIncrease(ArdenValue input) {
+		ArdenValue[] inputs = unaryComma(input).values;
+		if (inputs.length == 0)
+			return ArdenNull.INSTANCE;
+		ArdenValue[] outputs = new ArdenValue[inputs.length - 1];
+		for (int i = 0; i < outputs.length; i++) {
+			outputs[i] = BinaryOperator.MUL.runElement(
+					BinaryOperator.DIV.runElement(BinaryOperator.SUB.runElement(inputs[i + 1], inputs[i]), inputs[i]),
+					ArdenNumber.ONE_HUNDRED).setTime(inputs[i + 1].primaryTime);
+		}
+		return new ArdenList(outputs);
+	}
+
 	/** Implements the string concatenation operator || */
 	public static ArdenString concat(ArdenValue lhs, ArdenValue rhs) {
+		// TODO: I think this impl is incorrect for lists of strings
 		return new ArdenString(toString(lhs) + toString(rhs));
 	}
 
@@ -307,5 +334,21 @@ public final class ExpressionHelpers {
 		} else {
 			return ArdenBoolean.create(false, input.primaryTime);
 		}
+	}
+
+	public static ArdenValue first(ArdenValue input) {
+		ArdenValue[] arr = unaryComma(input).values;
+		if (arr.length == 0)
+			return ArdenNull.INSTANCE;
+		else
+			return arr[0];
+	}
+
+	public static ArdenValue last(ArdenValue input) {
+		ArdenValue[] arr = unaryComma(input).values;
+		if (arr.length == 0)
+			return ArdenNull.INSTANCE;
+		else
+			return arr[arr.length - 1];
 	}
 }

@@ -32,5 +32,5 @@ knowledge:
         ;;
     action:
         write "Caution, the patient has the following allergy to penicillin documented: " || penicillin_allergy;;
-    urgency: 50;;
+    urgency: 51;;
 end:

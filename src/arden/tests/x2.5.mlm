@@ -40,7 +40,7 @@ knowledge:
             conclude true;
         else
             no_recent_creatinine := false;
-            if % increase of (serum_creatinine,
+            if % increase of (baseline_creatinine,
                 recent_creatinine) > 20 /* % */
                 and recent_creatinine > 2.0 then
                 conclude true;

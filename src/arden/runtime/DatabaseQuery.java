@@ -89,6 +89,41 @@ public abstract class DatabaseQuery {
 	}
 
 	/**
+	 * 'average' aggregation operator.
+	 */
+	public DatabaseQuery average() {
+		return new MemoryQuery(execute()).average();
+	}
+
+	/**
+	 * 'count' aggregation operator.
+	 */
+	public DatabaseQuery count() {
+		return new MemoryQuery(execute()).count();
+	}
+
+	/**
+	 * 'exists' aggregation operator.
+	 */
+	public DatabaseQuery exist() {
+		return new MemoryQuery(execute()).exist();
+	}
+
+	/**
+	 * 'sum' aggregation operator.
+	 */
+	public DatabaseQuery sum() {
+		return new MemoryQuery(execute()).sum();
+	}
+
+	/**
+	 * 'median' aggregation operator.
+	 */
+	public DatabaseQuery median() {
+		return new MemoryQuery(execute()).median();
+	}
+
+	/**
 	 * 'minimum' aggregation operator.
 	 */
 	public DatabaseQuery minimum() {

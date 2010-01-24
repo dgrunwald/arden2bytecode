@@ -2,6 +2,7 @@ package arden.runtime;
 
 public final class ArdenNumber extends ArdenValue {
 	public static final ArdenNumber ZERO = new ArdenNumber(0);
+	public static final ArdenNumber ONE_HUNDRED = new ArdenNumber(100);
 
 	public final double value;
 

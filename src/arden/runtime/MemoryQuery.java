@@ -104,6 +104,34 @@ public final class MemoryQuery extends DatabaseQuery {
 	}
 
 	@Override
+	public DatabaseQuery average() {
+		throw new RuntimeException("not implemented"); // TODO
+	}
+
+	@Override
+	public DatabaseQuery count() {
+		throw new RuntimeException("not implemented"); // TODO
+	}
+
+	@Override
+	public DatabaseQuery exist() {
+		ArdenValue[] result = new ArdenValue[values.length];
+		for (int i = 0; i < values.length; i++)
+			result[i] = ExpressionHelpers.exist(values[i]);
+		return new MemoryQuery(result);
+	}
+
+	@Override
+	public DatabaseQuery sum() {
+		throw new RuntimeException("not implemented"); // TODO
+	}
+
+	@Override
+	public DatabaseQuery median() {
+		throw new RuntimeException("not implemented"); // TODO
+	}
+
+	@Override
 	public DatabaseQuery minimum() {
 		throw new RuntimeException("not implemented"); // TODO
 	}
@@ -125,7 +153,10 @@ public final class MemoryQuery extends DatabaseQuery {
 
 	@Override
 	public DatabaseQuery last() {
-		throw new RuntimeException("not implemented"); // TODO
+		ArdenValue[] result = new ArdenValue[values.length];
+		for (int i = 0; i < values.length; i++)
+			result[i] = ExpressionHelpers.last(values[i]);
+		return new MemoryQuery(result);
 	}
 
 	@Override
@@ -135,7 +166,10 @@ public final class MemoryQuery extends DatabaseQuery {
 
 	@Override
 	public DatabaseQuery first() {
-		throw new RuntimeException("not implemented"); // TODO
+		ArdenValue[] result = new ArdenValue[values.length];
+		for (int i = 0; i < values.length; i++)
+			result[i] = ExpressionHelpers.first(values[i]);
+		return new MemoryQuery(result);
 	}
 
 	@Override

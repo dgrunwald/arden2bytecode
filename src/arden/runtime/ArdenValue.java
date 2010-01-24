@@ -12,6 +12,9 @@ public abstract class ArdenValue {
 		this.primaryTime = primaryTime;
 	}
 
+	/**
+	 * Creates a copy of this value with the primary time set to newPrimaryTime.
+	 */
 	public abstract ArdenValue setTime(long newPrimaryTime);
 
 	/**

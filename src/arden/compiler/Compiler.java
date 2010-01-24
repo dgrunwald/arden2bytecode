@@ -159,11 +159,17 @@ public final class Compiler {
 	}
 
 	private void compileUrgency(CodeGenerator codeGen, PUrgencySlot urgencySlot) {
+		// urgency_slot =
+		// {empty}
+		// | {urg} urgency urgency_val semicolons;
 		if (urgencySlot instanceof AUrgUrgencySlot) {
 			PUrgencyVal val = ((AUrgUrgencySlot) urgencySlot).getUrgencyVal();
 			CompilerContext context = codeGen.createUrgency();
 			if (enableDebugging)
 				context.writer.enableLineNumberTable();
+			// urgency_val =
+			// {num} P.number
+			// | {id} identifier;
 			if (val instanceof ANumUrgencyVal) {
 				context.writer.loadDoubleConstant(ParseHelpers
 						.getLiteralDoubleValue(((ANumUrgencyVal) val).getNumber()));

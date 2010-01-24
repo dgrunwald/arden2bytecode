@@ -1,18 +1,6 @@
 package arden.compiler;
 
-import arden.compiler.node.AAvgOfReadFuncOp;
-import arden.compiler.node.AAvgeOfReadFuncOp;
-import arden.compiler.node.ACntOfReadFuncOp;
-import arden.compiler.node.AExOfReadFuncOp;
-import arden.compiler.node.AExsOfReadFuncOp;
-import arden.compiler.node.AMedOfReadFuncOp;
-import arden.compiler.node.AOfnrOfFuncOp;
-import arden.compiler.node.AOfrOfFuncOp;
-import arden.compiler.node.AStdvOfNoreadFuncOp;
-import arden.compiler.node.ASumOfReadFuncOp;
-import arden.compiler.node.ATimeOfNoreadFuncOp;
-import arden.compiler.node.AVarOfNoreadFuncOp;
-import arden.compiler.node.Node;
+import arden.compiler.node.*;
 import arden.runtime.ArdenValue;
 import arden.runtime.UnaryOperator;
 
@@ -146,7 +134,30 @@ final class UnaryOperatorCompiler extends VisitorBase {
 	// | {len} length
 	// | {uc} uppercase
 	// | {lc} lowercase;
-	// TODO: add missing definitions from this production
+
+	@Override
+	public void caseAAnyOfNoreadFuncOp(AAnyOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAAnyOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAAllOfNoreadFuncOp(AAllOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAAllOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseANoOfNoreadFuncOp(ANoOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseANoOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseASlpOfNoreadFuncOp(ASlpOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseASlpOfNoreadFuncOp(node);
+	}
 
 	@Override
 	public void caseAStdvOfNoreadFuncOp(AStdvOfNoreadFuncOp node) {
@@ -163,7 +174,246 @@ final class UnaryOperatorCompiler extends VisitorBase {
 	}
 
 	@Override
+	public void caseAIncOfNoreadFuncOp(AIncOfNoreadFuncOp node) {
+		// increase
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("increase", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAPeriOfNoreadFuncOp(APeriOfNoreadFuncOp node) {
+		// percent increase
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("percentIncrease", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAModiOfNoreadFuncOp(AModiOfNoreadFuncOp node) {
+		// % increase
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("percentIncrease", ArdenValue.class));
+	}
+
+	@Override
+	public void caseADecOfNoreadFuncOp(ADecOfNoreadFuncOp node) {
+		// decrease
+		parent.loadOperator(UnaryOperator.MINUS);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("increase", ArdenValue.class));
+		parent.invokeLoadedUnaryOperator();
+	}
+
+	@Override
+	public void caseAPerdOfNoreadFuncOp(APerdOfNoreadFuncOp node) {
+		// percent decrease
+		parent.loadOperator(UnaryOperator.MINUS);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("percentIncrease", ArdenValue.class));
+		parent.invokeLoadedUnaryOperator();
+	}
+
+	@Override
+	public void caseAModdOfNoreadFuncOp(AModdOfNoreadFuncOp node) {
+		// % decrease
+		parent.loadOperator(UnaryOperator.MINUS);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("percentIncrease", ArdenValue.class));
+		parent.invokeLoadedUnaryOperator();
+	}
+
+	@Override
+	public void caseAInterOfNoreadFuncOp(AInterOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAInterOfNoreadFuncOp(node);
+	}
+
+	@Override
 	public void caseATimeOfNoreadFuncOp(ATimeOfNoreadFuncOp node) {
 		parent.invokeOperator(UnaryOperator.TIME, argument);
+	}
+
+	@Override
+	public void caseAAcosOfNoreadFuncOp(AAcosOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAAcosOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAAsinOfNoreadFuncOp(AAsinOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAAsinOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAAtanOfNoreadFuncOp(AAtanOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAAtanOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseACsinOfNoreadFuncOp(ACsinOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseACsinOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseACosOfNoreadFuncOp(ACosOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseACosOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseASineOfNoreadFuncOp(ASineOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseASineOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseASinOfNoreadFuncOp(ASinOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseASinOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseATangOfNoreadFuncOp(ATangOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseATangOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseATanOfNoreadFuncOp(ATanOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseATanOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAExpOfNoreadFuncOp(AExpOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAExpOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAFlrOfNoreadFuncOp(AFlrOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAFlrOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAIntOfNoreadFuncOp(AIntOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAIntOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseARoundOfNoreadFuncOp(ARoundOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseARoundOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseACeilOfNoreadFuncOp(ACeilOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseACeilOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseATruncOfNoreadFuncOp(ATruncOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseATruncOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseALogOfNoreadFuncOp(ALogOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseALogOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseALogtOfNoreadFuncOp(ALogtOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseALogtOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAAbsOfNoreadFuncOp(AAbsOfNoreadFuncOp node) {
+		parent.invokeOperator(UnaryOperator.ABS, argument);
+	}
+
+	@Override
+	public void caseASqrtOfNoreadFuncOp(ASqrtOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseASqrtOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAExyOfNoreadFuncOp(AExyOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAExyOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAExmoOfNoreadFuncOp(AExmoOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAExmoOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAExdOfNoreadFuncOp(AExdOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAExdOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAExhOfNoreadFuncOp(AExhOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAExhOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAExmiOfNoreadFuncOp(AExmiOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAExmiOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAExsOfNoreadFuncOp(AExsOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAExsOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAStrOfNoreadFuncOp(AStrOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAStrOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAExcOfNoreadFuncOp(AExcOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAExcOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseARevOfNoreadFuncOp(ARevOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseARevOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseALenOfNoreadFuncOp(ALenOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseALenOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseAUcOfNoreadFuncOp(AUcOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAUcOfNoreadFuncOp(node);
+	}
+
+	@Override
+	public void caseALcOfNoreadFuncOp(ALcOfNoreadFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseALcOfNoreadFuncOp(node);
 	}
 }

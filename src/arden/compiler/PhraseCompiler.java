@@ -37,8 +37,29 @@ final class ReadPhraseCompiler extends VisitorBase {
 	public void caseAOfReadPhrase(AOfReadPhrase node) {
 		// read_phrase = {of} of_read_func_op read_where
 		node.getReadWhere().apply(this);
-		// TODO Auto-generated method stub
-		throw new RuntimeCompilerException("TODO");
+
+		// of_read_func_op =
+		// {avge} average
+		// | {avg} avg
+		// | {cnt} count
+		// | {ex} exist
+		// | {exs} exists
+		// | {sum} sum
+		// | {med} median;
+		if (node.getOfReadFuncOp() instanceof AAvgeOfReadFuncOp || node.getOfReadFuncOp() instanceof AAvgOfReadFuncOp) {
+			invokeSimpleAggregationOperator("average");
+		} else if (node.getOfReadFuncOp() instanceof ACntOfReadFuncOp) {
+			invokeSimpleAggregationOperator("count");
+		} else if (node.getOfReadFuncOp() instanceof AExOfReadFuncOp
+				|| node.getOfReadFuncOp() instanceof AExsOfReadFuncOp) {
+			invokeSimpleAggregationOperator("exist");
+		} else if (node.getOfReadFuncOp() instanceof ASumOfReadFuncOp) {
+			invokeSimpleAggregationOperator("sum");
+		} else if (node.getOfReadFuncOp() instanceof AMedOfReadFuncOp) {
+			invokeSimpleAggregationOperator("median");
+		} else {
+			throw new RuntimeException("unknown of_read_func_op");
+		}
 	}
 
 	@Override
@@ -143,7 +164,7 @@ final class ReadPhraseCompiler extends VisitorBase {
 
 	/** Adds the temporalCompOp to the DatabaseQuery on the evaluation stack */
 	private void handleTemporalCompOp(PTemporalCompOp pTemporalCompOp, final boolean negate) {
-		final ExpressionCompiler exprCompiler = new ExpressionCompiler(context);
+		final ExpressionCompiler expressionCompiler = new ExpressionCompiler(context);
 
 		pTemporalCompOp.apply(new VisitorBase() {
 			// temporal_comp_op =
@@ -166,13 +187,13 @@ final class ReadPhraseCompiler extends VisitorBase {
 			private void caseAPrecTemporalCompOp(Switchable durationExpr, Switchable timeExpr) {
 				// within duration preceding time
 				// = within (duration before time) to time
-				exprCompiler.loadOperator(BinaryOperator.BEFORE);
-				durationExpr.apply(exprCompiler);
-				timeExpr.apply(exprCompiler);
+				expressionCompiler.loadOperator(BinaryOperator.BEFORE);
+				durationExpr.apply(expressionCompiler);
+				timeExpr.apply(expressionCompiler);
 				// stack: query, argument, BEFORE, dur, time
 				context.writer.dup_x2();
 				// stack: query, argument, time, BEFORE, dur, time
-				exprCompiler.invokeLoadedBinaryOperator();
+				expressionCompiler.invokeLoadedBinaryOperator();
 				// stack: query, argument, time, time2
 				context.writer.swap();
 				// stack: query, argument, time2, time
@@ -183,13 +204,13 @@ final class ReadPhraseCompiler extends VisitorBase {
 			@Override
 			public void caseAFolTemporalCompOp(AFolTemporalCompOp node) {
 				// within [left]:expr_string following [right]:expr_string
-				exprCompiler.loadOperator(BinaryOperator.AFTER);
-				node.getLeft().apply(exprCompiler);
-				node.getRight().apply(exprCompiler);
+				expressionCompiler.loadOperator(BinaryOperator.AFTER);
+				node.getLeft().apply(expressionCompiler);
+				node.getRight().apply(expressionCompiler);
 				// stack: query, argument, AFTER, dur, time
 				context.writer.dup_x2();
 				// stack: query, argument, time, AFTER, dur, time
-				exprCompiler.invokeLoadedBinaryOperator();
+				expressionCompiler.invokeLoadedBinaryOperator();
 				// stack: query, argument, time, time2
 				invokeWithinTo();
 				// stack: newquery
@@ -205,8 +226,8 @@ final class ReadPhraseCompiler extends VisitorBase {
 			@Override
 			public void caseAWithinTemporalCompOp(AWithinTemporalCompOp node) {
 				// within [lower]:expr_string to [upper]:expr_string
-				node.getLower().apply(new ExpressionCompiler(context));
-				node.getUpper().apply(new ExpressionCompiler(context));
+				node.getLower().apply(expressionCompiler);
+				node.getUpper().apply(expressionCompiler);
 				invokeWithinTo();
 			}
 
@@ -237,15 +258,27 @@ final class ReadPhraseCompiler extends VisitorBase {
 			@Override
 			public void caseABefTemporalCompOp(ABefTemporalCompOp node) {
 				// before expr_string
-				// TODO Auto-generated method stub
-				throw new RuntimeCompilerException("TODO");
+				node.getExprString().apply(expressionCompiler);
+				if (negate) {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryNotBefore",
+							DatabaseQuery.class, ArdenValue.class));
+				} else {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryBefore", DatabaseQuery.class,
+							ArdenValue.class));
+				}
 			}
 
 			@Override
 			public void caseAAfterTemporalCompOp(AAfterTemporalCompOp node) {
 				// after expr_string
-				// TODO Auto-generated method stub
-				throw new RuntimeCompilerException("TODO");
+				node.getExprString().apply(expressionCompiler);
+				if (negate) {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryNotAfter",
+							DatabaseQuery.class, ArdenValue.class));
+				} else {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryAfter", DatabaseQuery.class,
+							ArdenValue.class));
+				}
 			}
 
 			@Override

@@ -220,6 +220,7 @@ final class ActionCompiler extends VisitorBase {
 		Label endLabel = new Label();
 		context.writer.jumpIfZero(falseLabel);
 		trueBlock.apply(blockCompiler);
+		context.writer.jump(endLabel);
 		context.writer.markForwardJumpsOnly(falseLabel);
 		falseBlock.apply(blockCompiler);
 		context.writer.markForwardJumpsOnly(endLabel);

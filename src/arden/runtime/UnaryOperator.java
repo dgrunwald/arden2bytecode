@@ -40,17 +40,6 @@ public abstract class UnaryOperator {
 		};
 	};
 
-	public static final UnaryOperator SQRT = new UnaryOperator("SQRT") {
-		@Override
-		public ArdenValue runElement(ArdenValue val) {
-			if (val instanceof ArdenNumber) {
-				return ArdenNumber.create(Math.sqrt(((ArdenNumber) val).value), val.primaryTime);
-			} else {
-				return ArdenNull.create(val.primaryTime);
-			}
-		};
-	};
-
 	public static final UnaryOperator YEARS = new UnaryOperator("YEARS") {
 		@Override
 		public ArdenValue runElement(ArdenValue val) {
@@ -180,6 +169,20 @@ public abstract class UnaryOperator {
 		};
 	};
 
+	public static final UnaryOperator ABS = new NumericUnaryOperator("ABS") {
+		@Override
+		public double runNumber(double input) {
+			return Math.abs(input);
+		}
+	};
+
+	public static final UnaryOperator SQRT = new NumericUnaryOperator("SQRT") {
+		@Override
+		public double runNumber(double input) {
+			return Math.sqrt(input);
+		}
+	};
+
 	public UnaryOperator(String name) {
 		this.name = name;
 	}
@@ -201,5 +204,22 @@ public abstract class UnaryOperator {
 	@Override
 	public String toString() {
 		return name;
+	}
+
+	private static abstract class NumericUnaryOperator extends UnaryOperator {
+		public NumericUnaryOperator(String name) {
+			super(name);
+		}
+
+		public abstract double runNumber(double input);
+
+		@Override
+		public ArdenValue runElement(ArdenValue val) {
+			if (val instanceof ArdenNumber) {
+				return ArdenNumber.create(runNumber(((ArdenNumber) val).value), val.primaryTime);
+			} else {
+				return ArdenNull.create(val.primaryTime);
+			}
+		}
 	}
 }

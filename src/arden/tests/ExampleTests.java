@@ -8,14 +8,20 @@ import org.junit.Test;
 
 import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
+import arden.runtime.ArdenList;
+import arden.runtime.ArdenNull;
+import arden.runtime.ArdenString;
+import arden.runtime.ArdenValue;
+import arden.runtime.DatabaseQuery;
 import arden.runtime.MedicalLogicModule;
+import arden.runtime.MemoryQuery;
 
 public class ExampleTests {
 	private MedicalLogicModule compile(String filename) throws Exception {
 		Compiler c = new Compiler();
 		CompiledMlm mlm = c
 				.compileMlm(new InputStreamReader(MetadataTests.class.getResourceAsStream(filename + ".mlm")));
-		FileOutputStream fos = new FileOutputStream(filename + ".class");
+		FileOutputStream fos = new FileOutputStream("bin/" + mlm.getName() + ".class");
 		mlm.saveClassFile(fos);
 		fos.close();
 		return mlm;
@@ -28,9 +34,9 @@ public class ExampleTests {
 		TestContext context = new TestContext();
 		mlm.run(context, null);
 
-		Assert.assertEquals("x", context.getOutputText());
+		Assert.assertEquals("", context.getOutputText());
 	}
-	
+
 	@Test
 	public void X22() throws Exception {
 		MedicalLogicModule mlm = compile("x2.2");
@@ -38,19 +44,54 @@ public class ExampleTests {
 		TestContext context = new TestContext();
 		mlm.run(context, null);
 
-		Assert.assertEquals("x", context.getOutputText());
+		Assert.assertEquals("", context.getOutputText());
 	}
-	
-	@Test
-	public void X23() throws Exception {
-		MedicalLogicModule mlm = compile("x2.3");
 
+	@Test
+	public void X23noAllergies() throws Exception {
+		MedicalLogicModule mlm = compile("x2.3");
 		TestContext context = new TestContext();
 		mlm.run(context, null);
-
-		Assert.assertEquals("x", context.getOutputText());
+		Assert.assertEquals("", context.getOutputText());
 	}
-	
+
+	@Test
+	public void X23allergies() throws Exception {
+		MedicalLogicModule mlm = compile("x2.3");
+		TestContext context = new TestContext() {
+			@Override
+			public DatabaseQuery createQuery(String mapping) {
+				Assert.assertEquals("allergy where agent_class = penicillin", mapping);
+				ArdenList list = new ArdenList(new ArdenValue[] { new ArdenString("all1"), new ArdenString("all2") });
+				return new MemoryQuery(new ArdenValue[] { list });
+			}
+		};
+		mlm.run(context, null);
+		Assert.assertEquals("Caution, the patient has the following allergy to penicillin documented: all2\n", context
+				.getOutputText());
+	}
+
+	@Test
+	public void X23allergiesButLastIsNull() throws Exception {
+		MedicalLogicModule mlm = compile("x2.3");
+		TestContext context = new TestContext() {
+			@Override
+			public DatabaseQuery createQuery(String mapping) {
+				Assert.assertEquals("allergy where agent_class = penicillin", mapping);
+				ArdenList list = new ArdenList(new ArdenValue[] { new ArdenString("all1"), ArdenNull.INSTANCE });
+				return new MemoryQuery(new ArdenValue[] { list });
+			}
+		};
+		mlm.run(context, null);
+		Assert.assertEquals("", context.getOutputText());
+	}
+
+	@Test
+	public void X23urgency() throws Exception {
+		MedicalLogicModule mlm = compile("x2.3");
+		Assert.assertEquals(51.0, mlm.createInstance(new TestContext(), null).getUrgency(), 0);
+	}
+
 	@Test
 	public void X24() throws Exception {
 		MedicalLogicModule mlm = compile("x2.4");
@@ -58,9 +99,9 @@ public class ExampleTests {
 		TestContext context = new TestContext();
 		mlm.run(context, null);
 
-		Assert.assertEquals("x", context.getOutputText());
+		Assert.assertEquals("", context.getOutputText());
 	}
-	
+
 	@Test
 	public void X25() throws Exception {
 		MedicalLogicModule mlm = compile("x2.5");
@@ -68,9 +109,11 @@ public class ExampleTests {
 		TestContext context = new TestContext();
 		mlm.run(context, null);
 
-		Assert.assertEquals("x", context.getOutputText());
+		Assert.assertEquals(
+				"Suggest obtaining a serum creatinine to follow up on renal function in the setting of gentamicin.\n",
+				context.getOutputText());
 	}
-	
+
 	@Test
 	public void X26() throws Exception {
 		MedicalLogicModule mlm = compile("x2.6");
@@ -78,9 +121,9 @@ public class ExampleTests {
 		TestContext context = new TestContext();
 		mlm.run(context, null);
 
-		Assert.assertEquals("x", context.getOutputText());
+		Assert.assertEquals("", context.getOutputText());
 	}
-	
+
 	@Test
 	public void X27() throws Exception {
 		MedicalLogicModule mlm = compile("x2.7");
@@ -88,9 +131,9 @@ public class ExampleTests {
 		TestContext context = new TestContext();
 		mlm.run(context, null);
 
-		Assert.assertEquals("x", context.getOutputText());
+		Assert.assertEquals("", context.getOutputText());
 	}
-	
+
 	@Test
 	public void X28() throws Exception {
 		MedicalLogicModule mlm = compile("x2.8");
@@ -98,6 +141,6 @@ public class ExampleTests {
 		TestContext context = new TestContext();
 		mlm.run(context, null);
 
-		Assert.assertEquals("x", context.getOutputText());
+		Assert.assertEquals("", context.getOutputText());
 	}
 }
