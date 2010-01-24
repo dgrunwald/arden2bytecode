@@ -502,14 +502,14 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Generiert die 'nop'-Instruktion.
+	 * Generates the 'nop'-instruction.
 	 */
 	public void nop() {
 		emit(0); // nop
 	}
 
 	/**
-	 * Entfernt den obersten Wert vom Stack.
+	 * Removes the top value from the stack.
 	 * 
 	 * Stack: .., x => ..
 	 */
@@ -519,7 +519,17 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Dupliziert den obersten Wert auf dem Stack.
+	 * Removes the top two values from the stack.
+	 * 
+	 * Stack: .., x, y => ..
+	 */
+	public void pop2() {
+		poppush(2, 0);
+		emit(88); // pop2
+	}
+
+	/**
+	 * Duplicates the top value on the stack.
 	 * 
 	 * Stack: .., x => .., x, x
 	 */
@@ -529,7 +539,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Dupliziert die obersten beiden Wert auf dem Stack.
+	 * Duplicates the top two values on the stack.
 	 * 
 	 * Stack: .., y, x => .., y, x, y, x
 	 */
@@ -539,8 +549,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Dupliziert den obersten Wert auf dem Stack und fügt ihn an dritter
-	 * Position ein.
+	 * Duplicates the top value on the stack and inserts it at the 3rd position.
 	 * 
 	 * Stack: .., y, x => .., x, y, x
 	 */
@@ -563,8 +572,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Dupliziert den obersten Wert auf dem Stack und fügt ihn an vierter
-	 * Position ein.
+	 * Duplicates the top value on the stack and inserts it at the 4th position.
 	 * 
 	 * Stack: .., z, y, x => .., x, z, y, x
 	 */
@@ -620,6 +628,16 @@ public final class MethodWriter {
 	public void jumpIfNonZero(Label label) {
 		poppush(1, 0);
 		emitJump(154, label); // ifne
+	}
+
+	/**
+	 * Jump to Label, if value is less than 0.
+	 * 
+	 * Stack: .., int => ..
+	 */
+	public void jumpIfNegative(Label label) {
+		poppush(1, 0);
+		emitJump(155, label); // iflt
 	}
 
 	/**

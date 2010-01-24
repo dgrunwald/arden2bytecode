@@ -35,6 +35,18 @@ public final class RuntimeHelpers {
 			return DEFAULT_URGENCY;
 	}
 
+	/** Converts val to int. Returns -1 if val is not an integer. */
+	public static int getPrimitiveIntegerValue(ArdenValue val) {
+		if (!(val instanceof ArdenNumber))
+			return -1;
+		double v = ((ArdenNumber) val).value;
+		int i = (int) v;
+		if (i == v)
+			return i;
+		else
+			return -1;
+	}
+
 	public static DatabaseQuery constrainQueryWithinTo(DatabaseQuery q, ArdenValue start, ArdenValue end) {
 		if (start instanceof ArdenTime && end instanceof ArdenTime)
 			return q.occursWithinTo((ArdenTime) start, (ArdenTime) end);

@@ -1,5 +1,6 @@
 package arden.compiler;
 
+import arden.codegenerator.Label;
 import arden.compiler.node.*;
 import arden.runtime.ArdenValue;
 import arden.runtime.BinaryOperator;
@@ -47,18 +48,28 @@ final class ReadPhraseCompiler extends VisitorBase {
 		// | {sum} sum
 		// | {med} median;
 		if (node.getOfReadFuncOp() instanceof AAvgeOfReadFuncOp || node.getOfReadFuncOp() instanceof AAvgOfReadFuncOp) {
-			invokeSimpleAggregationOperator("average");
+			invokeAggregationOperator("average");
 		} else if (node.getOfReadFuncOp() instanceof ACntOfReadFuncOp) {
-			invokeSimpleAggregationOperator("count");
+			invokeAggregationOperator("count");
 		} else if (node.getOfReadFuncOp() instanceof AExOfReadFuncOp
 				|| node.getOfReadFuncOp() instanceof AExsOfReadFuncOp) {
-			invokeSimpleAggregationOperator("exist");
+			invokeAggregationOperator("exist");
 		} else if (node.getOfReadFuncOp() instanceof ASumOfReadFuncOp) {
-			invokeSimpleAggregationOperator("sum");
+			invokeAggregationOperator("sum");
 		} else if (node.getOfReadFuncOp() instanceof AMedOfReadFuncOp) {
-			invokeSimpleAggregationOperator("median");
+			invokeAggregationOperator("median");
 		} else {
 			throw new RuntimeException("unknown of_read_func_op");
+		}
+	}
+
+	private void invokeAggregationOperator(String name) {
+		try {
+			context.writer.invokeInstance(DatabaseQuery.class.getMethod(name));
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -66,26 +77,29 @@ final class ReadPhraseCompiler extends VisitorBase {
 	public void caseAFReadPhrase(AFReadPhrase node) {
 		// read_phrase = {f} from_of_func_op read_where
 		node.getReadWhere().apply(this);
-		handleFromOfFuncOp(node.getFromOfFuncOp());
+		handleAggregationOp(node.getFromOfFuncOp());
 	}
 
 	@Override
 	public void caseAFofReadPhrase(AFofReadPhrase node) {
 		// read_phrase = {fof} from_of_func_op of read_where
 		node.getReadWhere().apply(this);
-		handleFromOfFuncOp(node.getFromOfFuncOp());
+		handleAggregationOp(node.getFromOfFuncOp());
 	}
 
 	@Override
 	public void caseAFoffReadPhrase(AFoffReadPhrase node) {
 		// read_phrase = {foff} from_of_func_op expr_factor from read_where;
 		node.getReadWhere().apply(this);
-		// TODO Auto-generated method stub
-		throw new RuntimeCompilerException("TODO");
+		handleTransformationOp(node.getFromOfFuncOp(), node.getExprFactor());
 	}
 
 	/** Adds the PFromOfFuncOp to the DatabaseQuery on the evaluation stack */
-	private void handleFromOfFuncOp(PFromOfFuncOp node) {
+	private void handleAggregationOp(PFromOfFuncOp node) {
+		invokeAggregationOperator(getOperatorName(node));
+	}
+
+	private static String getOperatorName(PFromOfFuncOp node) {
 		// from_of_func_op =
 		// {mini} minimum
 		// | {min} min
@@ -96,30 +110,59 @@ final class ReadPhraseCompiler extends VisitorBase {
 		// | {ear} earliest
 		// | {lat} latest;
 		if (node instanceof AMiniFromOfFuncOp || node instanceof AMinFromOfFuncOp) {
-			invokeSimpleAggregationOperator("minimum");
+			return "minimum";
 		} else if (node instanceof AMaxiFromOfFuncOp || node instanceof AMaxFromOfFuncOp) {
-			invokeSimpleAggregationOperator("maximum");
+			return "maximum";
 		} else if (node instanceof ALastFromOfFuncOp) {
-			invokeSimpleAggregationOperator("last");
+			return "last";
 		} else if (node instanceof AFirFromOfFuncOp) {
-			invokeSimpleAggregationOperator("first");
+			return "first";
 		} else if (node instanceof AEarFromOfFuncOp) {
-			invokeSimpleAggregationOperator("earliest");
+			return "earliest";
 		} else if (node instanceof ALatFromOfFuncOp) {
-			invokeSimpleAggregationOperator("latest");
+			return "latest";
 		} else {
 			throw new RuntimeException("unknown from_of_func_op");
 		}
 	}
 
-	private void invokeSimpleAggregationOperator(String name) {
+	/** Adds the PFromOfFuncOp to the DatabaseQuery on the evaluation stack */
+	private void handleTransformationOp(PFromOfFuncOp node, PExprFactor number) {
+		// stack: query
+		number.apply(new ExpressionCompiler(context));
+		context.writer.invokeStatic(Compiler.getRuntimeHelper("getPrimitiveIntegerValue", ArdenValue.class));
+		// stack: query, number
+		// now emit code like:
+		// (number >= 0) ? query.op(number) : DatabaseQuery.NULL;
+		context.writer.dup();
+		// stack: query, number, number
+		Label elseLabel = new Label();
+		Label endLabel = new Label();
+		context.writer.jumpIfNegative(elseLabel);
+		// stack: query, number
+		String name = getOperatorName(node);
 		try {
-			context.writer.invokeInstance(DatabaseQuery.class.getMethod(name));
+			context.writer.invokeInstance(DatabaseQuery.class.getMethod(name, Integer.TYPE));
 		} catch (SecurityException e) {
 			throw new RuntimeException(e);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
+		// stack: newquery
+		context.writer.jump(endLabel);
+		context.writer.markForwardJumpsOnly(elseLabel);
+		// stack: query, number
+		context.writer.pop2();
+		// stack: empty
+		try {
+			context.writer.loadStaticField(DatabaseQuery.class.getField("NULL"));
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException(e);
+		}
+		// stack: newquery
+		context.writer.markForwardJumpsOnly(endLabel);
 	}
 
 	// read_where =

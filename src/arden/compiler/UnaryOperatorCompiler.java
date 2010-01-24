@@ -5,7 +5,8 @@ import arden.runtime.ArdenValue;
 import arden.runtime.UnaryOperator;
 
 /**
- * Compiler for unary function operators (of_func_op and related productions).
+ * Compiler for unary function operators (of_func_op, from_of_func_op and
+ * related productions).
  * 
  * Every operator.apply(this) call will generate code that pushes the operator's
  * result value onto the evaluation stack. The parent compiler is used to
@@ -415,5 +416,62 @@ final class UnaryOperatorCompiler extends VisitorBase {
 	public void caseALcOfNoreadFuncOp(ALcOfNoreadFuncOp node) {
 		// TODO Auto-generated method stub
 		super.caseALcOfNoreadFuncOp(node);
+	}
+
+	// from_of_func_op =
+	// {mini} minimum
+	// | {min} min
+	// | {maxi} maximum
+	// | {max} max
+	// | {last} last
+	// | {fir} first
+	// | {ear} earliest
+	// | {lat} latest;
+	@Override
+	public void caseAMiniFromOfFuncOp(AMiniFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("minimum", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAMinFromOfFuncOp(AMinFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("minimum", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAMaxiFromOfFuncOp(AMaxiFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("maximum", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAMaxFromOfFuncOp(AMaxFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("maximum", ArdenValue.class));
+	}
+
+	@Override
+	public void caseALastFromOfFuncOp(ALastFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("last", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAFirFromOfFuncOp(AFirFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("first", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAEarFromOfFuncOp(AEarFromOfFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseAEarFromOfFuncOp(node);
+	}
+
+	@Override
+	public void caseALatFromOfFuncOp(ALatFromOfFuncOp node) {
+		// TODO Auto-generated method stub
+		super.caseALatFromOfFuncOp(node);
 	}
 }

@@ -274,12 +274,10 @@ public final class ExpressionHelpers {
 		// primary times are lost (as specified)
 		double lower = ((ArdenNumber) lhs).value;
 		double upper = ((ArdenNumber) rhs).value;
-		if (Math.floor(lower) != lower)
-			return ArdenNull.INSTANCE;
-		if (Math.floor(upper) != upper)
-			return ArdenNull.INSTANCE;
 		int lowerInt = (int) lower;
 		int upperInt = (int) upper;
+		if (lowerInt != lower || upperInt != upper)
+			return ArdenNull.INSTANCE;
 		if (lowerInt > upperInt)
 			return ArdenList.EMPTY;
 		ArdenValue[] result = new ArdenValue[upperInt - lowerInt + 1];
@@ -336,6 +334,7 @@ public final class ExpressionHelpers {
 		}
 	}
 
+	/** Implements the FIRST aggregation operator. */
 	public static ArdenValue first(ArdenValue input) {
 		ArdenValue[] arr = unaryComma(input).values;
 		if (arr.length == 0)
@@ -344,11 +343,64 @@ public final class ExpressionHelpers {
 			return arr[0];
 	}
 
+	/** Implements the LAST aggregation operator. */
 	public static ArdenValue last(ArdenValue input) {
 		ArdenValue[] arr = unaryComma(input).values;
 		if (arr.length == 0)
 			return ArdenNull.INSTANCE;
 		else
 			return arr[arr.length - 1];
+	}
+
+	/** Implements the FIRST transformation operator. */
+	public static ArdenValue first(ArdenValue input, int numberOfElements) {
+		ArdenList inputList = unaryComma(input);
+		if (numberOfElements < inputList.values.length)
+			return inputList;
+		ArdenValue[] result = new ArdenValue[numberOfElements];
+		System.arraycopy(inputList.values, 0, result, 0, numberOfElements);
+		return new ArdenList(result);
+	}
+
+	/** Implements the LAST transformation operator. */
+	public static ArdenValue last(ArdenValue input, int numberOfElements) {
+		ArdenList inputList = unaryComma(input);
+		if (numberOfElements < inputList.values.length)
+			return inputList;
+		ArdenValue[] result = new ArdenValue[numberOfElements];
+		System.arraycopy(inputList.values, inputList.values.length - numberOfElements, result, 0, numberOfElements);
+		return new ArdenList(result);
+	}
+
+	/** Implements the MINIMUM aggregation operator. */
+	public static ArdenValue minimum(ArdenValue input) {
+		ArdenValue[] arr = unaryComma(input).values;
+		if (arr.length == 0)
+			return ArdenNull.INSTANCE;
+		ArdenValue min = arr[0];
+		for (int i = 1; i < arr.length; i++) {
+			int r = min.compareTo(arr[i]);
+			if (r == Integer.MIN_VALUE)
+				return ArdenNull.INSTANCE;
+			if (r == 1 || (r == 0 && arr[i].primaryTime > min.primaryTime))
+				min = arr[i];
+		}
+		return min;
+	}
+
+	/** Implements the MAXIMUM aggregation operator. */
+	public static ArdenValue maximum(ArdenValue input) {
+		ArdenValue[] arr = unaryComma(input).values;
+		if (arr.length == 0)
+			return ArdenNull.INSTANCE;
+		ArdenValue max = arr[0];
+		for (int i = 1; i < arr.length; i++) {
+			int r = max.compareTo(arr[i]);
+			if (r == Integer.MIN_VALUE)
+				return ArdenNull.INSTANCE;
+			if (r == -1 || (r == 0 && arr[i].primaryTime > max.primaryTime))
+				max = arr[i];
+		}
+		return max;
 	}
 }

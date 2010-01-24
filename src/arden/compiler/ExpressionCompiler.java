@@ -641,48 +641,55 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAFromexprExprFunction(AFromexprExprFunction node) {
-		// TODO Auto-generated method stub
-		super.caseAFromexprExprFunction(node);
+		// {fromexpr} from_of_func_op expr_function
+		node.getFromOfFuncOp().apply(new UnaryOperatorCompiler(this, node.getExprFunction()));
 	}
 
 	@Override
 	public void caseAFromofexprExprFunction(AFromofexprExprFunction node) {
-		// TODO Auto-generated method stub
-		super.caseAFromofexprExprFunction(node);
+		// {fromofexpr} from_of_func_op of expr_function
+		node.getFromOfFuncOp().apply(new UnaryOperatorCompiler(this, node.getExprFunction()));
 	}
 
 	@Override
 	public void caseAFromofexprfromExprFunction(AFromofexprfromExprFunction node) {
+		// {fromofexprfrom} from_of_func_op expr_factor from expr_function
 		// TODO Auto-generated method stub
 		super.caseAFromofexprfromExprFunction(node);
 	}
 
 	@Override
 	public void caseAFromexprfromExprFunction(AFromexprfromExprFunction node) {
+		// {fromexprfrom} from_func_op expr_factor from expr_function
 		// TODO Auto-generated method stub
 		super.caseAFromexprfromExprFunction(node);
 	}
 
 	@Override
 	public void caseAIfromexprExprFunction(AIfromexprExprFunction node) {
+		// {ifromexpr} index_from_of_func_op expr_function
 		// TODO Auto-generated method stub
 		super.caseAIfromexprExprFunction(node);
 	}
 
 	@Override
 	public void caseAIfromofexprExprFunction(AIfromofexprExprFunction node) {
+		// {ifromofexpr} index_from_of_func_op of expr_function
 		// TODO Auto-generated method stub
 		super.caseAIfromofexprExprFunction(node);
 	}
 
 	@Override
 	public void caseAIfromofexprfromExprFunction(AIfromofexprfromExprFunction node) {
+		// {ifromofexprfrom} index_from_of_func_op expr_factor from
+		// expr_function
 		// TODO Auto-generated method stub
 		super.caseAIfromofexprfromExprFunction(node);
 	}
 
 	@Override
 	public void caseAIfromexprfromExprFunction(AIfromexprfromExprFunction node) {
+		// {ifromexprfrom} index_from_func_op expr_factor from expr_function
 		// TODO Auto-generated method stub
 		super.caseAIfromexprfromExprFunction(node);
 	}
