@@ -1,7 +1,6 @@
 maintenance:
     title: Check for penicillin allergy;;
     mlmname: pen_allergy;;
-    arden: ;;
     version: 1.00;;
     institution: Columbia-Presbyterian Medical Center;;
     author: George Hripcsak, M.D.;;

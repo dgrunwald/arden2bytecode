@@ -1,7 +1,5 @@
 package arden.compiler;
 
-import java.lang.reflect.Method;
-
 import arden.compiler.node.*;
 import arden.runtime.ArdenValue;
 import arden.runtime.BinaryOperator;
@@ -247,21 +245,21 @@ final class ReadPhraseCompiler extends VisitorBase {
 			public void caseAAfterTemporalCompOp(AAfterTemporalCompOp node) {
 				// after expr_string
 				// TODO Auto-generated method stub
-				super.caseAAfterTemporalCompOp(node);
+				throw new RuntimeCompilerException("TODO");
 			}
 
 			@Override
 			public void caseAEqualTemporalCompOp(AEqualTemporalCompOp node) {
 				// equal expr_string
 				// TODO Auto-generated method stub
-				super.caseAEqualTemporalCompOp(node);
+				throw new RuntimeCompilerException("TODO");
 			}
 
 			@Override
 			public void caseAAtTemporalCompOp(AAtTemporalCompOp node) {
 				// at expr_string
 				// TODO Auto-generated method stub
-				super.caseAAtTemporalCompOp(node);
+				throw new RuntimeCompilerException("TODO");
 			}
 		});
 	}

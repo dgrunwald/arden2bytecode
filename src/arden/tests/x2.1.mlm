@@ -16,7 +16,7 @@ library:
         The fractional excretion of sodium is calculated from the urine sodium and creatinine
         and the most recent serum sodium and creatinine (where they occurred within the past 24 hours).
         A value less than 1.0 % is considered low.;;
-    keywords: fractional excretion, serum sodium, azotemia;;
+    keywords: fractional excretion; serum sodium; azotemia;;
     citations:
         1. Steiner RW. Interpreting the fractional excretion of sodium. Am J Med 1984:77:699-702.;;
 knowledge:

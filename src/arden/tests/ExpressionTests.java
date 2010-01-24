@@ -52,6 +52,11 @@ public class ExpressionTests extends ExpressionTestBase {
 	}
 
 	@Test
+	public void TheNullConstant() throws Exception {
+		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("the null"));
+	}
+
+	@Test
 	public void BooleanTrue() throws Exception {
 		Assert.assertSame(ArdenBoolean.TRUE, evalExpression("true"));
 	}

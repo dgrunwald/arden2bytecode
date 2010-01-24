@@ -1,7 +1,6 @@
 maintenance:
     title: Dosing for gentamicin in renal failure;;
     mlmname: gentamicin_dosing;;
-    arden: ;;
     version: 1.00;;
     institution: Columbia-Presbyterian Medical Center;;
     author: George Hripcsak, M.D.;;

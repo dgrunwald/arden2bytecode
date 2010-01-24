@@ -7,7 +7,6 @@ import java.util.List;
 import arden.codegenerator.FieldReference;
 import arden.codegenerator.Label;
 import arden.compiler.node.*;
-import arden.runtime.ArdenNull;
 import arden.runtime.DatabaseQuery;
 import arden.runtime.MedicalLogicModule;
 

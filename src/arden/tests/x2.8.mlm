@@ -34,7 +34,7 @@ knowledge:
         num:= 1;
         /* Checks each allergen in the medications to determine          */
         /* if the patient is allergic to it                              */
-        while num <= (count med_allergen) do
+        while num <= (count med_allergens) do
             allergen:= last(first num from med_allergens);
             allergy_found:= (patient_allergies = allergen);
             reaction:= patient_reactions where allergy_found;

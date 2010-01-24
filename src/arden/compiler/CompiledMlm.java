@@ -8,17 +8,25 @@ import java.lang.reflect.InvocationTargetException;
 import arden.runtime.ArdenList;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
+import arden.runtime.LibraryMetadata;
+import arden.runtime.MaintenanceMetadata;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.MedicalLogicModuleImplementation;
 
 public final class CompiledMlm implements MedicalLogicModule {
 	private final byte[] data;
+	private final MaintenanceMetadata maintenance;
+	private final LibraryMetadata library;
+	private final String mlmname;
 	private Constructor<? extends MedicalLogicModuleImplementation> ctor;
 
-	CompiledMlm(byte[] data) {
+	CompiledMlm(byte[] data, MaintenanceMetadata maintenance, LibraryMetadata library) {
 		if (data == null)
 			throw new NullPointerException();
 		this.data = data;
+		this.maintenance = maintenance;
+		this.library = library;
+		this.mlmname = maintenance.getMlmName();
 	}
 
 	public void saveClassFile(OutputStream os) throws IOException {
@@ -30,8 +38,8 @@ public final class CompiledMlm implements MedicalLogicModule {
 		if (ctor == null) {
 			Class<? extends MedicalLogicModuleImplementation> clazz;
 			try {
-				ClassLoader classLoader = new InMemoryClassLoader("xyz", data);
-				clazz = (Class<? extends MedicalLogicModuleImplementation>) classLoader.loadClass("xyz");
+				ClassLoader classLoader = new InMemoryClassLoader(mlmname, data);
+				clazz = (Class<? extends MedicalLogicModuleImplementation>) classLoader.loadClass(mlmname);
 			} catch (ClassNotFoundException e) {
 				throw new RuntimeException(e);
 			}
@@ -85,5 +93,20 @@ public final class CompiledMlm implements MedicalLogicModule {
 		} catch (Exception ex) {
 			throw new InvocationTargetException(ex);
 		}
+	}
+
+	@Override
+	public MaintenanceMetadata getMaintenance() {
+		return maintenance;
+	}
+
+	@Override
+	public LibraryMetadata getLibrary() {
+		return library;
+	}
+
+	@Override
+	public String getName() {
+		return mlmname;
 	}
 }

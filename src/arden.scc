@@ -130,7 +130,7 @@ Helpers
   zero = '0';
 
 States
-  normal, text, mlmname, datamap, arden, format, formatted, link;
+  normal, text, mlmname, datamap, arden, format, formatted;
 
 
 //==============================================================================
@@ -153,7 +153,7 @@ Tokens
   comma      = ',';
   semicolon  = ';';
   {normal -> text}colon      = ':';
-  {normal, text -> normal, mlmname -> normal, arden->normal, link -> normal}semicolons = ';;';
+  {normal, text -> normal, mlmname -> normal, arden->normal}semicolons = ';;';
   dot        = '.';
   assign     = ':=';
   // logical
@@ -209,7 +209,7 @@ Tokens
   call        = c a l l;
   ceiling     = c e i l i n g;
   characters  = c h a r a c t e r s;
-  {normal -> link}citations   = c i t a t i o n s ':';
+  {normal -> text}citations   = c i t a t i o n s ':';
   conclude    = c o n c l u d e;
   cos         = c o s;
   cosine      = c o s i n e;
@@ -278,7 +278,7 @@ Tokens
   less        = l e s s;
   let         = l e t;
   library     = l i b r a r y ':';
-  {normal -> link} links       = l i n k s ':';
+  {normal -> text} links       = l i n k s ':';
   list        = l i s t;
   log         = l o g;
   log10       = l o g '1' '0';
@@ -349,7 +349,7 @@ Tokens
   tangent     = t a n g e n t;
   testing     = t e s t i n g;
   than        = t h a n;
-  the         = 'the';
+  the         = t h e;
   then        = t h e n;
   they        = t h e y;
   time        = t i m e;
@@ -379,11 +379,6 @@ Tokens
   year        = y e a r;
   years       = y e a r s;
 
-  // pseudo-keywords
-  {normal -> link, link} url_link    = u r l us l i n k;
-  {normal -> link, link} mesh_link   = m e s h us l i n k;
-  {normal -> link, link} other_link  = o t h e r us l i n k;
-  {normal -> link, link} exe_link    = e x e us l i n k;
   {formatted}ce           = 'E';
   {formatted}e           = 'e';
   ct           = 'T';
@@ -417,14 +412,12 @@ Tokens
 
   {formatted}sspace = space;
 
-  {link} link_ttext = linktext;
-
   {text, formatted}text  = ttext;
 
   /****** lexical constructs ******/
 
   /* any string of characters enclosed in double quotes (" ASCII 22) with nested "" but without semicolons */
-  {normal, link} string_literal = '"' sstring? '"';
+  {normal} string_literal = '"' sstring? '"';
 
   digits = ddigits;
 
@@ -446,7 +439,7 @@ Tokens
   {datamap} data_mapping =  datamaptext;
 
   /* any string of characters enclosed in single quotes (�, ASCII 44) without semicolons */
-  {normal, link}term =  ''' ttext ''';
+  {normal}term =  ''' ttext ''';
 
   traditional_comment = '/*' not_star+ '*'+ (not_star_not_slash not_star* '*'+)* '/';
   documentation_comment =    '/**' '*'* (not_star_not_slash not_star* '*'+)* '/';
@@ -454,6 +447,7 @@ Tokens
 
 Ignored Tokens
   blank,
+  the,
   traditional_comment,
   documentation_comment,
   end_of_line_comment;
@@ -501,8 +495,8 @@ library_body =
                 purpose_slot
                 explanation_slot
                 keywords_slot
-                citations_slot
-                links_slot;
+                citations_slot?
+                links_slot?;
 
 knowledge_category =
                 knowledge knowledge_body;
@@ -533,7 +527,6 @@ mlmname_slot =
 
 arden_version_slot =
       {vrsn}    arden arden_version semicolons
-    | {ntxt}    arden semicolons
     | {empty};    /* the empty version is only valid    */
                   /* combination with the "FILENAME"    */
                   /* form of < mlmname_slot >           */
@@ -543,26 +536,20 @@ arden_version =
     | {twoone}  version twopointone;
 
 version_slot =
-                version colon mlm_version semicolons;
-
-mlm_version =
-                text;
+                version colon text semicolons;
 
 institution_slot =
-      {text}    institution colon text semicolons
-    | {empty}   institution colon semicolons;
+                institution colon text? semicolons;
 
 /* text limited to 80 characters */
 
 author_slot =
-      {text}    author text semicolons
-    | {empty}   author semicolons;
+                author text? semicolons;
 
 /* see 6.1.6 for details */
 
 specialist_slot =
-      {text}    specialist text semicolons
-    | {empty}   specialist semicolons;
+                specialist text? semicolons;
 
 /* see 6.1.7 for details */
 
@@ -585,76 +572,21 @@ validation_code =
 /****** library slots ******/
 
 purpose_slot =
-      {text}    purpose text semicolons
-    | {ntxt}    purpose semicolons;
+                purpose text? semicolons;
 
 explanation_slot =
-      {text}    explanation text semicolons
-    | {empty}   explanation semicolons;
+                explanation text? semicolons;
 
 keywords_slot =
-      {text}    keywords text semicolons
-    | {empty}   keywords semicolons;
+                keywords text? semicolons;
 
 /* May require special processing to handle both list and text versions */
 
 citations_slot =
-      {empty}
-    | {list}    citations citations_list semicolons
-    | {text}    citations link_ttext semicolons; /* deprecated -- supported for backward compatibility */
-
-citations_list =
-      {empty}
-    | {single}  single_citation
-    | {list}    single_citation semicolon citations_list;
-
-single_citation =
-      {formal}  digits dot citation_type citation_text
-    | {text}    citation_text;
-
-/* This is a separate definition to allow for future expansion */
-
-citation_text =
-                string_literal;
-
-citation_type =
-      {empty}
-    | {sup}     support
-    | {ref}     refute;
-
-/* May require special processing to handle both list and text versions */
+                citations text? semicolons;
 
 links_slot =
-      {empty}
-    | {list}    links links_list semicolons
-    | {text}    links link_ttext semicolons;
-
-/* deprecated - supported for backward*/
-/* compatibility */
-
-links_list =
-      {empty}
-    | {single}  single_link
-    | {list}    links_list semicolon single_link;
-
-single_link =
-                link_type link_name link_text;
-
-link_type =
-      {empty}
-    | {url}     url_link
-    | {mesh}    mesh_link
-    | {other}   other_link
-    | {exe}     exe_link;
-
-link_name =
-      {empty}
-    | {string}  string_literal;
-
-/* This is a separate definition to allow for future expansion */
-
-link_text =
-                term;
+                links text? semicolons;
 
 /****** knowledge slots ******/
 

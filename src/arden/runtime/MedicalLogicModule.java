@@ -19,4 +19,13 @@ public interface MedicalLogicModule {
 	 *         (Java) null if no return statement was executed.
 	 */
 	ArdenValue[] run(ExecutionContext context, ArdenValue[] arguments) throws InvocationTargetException;
+
+	/** Gets the mlmname */
+	String getName();
+
+	/** Gets the maintenance metadata */
+	MaintenanceMetadata getMaintenance();
+
+	/** Gets the library metadata */
+	LibraryMetadata getLibrary();
 }

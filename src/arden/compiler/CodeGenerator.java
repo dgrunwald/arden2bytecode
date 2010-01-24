@@ -1,8 +1,6 @@
 package arden.compiler;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -30,8 +28,7 @@ import arden.runtime.MedicalLogicModuleImplementation;
  * @author Daniel Grunwald
  */
 final class CodeGenerator {
-	private String className;
-	private ClassFileWriter classFileWriter;
+	private final ClassFileWriter classFileWriter;
 	private MethodWriter staticInitializer;
 	private HashMap<String, FieldReference> stringLiterals = new HashMap<String, FieldReference>();
 	private HashMap<Double, FieldReference> numberLiterals = new HashMap<Double, FieldReference>();
@@ -40,7 +37,7 @@ final class CodeGenerator {
 	private int nextFieldIndex;
 	private boolean isFinished;
 	private FieldReference nowField;
-	
+
 	private final static String literalPrefix = "$literal";
 
 	private MethodWriter getStaticInitializer() {
@@ -60,8 +57,8 @@ final class CodeGenerator {
 		try {
 			FieldReference ref = stringLiterals.get(value);
 			if (ref == null) {
-				ref = classFileWriter.declareField(literalPrefix + (nextFieldIndex++), ArdenString.class, Modifier.PRIVATE
-						| Modifier.STATIC | Modifier.FINAL);
+				ref = classFileWriter.declareField(literalPrefix + (nextFieldIndex++), ArdenString.class,
+						Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
 				stringLiterals.put(value, ref);
 				getStaticInitializer().newObject(ArdenString.class);
 				getStaticInitializer().dup();
@@ -87,8 +84,8 @@ final class CodeGenerator {
 		try {
 			FieldReference ref = numberLiterals.get(value);
 			if (ref == null) {
-				ref = classFileWriter.declareField(literalPrefix + (nextFieldIndex++), ArdenNumber.class, Modifier.PRIVATE
-						| Modifier.STATIC | Modifier.FINAL);
+				ref = classFileWriter.declareField(literalPrefix + (nextFieldIndex++), ArdenNumber.class,
+						Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
 				numberLiterals.put(value, ref);
 				getStaticInitializer().newObject(ArdenNumber.class);
 				getStaticInitializer().dup();
@@ -114,8 +111,8 @@ final class CodeGenerator {
 		try {
 			FieldReference ref = timeLiterals.get(value);
 			if (ref == null) {
-				ref = classFileWriter.declareField(literalPrefix + (nextFieldIndex++), ArdenTime.class, Modifier.PRIVATE
-						| Modifier.STATIC | Modifier.FINAL);
+				ref = classFileWriter.declareField(literalPrefix + (nextFieldIndex++), ArdenTime.class,
+						Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL);
 				timeLiterals.put(value, ref);
 				getStaticInitializer().newObject(ArdenTime.class);
 				getStaticInitializer().dup();
@@ -134,7 +131,6 @@ final class CodeGenerator {
 	}
 
 	public CodeGenerator(String mlmName) {
-		this.className = mlmName;
 		this.classFileWriter = new ClassFileWriter(mlmName, MedicalLogicModuleImplementation.class);
 	}
 

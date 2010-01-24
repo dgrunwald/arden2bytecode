@@ -29,7 +29,6 @@ import arden.compiler.parser.Parser;
 import arden.compiler.parser.ParserException;
 import arden.runtime.ArdenValue;
 import arden.runtime.MedicalLogicModule;
-import arden.runtime.MedicalLogicModuleImplementation;
 import arden.runtime.RuntimeHelpers;
 
 /**
@@ -100,13 +99,17 @@ public final class Compiler {
 	}
 
 	private CompiledMlm doCompileMlm(AMlm mlm) {
+		MetadataCompiler metadata = new MetadataCompiler();
+		mlm.getMaintenanceCategory().apply(metadata);
+		mlm.getLibraryCategory().apply(metadata);
+
 		AKnowledgeCategory knowledgeCategory = (AKnowledgeCategory) mlm.getKnowledgeCategory();
 		AKnowledgeBody knowledge = (AKnowledgeBody) knowledgeCategory.getKnowledgeBody();
 
 		// System.out.println(knowledge.toString());
 		// knowledge.apply(new PrintTreeVisitor(System.out));
 
-		CodeGenerator codeGen = new CodeGenerator("xyz");
+		CodeGenerator codeGen = new CodeGenerator(metadata.maintenance.getMlmName());
 
 		compileData(codeGen, knowledge.getDataSlot());
 		compileLogic(codeGen, knowledge.getLogicSlot());
@@ -123,7 +126,7 @@ public final class Compiler {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		return new CompiledMlm(data);
+		return new CompiledMlm(data, metadata.maintenance, metadata.library);
 	}
 
 	private void compileData(CodeGenerator codeGen, PDataSlot dataSlot) {
