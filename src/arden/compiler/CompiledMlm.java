@@ -1,5 +1,7 @@
 package arden.compiler;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -9,19 +11,42 @@ import arden.runtime.ExecutionContext;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.MedicalLogicModuleImplementation;
 
-final class CompiledMlm implements MedicalLogicModule {
+public final class CompiledMlm implements MedicalLogicModule {
+	private final byte[] data;
 	private Constructor<? extends MedicalLogicModuleImplementation> ctor;
 
-	public CompiledMlm(Class<? extends MedicalLogicModuleImplementation> clazz) {
-		// We know the class has an appropriate constructor because we compiled
-		// it, so wrap all the checked exceptions that should never occur.
-		try {
-			ctor = clazz.getConstructor(ExecutionContext.class, MedicalLogicModule.class, ArdenValue[].class);
-		} catch (SecurityException e) {
-			throw new RuntimeException(e);
-		} catch (NoSuchMethodException e) {
-			throw new RuntimeException(e);
+	CompiledMlm(byte[] data) {
+		if (data == null)
+			throw new NullPointerException();
+		this.data = data;
+	}
+
+	public void saveClassFile(OutputStream os) throws IOException {
+		os.write(data);
+	}
+
+	@SuppressWarnings("unchecked")
+	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getConstructor() {
+		if (ctor == null) {
+			Class<? extends MedicalLogicModuleImplementation> clazz;
+			try {
+				ClassLoader classLoader = new InMemoryClassLoader("xyz", data);
+				clazz = (Class<? extends MedicalLogicModuleImplementation>) classLoader.loadClass("xyz");
+			} catch (ClassNotFoundException e) {
+				throw new RuntimeException(e);
+			}
+			// We know the class has an appropriate constructor because we
+			// compiled it, so wrap all the checked exceptions that should never
+			// occur.
+			try {
+				ctor = clazz.getConstructor(ExecutionContext.class, MedicalLogicModule.class, ArdenValue[].class);
+			} catch (SecurityException e) {
+				throw new RuntimeException(e);
+			} catch (NoSuchMethodException e) {
+				throw new RuntimeException(e);
+			}
 		}
+		return ctor;
 	}
 
 	/** Creates an instance of the implementation class. */
@@ -34,7 +59,7 @@ final class CompiledMlm implements MedicalLogicModule {
 			arguments = ArdenList.EMPTY.values;
 
 		try {
-			return ctor.newInstance(context, this, arguments);
+			return getConstructor().newInstance(context, this, arguments);
 		} catch (IllegalArgumentException e) {
 			throw new RuntimeException(e);
 		} catch (InstantiationException e) {

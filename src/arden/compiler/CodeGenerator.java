@@ -40,6 +40,8 @@ final class CodeGenerator {
 	private int nextFieldIndex;
 	private boolean isFinished;
 	private FieldReference nowField;
+	
+	private final static String literalPrefix = "$literal";
 
 	private MethodWriter getStaticInitializer() {
 		if (isFinished)
@@ -58,7 +60,7 @@ final class CodeGenerator {
 		try {
 			FieldReference ref = stringLiterals.get(value);
 			if (ref == null) {
-				ref = classFileWriter.declareField("literal" + (nextFieldIndex++), ArdenString.class, Modifier.PRIVATE
+				ref = classFileWriter.declareField(literalPrefix + (nextFieldIndex++), ArdenString.class, Modifier.PRIVATE
 						| Modifier.STATIC | Modifier.FINAL);
 				stringLiterals.put(value, ref);
 				getStaticInitializer().newObject(ArdenString.class);
@@ -85,7 +87,7 @@ final class CodeGenerator {
 		try {
 			FieldReference ref = numberLiterals.get(value);
 			if (ref == null) {
-				ref = classFileWriter.declareField("literal" + (nextFieldIndex++), ArdenNumber.class, Modifier.PRIVATE
+				ref = classFileWriter.declareField(literalPrefix + (nextFieldIndex++), ArdenNumber.class, Modifier.PRIVATE
 						| Modifier.STATIC | Modifier.FINAL);
 				numberLiterals.put(value, ref);
 				getStaticInitializer().newObject(ArdenNumber.class);
@@ -112,7 +114,7 @@ final class CodeGenerator {
 		try {
 			FieldReference ref = timeLiterals.get(value);
 			if (ref == null) {
-				ref = classFileWriter.declareField("literal" + (nextFieldIndex++), ArdenTime.class, Modifier.PRIVATE
+				ref = classFileWriter.declareField(literalPrefix + (nextFieldIndex++), ArdenTime.class, Modifier.PRIVATE
 						| Modifier.STATIC | Modifier.FINAL);
 				timeLiterals.put(value, ref);
 				getStaticInitializer().newObject(ArdenTime.class);
@@ -175,7 +177,7 @@ final class CodeGenerator {
 
 	public FieldReference getNowField() {
 		if (nowField == null) {
-			nowField = classFileWriter.declareField("now", ArdenValue.class, Modifier.PRIVATE | Modifier.FINAL);
+			nowField = classFileWriter.declareField("now", ArdenValue.class, Modifier.PRIVATE);
 		}
 		return nowField;
 	}
@@ -256,26 +258,5 @@ final class CodeGenerator {
 			isFinished = true;
 		}
 		classFileWriter.save(output);
-	}
-
-	/** Loads the Java class. */
-	@SuppressWarnings("unchecked")
-	public Class<? extends MedicalLogicModuleImplementation> loadClassFromMemory() {
-		byte[] data;
-		try {
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			DataOutputStream s = new DataOutputStream(bos);
-			save(s);
-			s.close();
-			data = bos.toByteArray();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		try {
-			ClassLoader classLoader = new InMemoryClassLoader(className, data);
-			return (Class<? extends MedicalLogicModuleImplementation>) classLoader.loadClass(className);
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		}
 	}
 }

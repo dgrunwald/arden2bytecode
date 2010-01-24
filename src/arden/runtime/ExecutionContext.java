@@ -9,9 +9,22 @@ import java.util.Date;
  * 
  */
 public class ExecutionContext {
-	// query = "medication_cancellation where class = gentamicin"
-	public ArdenValue read(String query) {
-		return ArdenNull.INSTANCE;
+	/**
+	 * Creates a database query using a mapping clause. The DatabaseQuery object
+	 * can be used to limit the number of results produced.
+	 * 
+	 * @param mapping
+	 *            The contents of the mapping clause (=text between { and }).
+	 *            The meaning is implementation-defined. The Arden language
+	 *            specification uses mapping clauses like
+	 *            "medication_cancellation where class = gentamicin".
+	 * 
+	 * @return This method may not return Java null. Instead, it can return
+	 *         DatabaseQuery.NULL, a query that will always produce an empty
+	 *         result set.
+	 */
+	public DatabaseQuery createQuery(String mapping) {
+		return DatabaseQuery.NULL;
 	}
 
 	/**

@@ -1,5 +1,7 @@
 package arden.compiler;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
@@ -27,6 +29,7 @@ import arden.compiler.parser.Parser;
 import arden.compiler.parser.ParserException;
 import arden.runtime.ArdenValue;
 import arden.runtime.MedicalLogicModule;
+import arden.runtime.MedicalLogicModuleImplementation;
 import arden.runtime.RuntimeHelpers;
 
 /**
@@ -48,15 +51,15 @@ public final class Compiler {
 	}
 
 	/** Compiles a single MLM given in the input stream. */
-	public MedicalLogicModule compileMlm(Reader input) throws CompilerException, IOException {
-		List<MedicalLogicModule> output = compile(input);
+	public CompiledMlm compileMlm(Reader input) throws CompilerException, IOException {
+		List<CompiledMlm> output = compile(input);
 		if (output.size() != 1)
 			throw new CompilerException("Expected only a single MLM per file", 0, 0);
 		return output.get(0);
 	}
 
 	/** Compiles a list of MLMs given in the input stream. */
-	public List<MedicalLogicModule> compile(Reader input) throws CompilerException, IOException {
+	public List<CompiledMlm> compile(Reader input) throws CompilerException, IOException {
 		Lexer lexer = new Lexer(new PushbackReader(input, 1024));
 		Parser parser = new Parser(lexer);
 		Start syntaxTree;
@@ -71,9 +74,9 @@ public final class Compiler {
 	}
 
 	/** Compiles a list of MLMs given in the syntax tree. */
-	public List<MedicalLogicModule> compile(Start syntaxTree) throws CompilerException {
+	public List<CompiledMlm> compile(Start syntaxTree) throws CompilerException {
 		try {
-			final ArrayList<MedicalLogicModule> output = new ArrayList<MedicalLogicModule>();
+			final ArrayList<CompiledMlm> output = new ArrayList<CompiledMlm>();
 			// find all AMlm nodes and compile each individually
 			syntaxTree.apply(new DepthFirstAdapter() {
 				@Override
@@ -110,7 +113,17 @@ public final class Compiler {
 		compileAction(codeGen, knowledge.getActionSlot());
 		compileUrgency(codeGen, knowledge.getUrgencySlot());
 
-		return new CompiledMlm(codeGen.loadClassFromMemory());
+		byte[] data;
+		try {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			DataOutputStream s = new DataOutputStream(bos);
+			codeGen.save(s);
+			s.close();
+			data = bos.toByteArray();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return new CompiledMlm(data);
 	}
 
 	private void compileData(CodeGenerator codeGen, PDataSlot dataSlot) {

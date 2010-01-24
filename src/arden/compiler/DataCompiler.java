@@ -1,9 +1,14 @@
 package arden.compiler;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 
 import arden.codegenerator.FieldReference;
+import arden.codegenerator.Label;
 import arden.compiler.node.*;
+import arden.runtime.ArdenNull;
+import arden.runtime.DatabaseQuery;
 import arden.runtime.MedicalLogicModule;
 
 /**
@@ -134,7 +139,7 @@ final class DataCompiler extends VisitorBase {
 			@Override
 			public void caseAReadDataAssignPhrase(AReadDataAssignPhrase node) {
 				// {read} read read_phrase
-				assign(lhs, node.getReadPhrase());
+				assignPhrase(lhs, node.getReadPhrase());
 			}
 
 			@Override
@@ -203,13 +208,13 @@ final class DataCompiler extends VisitorBase {
 			@Override
 			public void caseACphrDataAssignPhrase(ACphrDataAssignPhrase node) {
 				// {cphr} call_phrase
-				assign(lhs, node.getCallPhrase());
+				assignPhrase(lhs, node.getCallPhrase());
 			}
 
 			@Override
 			public void caseAExprDataAssignPhrase(AExprDataAssignPhrase node) {
 				// {expr} expr
-				assign(lhs, node.getExpr());
+				assignExpression(lhs, node.getExpr());
 			}
 		});
 	}
@@ -217,21 +222,21 @@ final class DataCompiler extends VisitorBase {
 	@Override
 	public void caseATexprDataAssignment(ATexprDataAssignment node) {
 		// data_assignment = {texpr} time_becomes expr
-		assign(LeftHandSideAnalyzer.analyze(node.getTimeBecomes()), node.getExpr());
+		assignExpression(LeftHandSideAnalyzer.analyze(node.getTimeBecomes()), node.getExpr());
 	}
 
 	@Override
 	public void caseALphrDataAssignment(ALphrDataAssignment node) {
 		// data_assignment = {lphr} l_par data_var_list r_par assign read
 		// read_phrase
-		assign(LeftHandSideAnalyzer.analyze(node.getDataVarList()), node.getReadPhrase());
+		assignPhrase(LeftHandSideAnalyzer.analyze(node.getDataVarList()), node.getReadPhrase());
 	}
 
 	@Override
 	public void caseALlphrDataAssignment(ALlphrDataAssignment node) {
 		// data_assignment = {llphr} let l_par data_var_list r_par be read
 		// read_phrase
-		assign(LeftHandSideAnalyzer.analyze(node.getDataVarList()), node.getReadPhrase());
+		assignPhrase(LeftHandSideAnalyzer.analyze(node.getDataVarList()), node.getReadPhrase());
 	}
 
 	@Override
@@ -273,23 +278,74 @@ final class DataCompiler extends VisitorBase {
 
 	/** Assigns the argument to the variable. */
 	private void assignArgument(LeftHandSideResult lhs) {
-		// TODO: implement
-		throw new RuntimeCompilerException(lhs.getPosition(), "ARGUMENT is not yet implemented");
+		context.writer.loadVariable(context.argumentsVariable);
+		assignResultFromPhrase(lhs);
 	}
 
 	/** Assigns a read phrase to the variable. */
-	private void assign(LeftHandSideResult lhs, PReadPhrase readPhrase) {
-		// TODO: implement
-		throw new RuntimeCompilerException(lhs.getPosition(), "READ is not yet implemented");
+	private void assignPhrase(LeftHandSideResult lhs, PReadPhrase readPhrase) {
+		context.writer.sequencePoint(lhs.getPosition().getLine());
+		readPhrase.apply(new ReadPhraseCompiler(context));
+		try {
+			context.writer.invokeInstance(DatabaseQuery.class.getMethod("execute"));
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+		assignResultFromPhrase(lhs);
 	}
 
 	/** Assigns a call phrase to the variable. */
-	private void assign(LeftHandSideResult lhs, PCallPhrase readPhrase) {
-		// TODO: implement
-		throw new RuntimeCompilerException(lhs.getPosition(), "CALL is not yet implemented");
+	private void assignPhrase(LeftHandSideResult lhs, PCallPhrase callPhrase) {
+		// TODO
+		throw new RuntimeCompilerException("TODO");
+		// assignResultFromPhrase(lhs);
 	}
 
-	private void assign(LeftHandSideResult lhs, PExpr expr) {
+	private void assignResultFromPhrase(LeftHandSideResult lhs) {
+		final int phraseResultVar = context.allocateVariable();
+		// store phrase result in variable
+		context.writer.storeVariable(phraseResultVar);
+
+		List<LeftHandSideIdentifier> idents;
+		if (lhs instanceof LeftHandSideIdentifier) {
+			idents = new ArrayList<LeftHandSideIdentifier>();
+			idents.add((LeftHandSideIdentifier) lhs);
+		} else if (lhs instanceof LeftHandSideIdentifierList) {
+			idents = ((LeftHandSideIdentifierList) lhs).getList();
+		} else {
+			throw new RuntimeCompilerException(lhs.getPosition(), "Cannot use READ or CALL phrase in this context.");
+		}
+		for (int i = 0; i < idents.size(); i++) {
+			final int identNumber = i;
+			// for each identifier, emit:
+			// var_i = (i < phraseResult.Length)
+			// ? phraseResult.Length[i] : ArdenNull.Instance;
+			idents.get(i).assign(context, new Switchable() {
+				@Override
+				public void apply(Switch sw) {
+					Label trueLabel = new Label();
+					Label endLabel = new Label();
+					context.writer.loadIntegerConstant(identNumber);
+					context.writer.loadVariable(phraseResultVar);
+					context.writer.arrayLength();
+					context.writer.jumpIfLessThan(trueLabel);
+					// false part
+					new ANullExprFactorAtom().apply(sw);
+					context.writer.jump(endLabel);
+					// true part
+					context.writer.markForwardJumpsOnly(trueLabel);
+					context.writer.loadVariable(phraseResultVar);
+					context.writer.loadIntegerConstant(identNumber);
+					context.writer.loadObjectFromArray();
+					context.writer.markForwardJumpsOnly(endLabel);
+				}
+			});
+		}
+	}
+
+	private void assignExpression(LeftHandSideResult lhs, PExpr expr) {
 		lhs.assign(context, expr);
 	}
 }

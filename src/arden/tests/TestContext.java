@@ -5,12 +5,6 @@ import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 
 public class TestContext extends ExecutionContext {
-
-	@Override
-	public ArdenValue read(String query) {
-		throw new RuntimeException("Unexpected read");
-	}
-
 	StringBuilder b = new StringBuilder();
 
 	@Override

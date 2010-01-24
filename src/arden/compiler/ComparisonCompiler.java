@@ -17,14 +17,14 @@ import arden.runtime.UnaryOperator;
  * @author Daniel Grunwald
  */
 final class ComparisonCompiler extends VisitorBase {
-	private final ExpressionCompiler parent;
+	private final ExpressionCompiler expressionCompiler;
 	private final Switchable argument;
 	private final CompilerContext context;
 
-	public ComparisonCompiler(ExpressionCompiler parent, Switchable argument) {
-		this.parent = parent;
+	public ComparisonCompiler(ExpressionCompiler expressionCompiler, Switchable argument) {
+		this.expressionCompiler = expressionCompiler;
 		this.argument = argument;
-		this.context = parent.getContext();
+		this.context = expressionCompiler.getContext();
 	}
 
 	// main_comp_op =
@@ -64,7 +64,7 @@ final class ComparisonCompiler extends VisitorBase {
 			op = BinaryOperator.LE;
 		else
 			throw new RuntimeException("Unknown binary_comp_op");
-		parent.invokeOperator(op, argument, node.getExprString());
+		expressionCompiler.invokeOperator(op, argument, node.getExprString());
 	}
 
 	@Override
@@ -92,19 +92,19 @@ final class ComparisonCompiler extends VisitorBase {
 		// <n:time> IS WITHIN <n:duration> PRECEDING <n:time>
 		// => argument IS WITHIN (dur BEFORE time) TO time
 
-		parent.loadOperator(TernaryOperator.WITHINTO);
-		argument.apply(parent);
-		parent.loadOperator(BinaryOperator.BEFORE);
-		node.getLeft().apply(parent);
-		node.getRight().apply(parent);
+		expressionCompiler.loadOperator(TernaryOperator.WITHINTO);
+		argument.apply(expressionCompiler);
+		expressionCompiler.loadOperator(BinaryOperator.BEFORE);
+		node.getLeft().apply(expressionCompiler);
+		node.getRight().apply(expressionCompiler);
 		// stack: WITHINTO, argument, BEFORE, dur, time
 		context.writer.dup_x2();
 		// stack: WITHINTO, argument, time, BEFORE, dur, time
-		parent.invokeLoadedBinaryOperator();
+		expressionCompiler.invokeLoadedBinaryOperator();
 		// stack: WITHINTO, argument, time, time2
 		context.writer.swap();
 		// stack: WITHINTO, argument, time2, time
-		parent.invokeLoadedTernaryOperator();
+		expressionCompiler.invokeLoadedTernaryOperator();
 	}
 
 	@Override
@@ -114,31 +114,31 @@ final class ComparisonCompiler extends VisitorBase {
 
 		// <n:time> IS WITHIN <n:duration> FOLLOWING <n:time>
 		// => argument IS WITHIN time TO (dur AFTER time)
-		parent.loadOperator(TernaryOperator.WITHINTO);
-		argument.apply(parent);
-		parent.loadOperator(BinaryOperator.AFTER);
-		node.getLeft().apply(parent);
-		node.getRight().apply(parent);
+		expressionCompiler.loadOperator(TernaryOperator.WITHINTO);
+		argument.apply(expressionCompiler);
+		expressionCompiler.loadOperator(BinaryOperator.AFTER);
+		node.getLeft().apply(expressionCompiler);
+		node.getRight().apply(expressionCompiler);
 		// stack: WITHINTO, argument, AFTER, dur, time
 		context.writer.dup_x2();
 		// stack: WITHINTO, argument, time, AFTER, dur, time
-		parent.invokeLoadedBinaryOperator();
+		expressionCompiler.invokeLoadedBinaryOperator();
 		// stack: WITHINTO, argument, time, time2
-		parent.invokeLoadedTernaryOperator();
+		expressionCompiler.invokeLoadedTernaryOperator();
 	}
 
 	@Override
 	public void caseASurTemporalCompOp(ASurTemporalCompOp node) {
 		// temporal_comp_op =
 		// {sur} within [left]:expr_string surrounding [right]:expr_string
-		parent.invokeOperator(TernaryOperator.WITHINSURROUNDING, argument, node.getLeft(), node.getRight());
+		expressionCompiler.invokeOperator(TernaryOperator.WITHINSURROUNDING, argument, node.getLeft(), node.getRight());
 	}
 
 	@Override
 	public void caseAWithinTemporalCompOp(AWithinTemporalCompOp node) {
 		// temporal_comp_op = {within} within [lower]:expr_string to
 		// [upper]:expr_string
-		parent.invokeOperator(TernaryOperator.WITHINTO, argument, node.getLower(), node.getUpper());
+		expressionCompiler.invokeOperator(TernaryOperator.WITHINTO, argument, node.getLower(), node.getUpper());
 	}
 
 	@Override
@@ -146,55 +146,55 @@ final class ComparisonCompiler extends VisitorBase {
 		// temporal_comp_op = {past} within past expr_string
 		// (time IS WITHIN PAST dur)
 		// => (time IS WITHIN (dur BEFORE NOW) TO NOW)
-		parent.loadOperator(TernaryOperator.WITHINTO);
-		argument.apply(parent);
-		parent.loadOperator(BinaryOperator.BEFORE);
-		node.getExprString().apply(parent);
+		expressionCompiler.loadOperator(TernaryOperator.WITHINTO);
+		argument.apply(expressionCompiler);
+		expressionCompiler.loadOperator(BinaryOperator.BEFORE);
+		node.getExprString().apply(expressionCompiler);
 		context.writer.loadInstanceField(context.codeGenerator.getNowField());
 		// Stack: WITHINTO, time, BEFORE, dur, now
-		parent.invokeLoadedBinaryOperator();
+		expressionCompiler.invokeLoadedBinaryOperator();
 		// Stack: WITHINTO, time, starttime
 		context.writer.loadInstanceField(context.codeGenerator.getNowField());
 		// Stack: WITHINTO, time, starttime, now
-		parent.invokeLoadedTernaryOperator();
+		expressionCompiler.invokeLoadedTernaryOperator();
 	}
 
 	@Override
 	public void caseASameTemporalCompOp(ASameTemporalCompOp node) {
 		// temporal_comp_op = {same} within same day as expr_string
-		parent.invokeOperator(BinaryOperator.WITHINSAMEDAY, argument, node.getExprString());
+		expressionCompiler.invokeOperator(BinaryOperator.WITHINSAMEDAY, argument, node.getExprString());
 	}
 
 	@Override
 	public void caseABefTemporalCompOp(ABefTemporalCompOp node) {
 		// temporal_comp_op = {bef} before expr_string
-		parent.invokeOperator(BinaryOperator.ISBEFORE, argument, node.getExprString());
+		expressionCompiler.invokeOperator(BinaryOperator.ISBEFORE, argument, node.getExprString());
 	}
 
 	@Override
 	public void caseAAfterTemporalCompOp(AAfterTemporalCompOp node) {
 		// temporal_comp_op = {after} after expr_string
-		parent.invokeOperator(BinaryOperator.ISAFTER, argument, node.getExprString());
+		expressionCompiler.invokeOperator(BinaryOperator.ISAFTER, argument, node.getExprString());
 	}
 
 	@Override
 	public void caseAEqualTemporalCompOp(AEqualTemporalCompOp node) {
 		// temporal_comp_op = {equal} equal expr_string
-		parent.invokeOperator(BinaryOperator.EQ, argument, node.getExprString());
+		expressionCompiler.invokeOperator(BinaryOperator.EQ, argument, node.getExprString());
 	}
 
 	@Override
 	public void caseAAtTemporalCompOp(AAtTemporalCompOp node) {
 		// temporal_comp_op = {at} at expr_string
 		// OCCURRED AT is synonym for OCCURRED EQUAL
-		parent.invokeOperator(BinaryOperator.EQ, argument, node.getExprString());
+		expressionCompiler.invokeOperator(BinaryOperator.EQ, argument, node.getExprString());
 	}
 
 	// in_comp_op = in expr_string;
 	@Override
 	public void caseAInCompOp(AInCompOp node) {
-		argument.apply(parent);
-		node.getExprString().apply(parent);
+		argument.apply(expressionCompiler);
+		node.getExprString().apply(expressionCompiler);
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("isIn", ArdenValue.class, ArdenValue.class));
 	}
 
@@ -210,51 +210,51 @@ final class ComparisonCompiler extends VisitorBase {
 	@Override
 	public void caseAPresUnaryCompOp(APresUnaryCompOp node) {
 		// is present
-		parent.loadOperator(UnaryOperator.NOT);
-		parent.invokeOperator(UnaryOperator.ISNULL, argument);
-		parent.invokeLoadedUnaryOperator();
+		expressionCompiler.loadOperator(UnaryOperator.NOT);
+		expressionCompiler.invokeOperator(UnaryOperator.ISNULL, argument);
+		expressionCompiler.invokeLoadedUnaryOperator();
 	}
 
 	@Override
 	public void caseANullUnaryCompOp(ANullUnaryCompOp node) {
 		// is null
-		parent.invokeOperator(UnaryOperator.ISNULL, argument);
+		expressionCompiler.invokeOperator(UnaryOperator.ISNULL, argument);
 	}
 
 	@Override
 	public void caseABoolUnaryCompOp(ABoolUnaryCompOp node) {
 		// is boolean
-		parent.invokeOperator(UnaryOperator.ISBOOLEAN, argument);
+		expressionCompiler.invokeOperator(UnaryOperator.ISBOOLEAN, argument);
 	}
 
 	@Override
 	public void caseANumUnaryCompOp(ANumUnaryCompOp node) {
 		// is number
-		parent.invokeOperator(UnaryOperator.ISNUMBER, argument);
+		expressionCompiler.invokeOperator(UnaryOperator.ISNUMBER, argument);
 	}
 
 	@Override
 	public void caseATimeUnaryCompOp(ATimeUnaryCompOp node) {
 		// is number
-		parent.invokeOperator(UnaryOperator.ISTIME, argument);
+		expressionCompiler.invokeOperator(UnaryOperator.ISTIME, argument);
 	}
 
 	@Override
 	public void caseADurUnaryCompOp(ADurUnaryCompOp node) {
 		// is duration
-		parent.invokeOperator(UnaryOperator.ISDURATION, argument);
+		expressionCompiler.invokeOperator(UnaryOperator.ISDURATION, argument);
 	}
 
 	@Override
 	public void caseAStrUnaryCompOp(AStrUnaryCompOp node) {
 		// is string
-		parent.invokeOperator(UnaryOperator.ISSTRING, argument);
+		expressionCompiler.invokeOperator(UnaryOperator.ISSTRING, argument);
 	}
 	
 	@Override
 	public void caseAListUnaryCompOp(AListUnaryCompOp node) {
 		// is list
-		argument.apply(parent);
+		argument.apply(expressionCompiler);
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("isList", ArdenValue.class));
 	}
 }

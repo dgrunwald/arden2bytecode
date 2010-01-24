@@ -10,9 +10,12 @@ maintenance:
     validation: testing;;
 library:
     purpose:
-        Calculate the fractional excretion of sodium whenever urine electrolytes are stored. (This MLM demonstrates data interpretation across independent laboratory results.);;
+        Calculate the fractional excretion of sodium whenever urine electrolytes are stored.
+        (This MLM demonstrates data interpretation across independent laboratory results.);;
     explanation:
-        The fractional excretion of sodium is calculated from the urine sodium and creatinine and the most recent serum sodium and creatinine (where they occurred within the past 24 hours). A value less than 1.0 % is considered low.;;
+        The fractional excretion of sodium is calculated from the urine sodium and creatinine
+        and the most recent serum sodium and creatinine (where they occurred within the past 24 hours).
+        A value less than 1.0 % is considered low.;;
     keywords: fractional excretion, serum sodium, azotemia;;
     citations:
         1. Steiner RW. Interpreting the fractional excretion of sodium. Am J Med 1984:77:699-702.;;

@@ -14,6 +14,7 @@ final class CompilerContext {
 	public final MethodWriter writer;
 	public final int executionContextVariable;
 	public final int selfMLMVariable;
+	public final int argumentsVariable;
 	private int nextFreeVariable;
 	/** Stack of currently active 'it' variables */
 	private Stack<Integer> itVariables = new Stack<Integer>();
@@ -31,6 +32,10 @@ final class CompilerContext {
 			selfMLMVariable = 2;
 		else
 			selfMLMVariable = -1;
+		if (parameters >= 3)
+			argumentsVariable = 3;
+		else
+			argumentsVariable = -1;
 		nextFreeVariable = parameters + 1;
 	}
 

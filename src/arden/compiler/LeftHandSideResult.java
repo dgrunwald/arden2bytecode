@@ -1,9 +1,11 @@
 package arden.compiler;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 
 import arden.codegenerator.FieldReference;
-import arden.compiler.node.PExpr;
+import arden.compiler.node.Switchable;
 import arden.compiler.node.TIdentifier;
 import arden.compiler.node.TNow;
 import arden.compiler.node.Token;
@@ -18,7 +20,7 @@ import arden.runtime.ArdenValue;
 abstract class LeftHandSideResult {
 	public abstract Token getPosition();
 
-	public abstract void assign(CompilerContext context, PExpr expr);
+	public abstract void assign(CompilerContext context, Switchable expr);
 }
 
 final class LeftHandSideIdentifier extends LeftHandSideResult {
@@ -34,7 +36,7 @@ final class LeftHandSideIdentifier extends LeftHandSideResult {
 	}
 
 	@Override
-	public void assign(CompilerContext context, PExpr expr) {
+	public void assign(CompilerContext context, Switchable expr) {
 		context.writer.sequencePoint(identifier.getLine());
 		Variable v = context.codeGenerator.getVariable(identifier.getText());
 		if (v == null) {
@@ -45,6 +47,32 @@ final class LeftHandSideIdentifier extends LeftHandSideResult {
 		expr.apply(new ExpressionCompiler(context));
 		v.saveValue(context, identifier);
 	};
+}
+
+final class LeftHandSideIdentifierList extends LeftHandSideResult {
+	private final ArrayList<LeftHandSideIdentifier> list = new ArrayList<LeftHandSideIdentifier>();
+
+	public void add(LeftHandSideIdentifier ident) {
+		list.add(ident);
+	}
+
+	public List<LeftHandSideIdentifier> getList() {
+		return list;
+	}
+
+	@Override
+	public Token getPosition() {
+		if (list.size() == 0)
+			return null;
+		else
+			return list.get(0).getPosition();
+	}
+
+	@Override
+	public void assign(CompilerContext context, Switchable expr) {
+		throw new RuntimeCompilerException(getPosition(),
+				"A READ or CALL query must be used for initializing multiple variables.");
+	}
 }
 
 final class LeftHandSideTimeOfIdentifier extends LeftHandSideResult {
@@ -60,7 +88,7 @@ final class LeftHandSideTimeOfIdentifier extends LeftHandSideResult {
 	}
 
 	@Override
-	public void assign(CompilerContext context, PExpr expr) {
+	public void assign(CompilerContext context, Switchable expr) {
 		context.writer.sequencePoint(identifier.getLine());
 		Variable v = context.codeGenerator.getVariableOrShowError(identifier);
 		v.loadValue(context, identifier);
@@ -83,14 +111,10 @@ final class LeftHandSideNow extends LeftHandSideResult {
 	}
 
 	@Override
-	public void assign(CompilerContext context, PExpr expr) {
+	public void assign(CompilerContext context, Switchable expr) {
 		context.writer.sequencePoint(now.getLine());
 		context.writer.loadThis();
 		expr.apply(new ExpressionCompiler(context));
 		context.writer.storeInstanceField(context.codeGenerator.getNowField());
 	}
 }
-
-// class LeftHandSideTimeOfIdentifier extends LeftHandSideResult {
-
-// }

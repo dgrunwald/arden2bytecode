@@ -64,10 +64,6 @@ Helpers
   escape_sequence     = '\n' | '\t' | '\v' | '\b' | '\r' | '\f' | '\a' | '\"' | '\' ''' | '\\';
 
   semicol= ';';
-  nosemi = [printable - semicol];
-  allnosemi = [[all -semicol] - '"'];
-  nosemibr = [[nosemi - '{']-'}'];
-
   star          = '*';
   slash         = '/';
   slashslash    = '//';
@@ -84,12 +80,12 @@ Helpers
 
   letter                = [['a'..'z']+['A'..'Z']];
 
-  nosemicr = [nosemi + tab];
-  ttext  = nosemi+ (semicol nosemi+)*;
+  nosemicr = [[printable + tab] - semicol];
+  ttext  = [all - semicol]+ (semicol [all - semicol]+)*;
   linktext = (nosemicr+ (semicol nosemicr+)* eol?)* nosemicr+ (semicol nosemicr+)*;
   simplestring = [all - '"']+;
   sstring = simplestring+ ('"' '"' simplestring+)*;
-  datamaptext = nosemibr+ (semicol nosemibr+)*;
+  datamaptext = [all - ['{'+'}']]+;
 
    fractional_seconds =  /* no spaces are permitted between elements */
                         '.' ddigits

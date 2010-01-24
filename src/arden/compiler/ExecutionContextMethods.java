@@ -8,6 +8,7 @@ import arden.runtime.MedicalLogicModule;
 
 /** Contains references to the methods from the ExecutionContext class */
 final class ExecutionContextMethods {
+	public static final Method createQuery;
 	public static final Method write;
 	public static final Method findModule;
 	public static final Method callWithDelay;
@@ -15,6 +16,7 @@ final class ExecutionContextMethods {
 
 	static {
 		try {
+			createQuery = ExecutionContext.class.getMethod("createQuery", String.class);
 			write = ExecutionContext.class.getMethod("write", ArdenValue.class, String.class);
 			findModule = ExecutionContext.class.getMethod("findModule", String.class, String.class);
 			callWithDelay = ExecutionContext.class.getMethod("callWithDelay", MedicalLogicModule.class,
