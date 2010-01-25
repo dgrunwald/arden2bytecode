@@ -355,7 +355,7 @@ public final class ExpressionHelpers {
 	/** Implements the FIRST transformation operator. */
 	public static ArdenValue first(ArdenValue input, int numberOfElements) {
 		ArdenList inputList = unaryComma(input);
-		if (numberOfElements < inputList.values.length)
+		if (numberOfElements >= inputList.values.length)
 			return inputList;
 		ArdenValue[] result = new ArdenValue[numberOfElements];
 		System.arraycopy(inputList.values, 0, result, 0, numberOfElements);
@@ -365,7 +365,7 @@ public final class ExpressionHelpers {
 	/** Implements the LAST transformation operator. */
 	public static ArdenValue last(ArdenValue input, int numberOfElements) {
 		ArdenList inputList = unaryComma(input);
-		if (numberOfElements < inputList.values.length)
+		if (numberOfElements >= inputList.values.length)
 			return inputList;
 		ArdenValue[] result = new ArdenValue[numberOfElements];
 		System.arraycopy(inputList.values, inputList.values.length - numberOfElements, result, 0, numberOfElements);
@@ -402,5 +402,37 @@ public final class ExpressionHelpers {
 				max = arr[i];
 		}
 		return max;
+	}
+
+	/** implements the ANY operator */
+	public static ArdenValue any(ArdenValue sequence) {
+		ArdenList input = unaryComma(sequence);
+		long primaryTime = getCommonTime(input.values);
+		boolean allFalse = true;
+		for (ArdenValue val : input.values) {
+			if (val.isTrue())
+				return ArdenBoolean.create(true, primaryTime);
+			allFalse &= val.isFalse();
+		}
+		if (allFalse)
+			return ArdenBoolean.create(false, primaryTime);
+		else
+			return ArdenNull.create(primaryTime);
+	}
+
+	/** implements the ALL operator */
+	public static ArdenValue all(ArdenValue sequence) {
+		ArdenList input = unaryComma(sequence);
+		long primaryTime = getCommonTime(input.values);
+		boolean allTrue = true;
+		for (ArdenValue val : input.values) {
+			if (val.isFalse())
+				return ArdenBoolean.create(false, primaryTime);
+			allTrue &= val.isTrue();
+		}
+		if (allTrue)
+			return ArdenBoolean.create(true, primaryTime);
+		else
+			return ArdenNull.create(primaryTime);
 	}
 }

@@ -12,6 +12,7 @@ import java.util.List;
 import arden.compiler.analysis.DepthFirstAdapter;
 import arden.compiler.lexer.Lexer;
 import arden.compiler.lexer.LexerException;
+import arden.compiler.node.ADataSlot;
 import arden.compiler.node.AIdUrgencyVal;
 import arden.compiler.node.AKnowledgeBody;
 import arden.compiler.node.AKnowledgeCategory;
@@ -37,16 +38,13 @@ import arden.runtime.RuntimeHelpers;
  * @author Daniel Grunwald
  */
 public final class Compiler {
-	private boolean enableDebugging = true;
+	private boolean isDebuggingEnabled = false;
+	private String sourceFileName;
 
-	/** Gets whether the compiler will output debug information (line numbers) */
-	public boolean getEnableDebugging() {
-		return enableDebugging;
-	}
-
-	/** Sets whether the compiler will output debug information (line numbers) */
-	public void setEnableDebugging(boolean value) {
-		enableDebugging = value;
+	/** Enables debugging for the code being produced. */
+	public void enableDebugging(String sourceFileName) {
+		this.isDebuggingEnabled = true;
+		this.sourceFileName = sourceFileName;
 	}
 
 	/** Compiles a single MLM given in the input stream. */
@@ -109,7 +107,10 @@ public final class Compiler {
 		// System.out.println(knowledge.toString());
 		// knowledge.apply(new PrintTreeVisitor(System.out));
 
-		CodeGenerator codeGen = new CodeGenerator(metadata.maintenance.getMlmName());
+		CodeGenerator codeGen = new CodeGenerator(metadata.maintenance.getMlmName(), knowledgeCategory.getKnowledge()
+				.getLine());
+		if (isDebuggingEnabled)
+			codeGen.enableDebugging(sourceFileName);
 
 		compileData(codeGen, knowledge.getDataSlot());
 		compileLogic(codeGen, knowledge.getLogicSlot());
@@ -130,17 +131,14 @@ public final class Compiler {
 	}
 
 	private void compileData(CodeGenerator codeGen, PDataSlot dataSlot) {
-		CompilerContext context = codeGen.createConstructor();
-		if (enableDebugging)
-			context.writer.enableLineNumberTable();
+		int lineNumber = ((ADataSlot) dataSlot).getData().getLine();
+		CompilerContext context = codeGen.createConstructor(lineNumber);
 		dataSlot.apply(new DataCompiler(context));
 		context.writer.returnFromProcedure();
 	}
 
 	private void compileLogic(CodeGenerator codeGen, PLogicSlot logicSlot) {
 		CompilerContext context = codeGen.createLogic();
-		if (enableDebugging)
-			context.writer.enableLineNumberTable();
 		logicSlot.apply(new LogicCompiler(context));
 		// CONCLUDE FALSE; is default
 		context.writer.loadIntegerConstant(0);
@@ -149,8 +147,6 @@ public final class Compiler {
 
 	private void compileAction(CodeGenerator codeGen, PActionSlot actionSlot) {
 		CompilerContext context = codeGen.createAction();
-		if (enableDebugging)
-			context.writer.enableLineNumberTable();
 		if (actionSlot != null) {
 			actionSlot.apply(new ActionCompiler(context));
 		}
@@ -165,8 +161,7 @@ public final class Compiler {
 		if (urgencySlot instanceof AUrgUrgencySlot) {
 			PUrgencyVal val = ((AUrgUrgencySlot) urgencySlot).getUrgencyVal();
 			CompilerContext context = codeGen.createUrgency();
-			if (enableDebugging)
-				context.writer.enableLineNumberTable();
+			context.writer.sequencePoint(((AUrgUrgencySlot) urgencySlot).getUrgency().getLine());
 			// urgency_val =
 			// {num} P.number
 			// | {id} identifier;

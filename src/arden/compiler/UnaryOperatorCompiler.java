@@ -138,20 +138,22 @@ final class UnaryOperatorCompiler extends VisitorBase {
 
 	@Override
 	public void caseAAnyOfNoreadFuncOp(AAnyOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAAnyOfNoreadFuncOp(node);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("any", ArdenValue.class));
 	}
 
 	@Override
 	public void caseAAllOfNoreadFuncOp(AAllOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAAllOfNoreadFuncOp(node);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("all", ArdenValue.class));
 	}
 
 	@Override
 	public void caseANoOfNoreadFuncOp(ANoOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseANoOfNoreadFuncOp(node);
+		parent.loadOperator(UnaryOperator.NOT);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("any", ArdenValue.class));
+		parent.invokeLoadedUnaryOperator();
 	}
 
 	@Override

@@ -654,15 +654,13 @@ final class ExpressionCompiler extends VisitorBase {
 	@Override
 	public void caseAFromofexprfromExprFunction(AFromofexprfromExprFunction node) {
 		// {fromofexprfrom} from_of_func_op expr_factor from expr_function
-		// TODO Auto-generated method stub
-		super.caseAFromofexprfromExprFunction(node);
+		node.getFromOfFuncOp().apply(new TransformationOperatorCompiler(this, node.getExprFactor(), node.getExprFunction()));
 	}
 
 	@Override
 	public void caseAFromexprfromExprFunction(AFromexprfromExprFunction node) {
 		// {fromexprfrom} from_func_op expr_factor from expr_function
-		// TODO Auto-generated method stub
-		super.caseAFromexprfromExprFunction(node);
+		node.getFromFuncOp().apply(new TransformationOperatorCompiler(this, node.getExprFactor(), node.getExprFunction()));
 	}
 
 	@Override

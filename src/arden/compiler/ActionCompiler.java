@@ -107,6 +107,9 @@ final class ActionCompiler extends VisitorBase {
 
 		block.apply(blockCompiler);
 
+		// loopIndexVar++;
+		context.writer.incVariable(loopIndexVar, 1);
+
 		// if (loopIndexVar < arrayVar.length) goto loopBody;
 		context.writer.markForwardJumpsOnly(loopCondition);
 		context.writer.loadIntVariable(loopIndexVar);
@@ -126,6 +129,7 @@ final class ActionCompiler extends VisitorBase {
 
 	public static void compileWhileStatement(CompilerContext context, TWhile tWhile, PExpr expr, Switchable block,
 			Switch blockCompiler) {
+
 		Label start = new Label();
 		Label end = new Label();
 		context.writer.mark(start);

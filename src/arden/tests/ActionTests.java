@@ -30,15 +30,21 @@ public class ActionTests {
 		return stringBuilder.toString();
 	}
 
-	public static MedicalLogicModule parseAction(String actionCode) throws CompilerException {
+	public static MedicalLogicModule parseTemplate(String dataCode, String logicCode, String actionCode)
+			throws CompilerException {
 		try {
 			InputStream s = ActionTests.class.getResourceAsStream("ActionTemplate.mlm");
-			String fullCode = inputStreamToString(s).replace("$ACTION", actionCode);
+			String fullCode = inputStreamToString(s).replace("$ACTION", actionCode).replace("$DATA", dataCode).replace(
+					"$LOGIC", logicCode);
 			Compiler c = new Compiler();
 			return c.compileMlm(new StringReader(fullCode));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public static MedicalLogicModule parseAction(String actionCode) throws CompilerException {
+		return parseTemplate("", "conclude true;", actionCode);
 	}
 
 	@Test
@@ -61,7 +67,7 @@ public class ActionTests {
 		MedicalLogicModule mlm = parseAction("return \"A\"");
 		ArdenValue[] result = mlm.run(new TestContext(), null);
 		Assert.assertEquals(1, result.length);
-		Assert.assertEquals("A", ((ArdenString)result[0]).value);
+		Assert.assertEquals("A", ((ArdenString) result[0]).value);
 	}
 
 	@Test
@@ -69,7 +75,7 @@ public class ActionTests {
 		MedicalLogicModule mlm = parseAction("return \"A\", \"B\"");
 		ArdenValue[] result = mlm.run(new TestContext(), null);
 		Assert.assertEquals(2, result.length);
-		Assert.assertEquals("A", ((ArdenString)result[0]).value);
-		Assert.assertEquals("B", ((ArdenString)result[1]).value);
+		Assert.assertEquals("A", ((ArdenString) result[0]).value);
+		Assert.assertEquals("B", ((ArdenString) result[1]).value);
 	}
 }

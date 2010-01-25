@@ -19,10 +19,10 @@ library:
 		;;
 knowledge:
     type: data-driven;;
-    data: ;;
+    data: $DATA ;;
 evoke: /* this MLM is called directly */;;
 logic:
-        conclude true;
+        $LOGIC
         ;;
 action:
     $ACTION

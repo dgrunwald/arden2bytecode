@@ -1,5 +1,6 @@
 package arden.codegenerator;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
@@ -14,10 +15,10 @@ import java.util.List;
  * @author Daniel Grunwald
  */
 public final class ClassFileWriter {
-	ConstantPool pool = new ConstantPool();
+	private ConstantPool pool = new ConstantPool();
 
-	int this_class;
-	int super_class;
+	private int this_class;
+	private int super_class;
 
 	/** Creates a new ClassFileWriter for writing the specified class */
 	public ClassFileWriter(String className, Class<?> superClass) {
@@ -27,7 +28,19 @@ public final class ClassFileWriter {
 		super_class = pool.getClass(superClass);
 	}
 
-	class AttributeInfo {
+	private String sourceFileName;
+
+	/** Sets the source file name used for the debugger */
+	public void setSourceFileName(String sourceFileName) {
+		this.sourceFileName = sourceFileName;
+	}
+
+	/** Gets the source file name used for the debugger */
+	public String getSourceFileName() {
+		return sourceFileName;
+	}
+
+	private class AttributeInfo {
 		int nameIndex;
 		byte[] data;
 
@@ -42,7 +55,7 @@ public final class ClassFileWriter {
 		}
 	}
 
-	class FieldInfo {
+	private class FieldInfo {
 		short access_flags;
 		int name_index;
 		int descriptor_index;
@@ -61,7 +74,7 @@ public final class ClassFileWriter {
 		}
 	}
 
-	List<FieldInfo> fields = new ArrayList<FieldInfo>();
+	private List<FieldInfo> fields = new ArrayList<FieldInfo>();
 
 	/** Declares a new field in the class */
 	public FieldReference declareField(String name, Class<?> type, int modifiers) {
@@ -71,7 +84,7 @@ public final class ClassFileWriter {
 		return pool.createFieldref(this_class, name, type);
 	}
 
-	class MethodInfo {
+	private class MethodInfo {
 		short access_flags;
 		int name_index;
 		int descriptor_index;
@@ -96,8 +109,8 @@ public final class ClassFileWriter {
 		}
 	}
 
-	static final String JAVA_CONSTRUCTOR_NAME = "<init>";
-	static final String JAVA_STATIC_INITIALIZER_NAME = "<clinit>";
+	private static final String JAVA_CONSTRUCTOR_NAME = "<init>";
+	private static final String JAVA_STATIC_INITIALIZER_NAME = "<clinit>";
 
 	List<MethodInfo> methods = new ArrayList<MethodInfo>();
 
@@ -130,6 +143,19 @@ public final class ClassFileWriter {
 
 	/** Saves the class file */
 	public void save(DataOutput output) throws IOException {
+		ArrayList<AttributeInfo> attributes = new ArrayList<AttributeInfo>();
+		// attributes must be created before constant pool is saved
+		if (sourceFileName != null) {
+			AttributeInfo sourceFile = new AttributeInfo("SourceFile");
+			ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+			DataOutputStream data = new DataOutputStream(byteOutputStream);
+			data.writeShort(pool.getUtf8(sourceFileName));
+			data.flush();
+			sourceFile.data = byteOutputStream.toByteArray();
+			attributes.add(sourceFile);
+		}
+
+		// Write the class file
 		output.writeInt(0xCAFEBABE); // magic
 		output.writeShort(0x00); // minor_version
 		output.writeShort(0x32); // major_version
@@ -144,6 +170,9 @@ public final class ClassFileWriter {
 		output.writeShort(methods.size()); // methods_count
 		for (MethodInfo info : methods)
 			info.save(output);
-		output.writeShort(0); // attributes_count
+
+		output.writeShort(attributes.size()); // attributes_count
+		for (AttributeInfo attr : attributes)
+			attr.save(output);
 	}
 }

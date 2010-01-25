@@ -32,6 +32,16 @@ public final class ArdenString extends ArdenValue {
 	}
 
 	@Override
+	public boolean equals(Object obj) {
+		return (obj instanceof ArdenString) && value.equals(((ArdenString) obj).value);
+	}
+
+	@Override
+	public int hashCode() {
+		return value.hashCode();
+	}
+
+	@Override
 	public int compareTo(ArdenValue rhs) {
 		if (rhs instanceof ArdenString) {
 			return Integer.signum(value.compareTo(((ArdenString) rhs).value));

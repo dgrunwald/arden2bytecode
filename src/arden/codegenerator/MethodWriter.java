@@ -18,7 +18,7 @@ import java.util.ArrayList;
  */
 public final class MethodWriter {
 	/** ConstantPool for method- and field references */
-	private ConstantPool pool;
+	private final ConstantPool pool;
 
 	/** Line number table, used if debugging information should be output */
 	private LineNumberTable lineNumberTable;
@@ -27,15 +27,15 @@ public final class MethodWriter {
 	private LocalVariableTable localVariableTable;
 
 	/** OutputStream: all byte code is written here */
-	private ByteArrayOutputStream byteCodeOutputStream = new ByteArrayOutputStream();
+	private final ByteArrayOutputStream byteCodeOutputStream = new ByteArrayOutputStream();
 
 	/** DataOutputStream that wraps the byteCodeOutputStream */
-	private DataOutputStream byteCode = new DataOutputStream(byteCodeOutputStream);
+	private final DataOutputStream byteCode = new DataOutputStream(byteCodeOutputStream);
 
-	private boolean isInstanceMethod;
+	private final boolean isInstanceMethod;
 
 	/** Stores positions, where the target of labels has to be placed. */
-	private ArrayList<LabelReference> labelReferences = new ArrayList<LabelReference>();
+	private final ArrayList<LabelReference> labelReferences = new ArrayList<LabelReference>();
 
 	/** Number of local variables including parameters and 'this' */
 	private int numLocals;
@@ -59,6 +59,8 @@ public final class MethodWriter {
 	 * MethodWriter constructor.
 	 */
 	public MethodWriter(ConstantPool pool, boolean isInstanceMethod, int parameterCount) {
+		if (pool == null)
+			throw new NullPointerException();
 		this.pool = pool;
 		this.isInstanceMethod = isInstanceMethod;
 		this.numLocals = parameterCount + (isInstanceMethod ? 1 : 0);

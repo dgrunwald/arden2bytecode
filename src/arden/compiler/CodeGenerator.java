@@ -30,21 +30,25 @@ import arden.runtime.MedicalLogicModuleImplementation;
 final class CodeGenerator {
 	private final ClassFileWriter classFileWriter;
 	private MethodWriter staticInitializer;
-	private HashMap<String, FieldReference> stringLiterals = new HashMap<String, FieldReference>();
-	private HashMap<Double, FieldReference> numberLiterals = new HashMap<Double, FieldReference>();
-	private HashMap<Long, FieldReference> timeLiterals = new HashMap<Long, FieldReference>();
-	private HashMap<String, Variable> variables = new HashMap<String, Variable>();
+	private final HashMap<String, FieldReference> stringLiterals = new HashMap<String, FieldReference>();
+	private final HashMap<Double, FieldReference> numberLiterals = new HashMap<Double, FieldReference>();
+	private final HashMap<Long, FieldReference> timeLiterals = new HashMap<Long, FieldReference>();
+	private final HashMap<String, Variable> variables = new HashMap<String, Variable>();
 	private int nextFieldIndex;
 	private boolean isFinished;
 	private FieldReference nowField;
 
-	private final static String literalPrefix = "$literal";
+	private static final String literalPrefix = "$literal";
 
 	private MethodWriter getStaticInitializer() {
 		if (isFinished)
 			throw new IllegalStateException();
 		if (staticInitializer == null) {
 			staticInitializer = classFileWriter.createStaticInitializer();
+			if (isDebuggingEnabled) {
+				staticInitializer.enableLineNumberTable();
+				staticInitializer.sequencePoint(lineNumberForStaticInitializationSequencePoint);
+			}
 		}
 		return staticInitializer;
 	}
@@ -130,17 +134,34 @@ final class CodeGenerator {
 		}
 	}
 
-	public CodeGenerator(String mlmName) {
+	private final int lineNumberForStaticInitializationSequencePoint;
+	
+	public CodeGenerator(String mlmName, int lineNumberForStaticInitializationSequencePoint) {
 		this.classFileWriter = new ClassFileWriter(mlmName, MedicalLogicModuleImplementation.class);
+		this.lineNumberForStaticInitializationSequencePoint = lineNumberForStaticInitializationSequencePoint;
 	}
 
-	MethodWriter ctor;
-	Label ctorUserCodeLabel = new Label();
-	Label ctorInitCodeLabel = new Label();
+	private boolean isDebuggingEnabled = false;
 
-	public CompilerContext createConstructor() {
+	/** Enables debugging for the code being produced. */
+	public void enableDebugging(String sourceFileName) {
+		this.isDebuggingEnabled = true;
+		classFileWriter.setSourceFileName(sourceFileName);
+	}
+
+	private MethodWriter ctor;
+	private final Label ctorUserCodeLabel = new Label();
+	private final Label ctorInitCodeLabel = new Label();
+	private int lineNumberForInitializationSequencePoint;
+
+	public CompilerContext createConstructor(int lineNumberForInitializationSequencePoint) {
 		ctor = classFileWriter.createConstructor(Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class,
 				MedicalLogicModule.class, ArdenValue[].class });
+		this.lineNumberForInitializationSequencePoint = lineNumberForInitializationSequencePoint;
+		if (isDebuggingEnabled) {
+			ctor.enableLineNumberTable();
+			ctor.sequencePoint(lineNumberForStaticInitializationSequencePoint);
+		}
 		ctor.loadThis();
 		try {
 			ctor.invokeConstructor(MedicalLogicModuleImplementation.class.getConstructor());
@@ -157,17 +178,23 @@ final class CodeGenerator {
 	public CompilerContext createLogic() {
 		MethodWriter w = classFileWriter.createMethod("logic", Modifier.PUBLIC,
 				new Class<?>[] { ExecutionContext.class }, Boolean.TYPE);
+		if (isDebuggingEnabled)
+			w.enableLineNumberTable();
 		return new CompilerContext(this, w, 1);
 	}
 
 	public CompilerContext createAction() {
 		MethodWriter w = classFileWriter.createMethod("action", Modifier.PUBLIC,
 				new Class<?>[] { ExecutionContext.class }, ArdenValue[].class);
+		if (isDebuggingEnabled)
+			w.enableLineNumberTable();
 		return new CompilerContext(this, w, 1);
 	}
 
 	public CompilerContext createUrgency() {
 		MethodWriter w = classFileWriter.createMethod("getUrgency", Modifier.PUBLIC, new Class<?>[] {}, Double.TYPE);
+		if (isDebuggingEnabled)
+			w.enableLineNumberTable();
 		return new CompilerContext(this, w, 0);
 	}
 
@@ -230,6 +257,7 @@ final class CodeGenerator {
 			if (staticInitializer != null)
 				staticInitializer.returnFromProcedure();
 
+			ctor.sequencePoint(lineNumberForInitializationSequencePoint);
 			ctor.returnFromProcedure();
 			ctor.markForwardJumpsOnly(ctorInitCodeLabel);
 			if (nowField != null) {
@@ -237,18 +265,19 @@ final class CodeGenerator {
 				ctor.loadVariable(1);
 				ctor.invokeInstance(ExecutionContextMethods.getCurrentTime);
 				ctor.storeInstanceField(nowField);
-				for (FieldReference fieldToInit : fieldsNeedingInitialization) {
-					ctor.loadThis();
-					try {
-						ctor.loadStaticField(ArdenNull.class.getField("INSTANCE"));
-					} catch (SecurityException e) {
-						throw new RuntimeException(e);
-					} catch (NoSuchFieldException e) {
-						throw new RuntimeException(e);
-					}
-					ctor.storeInstanceField(fieldToInit);
-				}
 			}
+			for (FieldReference fieldToInit : fieldsNeedingInitialization) {
+				ctor.loadThis();
+				try {
+					ctor.loadStaticField(ArdenNull.class.getField("INSTANCE"));
+				} catch (SecurityException e) {
+					throw new RuntimeException(e);
+				} catch (NoSuchFieldException e) {
+					throw new RuntimeException(e);
+				}
+				ctor.storeInstanceField(fieldToInit);
+			}
+
 			ctor.jump(ctorUserCodeLabel);
 
 			isFinished = true;
