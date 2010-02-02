@@ -23,6 +23,7 @@ knowledge:
         /* find allergies */
         penicillin_allergy := read last {allergy where agent_class = penicillin};
         ;;
+    priority: 42;;
     evoke:
         penicillin_order;;
     logic:

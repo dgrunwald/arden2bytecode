@@ -7,6 +7,9 @@ import arden.runtime.ArdenList;
 import arden.runtime.ArdenNull;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenString;
+import arden.runtime.ArdenTime;
+import arden.runtime.ArdenValue;
+import arden.runtime.MedicalLogicModule;
 
 public class ListOperatorTests extends ExpressionTestBase {
 	@Test
@@ -41,6 +44,61 @@ public class ListOperatorTests extends ExpressionTestBase {
 		Assert.assertEquals(4, ((ArdenNumber) list.values[0]).value, 0);
 		Assert.assertEquals("a", ((ArdenString) list.values[1]).value);
 		Assert.assertSame(ArdenNull.INSTANCE, list.values[2]);
+	}
+
+	@Test
+	public void MergeWithoutPrimaryTimes() throws Exception {
+		assertEval("null", "1 merge 2");
+		assertEval("null", "(1,3) merge (2,4)"); // no primary times
+	}
+
+	@Test
+	public void MergeWithPrimaryTimes() throws Exception {
+		ArdenValue[] a = { ArdenNumber.create(10, 1), ArdenNumber.create(3, 3) };
+		ArdenValue[] b = { new ArdenString("last", 4), ArdenNumber.create(2, 2) };
+		ArdenValue[] args = { new ArdenList(a), new ArdenList(b) };
+
+		MedicalLogicModule mlm = ActionTests.parseTemplate("(a,b) := ARGUMENT;", "conclude true;",
+				"return (a merge b);");
+		ArdenValue[] arr = mlm.run(new TestContext(), args);
+		Assert.assertEquals(1, arr.length);
+		Assert.assertEquals("(10,2,3,\"last\")", arr[0].toString());
+	}
+
+	@Test
+	public void SortByPrimaryTimes() throws Exception {
+		ArdenValue[] a = { ArdenNumber.create(10, 1), ArdenNumber.create(3, 3), new ArdenString("last", 4),
+				ArdenNumber.create(2, 2) };
+		ArdenValue[] args = { new ArdenList(a) };
+
+		MedicalLogicModule mlm = ActionTests.parseTemplate("a := ARGUMENT;", "conclude true;", "return (sort time a);");
+		ArdenValue[] arr = mlm.run(new TestContext(), args);
+		Assert.assertEquals(1, arr.length);
+		Assert.assertEquals("(10,2,3,\"last\")", arr[0].toString());
+	}
+
+	@Test
+	public void SortPrimaryTimes() throws Exception {
+		ArdenValue[] a = { ArdenNumber.create(10, 1), ArdenNumber.create(3, 3), new ArdenString("last", 4),
+				ArdenNumber.create(2, 2) };
+		ArdenValue[] args = { new ArdenList(a) };
+
+		MedicalLogicModule mlm = ActionTests.parseTemplate("a := ARGUMENT;", "conclude true;",
+				"return (sort time of a);");
+		ArdenValue[] arr = mlm.run(new TestContext(), args);
+		Assert.assertEquals(1, arr.length);
+		ArdenList list = (ArdenList) arr[0];
+		Assert.assertEquals(4, list.values.length);
+		Assert.assertEquals(1, ((ArdenTime) list.values[0]).value);
+		Assert.assertEquals(2, ((ArdenTime) list.values[1]).value);
+		Assert.assertEquals(3, ((ArdenTime) list.values[2]).value);
+		Assert.assertEquals(4, ((ArdenTime) list.values[3]).value);
+	}
+
+	@Test
+	public void SortByData() throws Exception {
+		assertEval("(1,2,3,4)", "sort (4,2,3,1)");
+		assertEval("(1,2,3,4)", "sort data (4,2,3,1)");
 	}
 
 	@Test

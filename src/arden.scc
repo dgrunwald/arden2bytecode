@@ -215,7 +215,8 @@ Tokens
   cosine      = c o s i n e;
   count       = c o u n t;
   currenttime = c u r r e n t t i m e;
-  data        = d a t a ':';
+  data        = d a t a;
+  data_colon  = d a t a ':';
   data_driven = d a t a us d r i v e n;
   dataadashdriven =  d a t a dash d r i v e n;
   date        = d a t e ':';
@@ -601,7 +602,7 @@ type_code =
                                  /* compatibility */
 
 data_slot =
-                data data_block semicolons;
+                data_colon data_block semicolons;
 
 priority_slot =
       {empty}
@@ -676,12 +677,7 @@ expr =
 expr_sort =
       {where}   expr_where
     | {merge}   expr_where merge expr_sort
-    | {sort}    sort  expr_sort
-    | {sopt}    sort l_brk sort_option r_brk expr_sort;
-
-sort_option =
-      {time}    time
-    | {data}    data;
+    | {sort}    sort data? expr_sort;
 
 expr_where =
       {range}   expr_range

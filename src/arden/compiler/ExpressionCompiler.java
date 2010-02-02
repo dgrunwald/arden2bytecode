@@ -170,8 +170,7 @@ final class ExpressionCompiler extends VisitorBase {
 	// expr_sort =
 	// {where} expr_where
 	// | {merge} expr_where merge expr_sort
-	// | {sort} sort expr_sort
-	// | {sopt} sort l_brk sort_option r_brk expr_sort;
+	// | {sort} sort data? expr_sort;
 	@Override
 	public void caseAWhereExprSort(AWhereExprSort node) {
 		// expr_sort = {where} expr_where
@@ -189,22 +188,28 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseASortExprSort(ASortExprSort node) {
-		// expr_sort = {sort} sort expr_sort
-		node.getExprSort().apply(this);
+		// expr_sort = {sort} sort data? expr_sort
+		GetExpressionVisitor exprVisitor = new GetExpressionVisitor();
+		node.getExprSort().apply(exprVisitor);
+		// if data wasn't specified, we need to check whether this is was a
+		// 'sort time x' expression
+		// we have to do this in code as handling it in the grammar would cause
+		// a shift/reduce conflict
+		if (node.getData() == null && exprVisitor.result instanceof AOfexprExprFunction) {
+			AOfexprExprFunction ofExpr = (AOfexprExprFunction) exprVisitor.result;
+			if (ofExpr.getOfFuncOp() instanceof AOfnrOfFuncOp) {
+				AOfnrOfFuncOp ofOp = (AOfnrOfFuncOp) ofExpr.getOfFuncOp();
+				if (ofOp.getOfNoreadFuncOp() instanceof ATimeOfNoreadFuncOp) {
+					// found pattern 'sort time x'
+					ofExpr.getExprFunction().apply(this); // evaluate 'x'
+					context.writer.invokeStatic(getMethod("sortByTime", ArdenValue.class));					
+					return;
+				}
+			}
+		}
+		// did not find pattern, so sort by data
+		exprVisitor.result.apply(this);
 		context.writer.invokeStatic(getMethod("sortByData", ArdenValue.class));
-	}
-
-	@Override
-	public void caseASoptExprSort(ASoptExprSort node) {
-		// expr_sort = {sopt} sort l_brk sort_option r_brk expr_sort
-		node.getExprSort().apply(this);
-		PSortOption sortOption = node.getSortOption();
-		if (sortOption instanceof ADataSortOption)
-			context.writer.invokeStatic(getMethod("sortByData", ArdenValue.class));
-		else if (sortOption instanceof ATimeSortOption)
-			context.writer.invokeStatic(getMethod("sortByTime", ArdenValue.class));
-		else
-			throw new RuntimeCompilerException("Unknown sort option: " + sortOption.toString());
 	}
 
 	// expr_where =
@@ -654,13 +659,15 @@ final class ExpressionCompiler extends VisitorBase {
 	@Override
 	public void caseAFromofexprfromExprFunction(AFromofexprfromExprFunction node) {
 		// {fromofexprfrom} from_of_func_op expr_factor from expr_function
-		node.getFromOfFuncOp().apply(new TransformationOperatorCompiler(this, node.getExprFactor(), node.getExprFunction()));
+		node.getFromOfFuncOp().apply(
+				new TransformationOperatorCompiler(this, node.getExprFactor(), node.getExprFunction()));
 	}
 
 	@Override
 	public void caseAFromexprfromExprFunction(AFromexprfromExprFunction node) {
 		// {fromexprfrom} from_func_op expr_factor from expr_function
-		node.getFromFuncOp().apply(new TransformationOperatorCompiler(this, node.getExprFactor(), node.getExprFunction()));
+		node.getFromFuncOp().apply(
+				new TransformationOperatorCompiler(this, node.getExprFactor(), node.getExprFunction()));
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import arden.compiler.node.ADateMlmDate;
 import arden.compiler.node.ADateSlot;
 import arden.compiler.node.ADtimeMlmDate;
 import arden.compiler.node.AEmptyArdenVersionSlot;
+import arden.compiler.node.AEmptyPrioritySlot;
 import arden.compiler.node.AExpValidationCode;
 import arden.compiler.node.AExplanationSlot;
 import arden.compiler.node.AFnameMlmnameSlot;
@@ -16,6 +17,7 @@ import arden.compiler.node.AInstitutionSlot;
 import arden.compiler.node.AKeywordsSlot;
 import arden.compiler.node.ALinksSlot;
 import arden.compiler.node.AMnameMlmnameSlot;
+import arden.compiler.node.APriPrioritySlot;
 import arden.compiler.node.AProdValidationCode;
 import arden.compiler.node.APurposeSlot;
 import arden.compiler.node.AResValidationCode;
@@ -32,6 +34,7 @@ import arden.runtime.MaintenanceMetadata;
 final class MetadataCompiler extends DepthFirstAdapter {
 	final MaintenanceMetadata maintenance = new MaintenanceMetadata();
 	final LibraryMetadata library = new LibraryMetadata();
+	double priority = 50;
 	private boolean usedFileNameForMlmName;
 
 	// maintenance_body =
@@ -197,5 +200,18 @@ final class MetadataCompiler extends DepthFirstAdapter {
 	public void caseALinksSlot(ALinksSlot node) {
 		if (node.getText() != null)
 			library.setLinks(node.getText().getText().trim());
+	}
+
+	// priority_slot =
+	// {empty}
+	// | {pri} priority P.number semicolons;
+	@Override
+	public void caseAEmptyPrioritySlot(AEmptyPrioritySlot node) {
+		// keep default priority of 50
+	}
+
+	@Override
+	public void caseAPriPrioritySlot(APriPrioritySlot node) {
+		priority = ParseHelpers.getLiteralDoubleValue(node.getNumber());
 	}
 }

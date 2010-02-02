@@ -28,4 +28,7 @@ public interface MedicalLogicModule {
 
 	/** Gets the library metadata */
 	LibraryMetadata getLibrary();
+
+	/** Gets the priority of this module. */
+	double getPriority();
 }

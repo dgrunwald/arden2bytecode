@@ -103,6 +103,7 @@ public final class Compiler {
 
 		AKnowledgeCategory knowledgeCategory = (AKnowledgeCategory) mlm.getKnowledgeCategory();
 		AKnowledgeBody knowledge = (AKnowledgeBody) knowledgeCategory.getKnowledgeBody();
+		knowledge.getPrioritySlot().apply(metadata);
 
 		// System.out.println(knowledge.toString());
 		// knowledge.apply(new PrintTreeVisitor(System.out));
@@ -127,11 +128,11 @@ public final class Compiler {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		return new CompiledMlm(data, metadata.maintenance, metadata.library);
+		return new CompiledMlm(data, metadata.maintenance, metadata.library, metadata.priority);
 	}
 
 	private void compileData(CodeGenerator codeGen, PDataSlot dataSlot) {
-		int lineNumber = ((ADataSlot) dataSlot).getData().getLine();
+		int lineNumber = ((ADataSlot) dataSlot).getDataColon().getLine();
 		CompilerContext context = codeGen.createConstructor(lineNumber);
 		dataSlot.apply(new DataCompiler(context));
 		context.writer.returnFromProcedure();
