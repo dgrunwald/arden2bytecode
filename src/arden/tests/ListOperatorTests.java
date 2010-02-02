@@ -67,6 +67,8 @@ public class ListOperatorTests extends ExpressionTestBase {
 
 	@Test
 	public void SortByPrimaryTimes() throws Exception {
+		assertEval("()", "SORT TIME ()");
+
 		ArdenValue[] a = { ArdenNumber.create(10, 1), ArdenNumber.create(3, 3), new ArdenString("last", 4),
 				ArdenNumber.create(2, 2) };
 		ArdenValue[] args = { new ArdenList(a) };
@@ -99,6 +101,8 @@ public class ListOperatorTests extends ExpressionTestBase {
 	public void SortByData() throws Exception {
 		assertEval("(1,2,3,4)", "sort (4,2,3,1)");
 		assertEval("(1,2,3,4)", "sort data (4,2,3,1)");
+		assertEval("null", "SORT DATA (3,1,2,null)");
+		assertEval("null", "SORT DATA (3,\"abc\")");
 	}
 
 	@Test

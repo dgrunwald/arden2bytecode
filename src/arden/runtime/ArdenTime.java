@@ -42,7 +42,7 @@ public final class ArdenTime extends ArdenValue {
 
 	@Override
 	public boolean equals(Object obj) {
-		return (obj instanceof ArdenTime) && (value == ((ArdenNumber) obj).value);
+		return (obj instanceof ArdenTime) && (value == ((ArdenTime) obj).value);
 	}
 
 	@Override

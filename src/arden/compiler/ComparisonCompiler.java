@@ -150,10 +150,12 @@ final class ComparisonCompiler extends VisitorBase {
 		argument.apply(expressionCompiler);
 		expressionCompiler.loadOperator(BinaryOperator.BEFORE);
 		node.getExprString().apply(expressionCompiler);
+		context.writer.loadThis();
 		context.writer.loadInstanceField(context.codeGenerator.getNowField());
 		// Stack: WITHINTO, time, BEFORE, dur, now
 		expressionCompiler.invokeLoadedBinaryOperator();
 		// Stack: WITHINTO, time, starttime
+		context.writer.loadThis();
 		context.writer.loadInstanceField(context.codeGenerator.getNowField());
 		// Stack: WITHINTO, time, starttime, now
 		expressionCompiler.invokeLoadedTernaryOperator();

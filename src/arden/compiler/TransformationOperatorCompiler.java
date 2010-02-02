@@ -4,7 +4,6 @@ import arden.codegenerator.Label;
 import arden.compiler.node.*;
 import arden.runtime.ArdenNull;
 import arden.runtime.ArdenValue;
-import arden.runtime.DatabaseQuery;
 
 /**
  * Compiles transformation operators (from_of_func_op and from_func_op
