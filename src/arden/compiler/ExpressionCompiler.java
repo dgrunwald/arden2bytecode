@@ -202,7 +202,7 @@ final class ExpressionCompiler extends VisitorBase {
 				if (ofOp.getOfNoreadFuncOp() instanceof ATimeOfNoreadFuncOp) {
 					// found pattern 'sort time x'
 					ofExpr.getExprFunction().apply(this); // evaluate 'x'
-					context.writer.invokeStatic(getMethod("sortByTime", ArdenValue.class));					
+					context.writer.invokeStatic(getMethod("sortByTime", ArdenValue.class));
 					return;
 				}
 			}
@@ -434,9 +434,9 @@ final class ExpressionCompiler extends VisitorBase {
 
 	// expr_find_string =
 	// {istr} find [substring]:expr_string T.in T.string
-	// [fullstring]:expr_string string_search_start
+	// [fullstring]:expr_string string_search_start?
 	// | {str} find [substring]:expr_string T.string [fullstring]:expr_string
-	// string_search_start;
+	// string_search_start?;
 	@Override
 	public void caseAIstrExprFindString(AIstrExprFindString node) {
 		findString(node.getSubstring(), node.getFullstring(), node.getStringSearchStart());
@@ -451,8 +451,8 @@ final class ExpressionCompiler extends VisitorBase {
 		loadOperator(TernaryOperator.FINDSTRING);
 		substring.apply(this);
 		fullstring.apply(this);
-		if (stringSearchStart instanceof AAtStringSearchStart) {
-			((AAtStringSearchStart) stringSearchStart).getExprPlus().apply(this);
+		if (stringSearchStart instanceof AStringSearchStart) {
+			((AStringSearchStart) stringSearchStart).getExprPlus().apply(this);
 		} else {
 			context.writer.loadStaticField(context.codeGenerator.getNumberLiteral(1));
 		}

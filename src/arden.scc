@@ -130,7 +130,7 @@ Helpers
   zero = '0';
 
 States
-  normal, text, mlmname, datamap, arden, format, formatted;
+  normal, text, mlmname, datamap, arden;
 
 
 //==============================================================================
@@ -168,19 +168,18 @@ Tokens
   gesign = '>=';
 
   // arithmetic
-  {normal, formatted}plus  = '+';
-  {normal, formatted}minus = '-';
+  {normal}plus  = '+';
+  {normal}minus = '-';
   times = '*';
   div   = '/';
   mod   = '%';
   dexp   = '**';
 
 //other
-  {normal, format -> formatted, formatted -> normal}dquote = '"';
-  {formatted}numsign='#';
+  {normal}dquote = '"';
 
 
-// Unhandled symbols  . . . �
+// Unhandled symbols  . . .
 
 
   //-- Keywords ------------------------------------------------------------------
@@ -252,7 +251,7 @@ Tokens
   floor       = f l o o r;
   following   = f o l l o w i n g;
   for         = f o r;
-  {normal -> format} formatted   = f o r m a t t e d;
+  formatted   = f o r m a t t e d;
   from        = f r o m;
   ge          = g e;
   greater     = g r e a t e r;
@@ -374,33 +373,15 @@ Tokens
   were        = w e r e;
   where       = w h e r e;
   while       = w h i l e;
-  {normal, format} with        = w i t h;
+  with        = w i t h;
   within      = w i t h i n;
   write       = w r i t e;
   year        = y e a r;
   years       = y e a r s;
 
-  {formatted}ce           = 'E';
-  {formatted}e           = 'e';
   ct           = 'T';
-  {formatted}t           = 't';
-  {formatted} zero      = '0';
   {arden}two            = '2';
   {arden}twopointone        = '2' '.' '1';
-  {formatted} c         = 'c';
-  {formatted}cc         = 'C';
-  {formatted} d         = 'd';
-  {formatted}ci         = 'I';
-  {formatted}o          ='o';
-  {formatted}u          ='u';
-  {formatted}x          ='x';
-  {formatted}cx         ='X';
-  {formatted}f          ='f';
-  {formatted}g          ='g';
-  {formatted}cg         ='G';
-  {formatted}n          ='n';
-  {formatted}p          ='p';
-  {formatted}s          ='s';
 
   {normal}identifier = letter (letter | digit | us)*;
   /* up to 80 characters total (no reserved words allowed) */
@@ -411,9 +392,7 @@ Tokens
 
   blank = (sp | ht | ff | line_terminator)*;
 
-  {formatted}sspace = space;
-
-  {text, formatted}text  = ttext;
+  {text}text  = ttext;
 
   /****** lexical constructs ******/
 
@@ -712,76 +691,27 @@ expr_comparison =
     | {match}   [first_string]:expr_string matches pattern [second_string]:expr_string;
 
 expr_find_string =
-      {istr}    find [substring]:expr_string T.in T.string [fullstring]:expr_string string_search_start
-    | {str}     find [substring]:expr_string T.string [fullstring]:expr_string string_search_start;
+      {istr}    find [substring]:expr_string T.in T.string [fullstring]:expr_string string_search_start?
+    | {str}     find [substring]:expr_string T.string [fullstring]:expr_string string_search_start?;
+
+string_search_start =
+                T.starting T.at expr_plus;
 
 expr_string =
       {plus}    expr_plus
     | {or}      expr_string logor expr_plus
-    | {form}    expr_string formatted with format_string;
-//   | {trim}    trim trim_option expr_string;// <------------------------------------------------------Problem
-//   | {sub}     substring expr_plus characters string_search_start from expr_string ; //<--------------Problem
-
-format_string =
-                [d1]:dquote [spec]:format_specification [d2]:dquote;
-
-/* The format string is a true     */
-/* Arden Syntax string, enclosed   */
-
-format_specification = /*  See section 9.8.2 (p. 34) and Annex 5 for */
-                       /* explanation of valid combination and their */
-                       /* meanings.                                  */
-
-      {specs}   format_specification format_specification_single
-    | {single}  format_specification_single;
-
-format_specification_single =
-      {options} mod format_options format_flag P.width P.precision
-                  /*  No spaces  are permitted between elements in above form */
-    | {text}    text;
-
-format_options = {empty}
-    | {plus}    T.plus
-    | {minus}   T.minus
-    | {zero}    T.zero
-    | {space}   T.sspace /* space */
-    | {numsign} T.numsign;
-
-format_flag = /* Format flags are case sensitive */
-      {c}       c
-    | {cc}      cc
-    | {d}       d
-    | {ci}      ci
-    | {o}       o
-    | {u}       u
-    | {x}       x
-    | {cx}      cx
-    | {e}       e
-    | {ce}      ce
-    | {f}       f
-    | {g}       g
-    | {cg}      cg
-    | {n}       n
-    | {p}       p
-    | {s}       s
-    | {t}       t;
-
-width =
-      {empty}
-    | {digits}  digits;
-
-precision =
-      {empty}
-    | {digits}  dot digits;
+    | {form}    expr_string formatted with string_literal
+    | {trim}    trim trim_option? expr_plus
+    | {sub}     substring [charcount]:expr_plus characters substring_start? from [inputstr]:expr_plus;
 
 trim_option =
-      {empty}
-    | {left}    T.left
+      {left}    T.left
     | {right}   T.right;
 
-string_search_start =
-      {empty}
-    | {at}      T.starting T.at expr_plus;
+substring_start =
+                T.starting T.at expr_factor;
+/* the spec demands expr_plus as in string_search_start, but we have to use expr_factor to avoid a shift/reduce conflict on the 'from' keyword */
+
 
 expr_plus =
       {times}   expr_times

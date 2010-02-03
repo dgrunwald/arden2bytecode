@@ -6,46 +6,9 @@ import org.junit.Test;
 import arden.runtime.ArdenBoolean;
 import arden.runtime.ArdenNull;
 import arden.runtime.ArdenNumber;
-import arden.runtime.ArdenString;
 import arden.runtime.ArdenTime;
 
 public class ExpressionTests extends ExpressionTestBase {
-	@Test
-	public void QuotationTest() throws Exception {
-		ArdenString s = (ArdenString) evalExpression("\"this string has one quotation mark: \"\" \"");
-		Assert.assertEquals("this string has one quotation mark: \" ", s.value);
-	}
-
-	@Test
-	public void StringWithTwoSpaces() throws Exception {
-		ArdenString s = (ArdenString) evalExpression("\"test  string\"");
-		Assert.assertEquals("test  string", s.value);
-	}
-
-	@Test
-	public void StringWithLineBreak() throws Exception {
-		ArdenString s = (ArdenString) evalExpression("\"test\nstring\"");
-		Assert.assertEquals("test string", s.value);
-	}
-
-	@Test
-	public void StringWithLineBreakAndWhiteSpace() throws Exception {
-		ArdenString s = (ArdenString) evalExpression("\"test \n\tstring\"");
-		Assert.assertEquals("test string", s.value);
-	}
-
-	@Test
-	public void EmptyString() throws Exception {
-		ArdenString s = (ArdenString) evalExpression("\"\"");
-		Assert.assertEquals("", s.value);
-	}
-
-	@Test
-	public void StringWithMultiLineBreak() throws Exception {
-		ArdenString s = (ArdenString) evalExpression("\"test  \n  \t \r\n  string\"");
-		Assert.assertEquals("test\nstring", s.value);
-	}
-
 	@Test
 	public void NullConstant() throws Exception {
 		Assert.assertSame(ArdenNull.INSTANCE, evalExpression("null"));
@@ -271,17 +234,5 @@ public class ExpressionTests extends ExpressionTestBase {
 	public void BeforeOperator() throws Exception {
 		assertEval("1990-03-11T00:00:00", "2 days BEFORE 1990-03-13T00:00:00");
 		assertEval("null", "2 days BEFORE 1 day");
-	}
-
-	@Test
-	public void StringConcat() throws Exception {
-		assertEval("\"ab\"", "\"a\" || \"b\"");
-		assertEval("\"null3\"", "null || 3");
-		assertEval("\"45\"", "4 || 5");
-		assertEval("\"4.7four\"", "4.7 || \"four\"");
-		assertEval("\"true\"", "true || \"\"");
-		assertEval("\"3 days left\"", "3 days || \" left\"");
-		assertEval("\"on 1990-03-15T13:45:01\"", "\"on \" || 1990-03-15T13:45:01");
-		assertEval("\"list=(1,2,3)\"", "\"list=\" || (1,2,3)");
 	}
 }
