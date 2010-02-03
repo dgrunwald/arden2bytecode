@@ -433,8 +433,10 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAFormExprString(AFormExprString node) {
-		// TODO Auto-generated method stub
-		super.caseAFormExprString(node);
+		// expr_string formatted with string_literal
+		node.getExprString().apply(this);
+		String formatting = ParseHelpers.getLiteralStringValue(node.getStringLiteral());
+		new FormattingCompiler(formatting, node.getStringLiteral()).run(context);
 	}
 
 	@Override

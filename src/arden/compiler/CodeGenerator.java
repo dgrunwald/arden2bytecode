@@ -40,7 +40,7 @@ final class CodeGenerator {
 
 	private static final String literalPrefix = "$literal";
 
-	private MethodWriter getStaticInitializer() {
+	public MethodWriter getStaticInitializer() {
 		if (isFinished)
 			throw new IllegalStateException();
 		if (staticInitializer == null) {
@@ -135,7 +135,7 @@ final class CodeGenerator {
 	}
 
 	private final int lineNumberForStaticInitializationSequencePoint;
-	
+
 	public CodeGenerator(String mlmName, int lineNumberForStaticInitializationSequencePoint) {
 		this.classFileWriter = new ClassFileWriter(mlmName, MedicalLogicModuleImplementation.class);
 		this.lineNumberForStaticInitializationSequencePoint = lineNumberForStaticInitializationSequencePoint;
@@ -207,6 +207,13 @@ final class CodeGenerator {
 
 	public FieldReference createField(String name, Class<?> type, int modifiers) {
 		return classFileWriter.declareField(name, type, modifiers);
+	}
+
+	private int formatFieldCount;
+
+	public FieldReference createStaticFinalField(Class<?> type) {
+		return classFileWriter.declareField("format$" + (++formatFieldCount), type, Modifier.PRIVATE | Modifier.STATIC
+				| Modifier.FINAL);
 	}
 
 	private ArrayList<FieldReference> fieldsNeedingInitialization = new ArrayList<FieldReference>();

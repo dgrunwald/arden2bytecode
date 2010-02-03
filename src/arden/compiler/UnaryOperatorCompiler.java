@@ -392,14 +392,14 @@ final class UnaryOperatorCompiler extends VisitorBase {
 
 	@Override
 	public void caseAExcOfNoreadFuncOp(AExcOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAExcOfNoreadFuncOp(node);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("extractCharacters", ArdenValue.class));
 	}
 
 	@Override
 	public void caseARevOfNoreadFuncOp(ARevOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseARevOfNoreadFuncOp(node);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("reverse", ArdenValue.class));
 	}
 
 	@Override

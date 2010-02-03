@@ -1,10 +1,12 @@
 package arden.tests;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Locale;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
 import arden.runtime.ArdenString;
 
@@ -59,12 +61,22 @@ public class StringOperators extends ExpressionTestBase {
 
 	@Test
 	public void FormattedWith() throws Exception {
-		assertEvalString("01:02:03", "(1,2,3) formatted with \"%2.2d::%2.2d::%2.2d\"");
+		Locale.setDefault(Locale.ENGLISH);
+		assertEvalString("01::02::03", "(1,2,3.3) formatted with \"%2.2d::%2.2d::%2.2d\"");
 		assertEvalString("The result was 10.61 mg", "10.60528 formatted with \"The result was %.2f mg\"");
-		assertEvalString("The date was Jan 10 1998", "1998-01-10T17:25:00 formatted with \"The date was %.2t\"");
+		assertEvalString("The date was Jan 10, 1998", "1998-01-10T17:25:00 formatted with \"The date was %.2t\"");
 		assertEvalString("The year was 1998", "1998-01-10T17:25:00 formatted with \"The year was %.0t\"");
 		assertEvalString("ten, twenty, thirty or more",
 				"(\"ten\", \"twenty\", \"thirty\") formatted with \"%s, %s, %s or more\"");
+
+		assertEvalString("12345678", "12345678 formatted with \"%i\"");
+		assertEvalString("aBc", "66 formatted with \"a%cc\"");
+		assertEvalString("  1%", "1 formatted with \"%3d%%\"");
+		assertEvalString("001%", "1 formatted with \"%03d%%\"");
+		assertEvalString("0042", "(4,42) formatted with \"%0*d\"");
+		assertEvalString("1  ", "1 formatted with \"%-3i\"");
+		assertEvalString("+1 ", "1 formatted with \"%-+3i\"");
+		assertEvalString(" ab", "\"abc\" formatted with \"%3.2s\"");
 	}
 
 	@Test
@@ -165,5 +177,15 @@ public class StringOperators extends ExpressionTestBase {
 		assertEval("(\"Pos\",\"Neg\",null)", "SUBSTRING 3 CHARACTERS FROM (\"Positive\",\"Negative\",2)");
 
 		assertEvalString("fg", "SUBSTRING -2 CHARACTERS FROM \"abcdefg\"");
+	}
+
+	@Test
+	public void ExtractCharacters() throws Exception {
+		assertEval("(\"a\",\"b\",\"c\")", "EXTRACT CHARACTERS \"abc\"");
+		assertEval("(\"a\",\"b\",\"c\")", "EXTRACT CHARACTERS (\"ab\",\"c\")");
+		assertEval("()", "EXTRACT CHARACTERS ()");
+		assertEval("()", "EXTRACT CHARACTERS \"\"");
+		assertEval("(\"4\",\"2\")", "EXTRACT CHARACTERS 42");
+		assertEvalString("edcba", "STRING REVERSE EXTRACT CHARACTERS \"abcde\"");
 	}
 }

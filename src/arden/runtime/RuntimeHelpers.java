@@ -1,6 +1,14 @@
 package arden.runtime;
 
 import java.lang.reflect.InvocationTargetException;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
+import javax.swing.text.NumberFormatter;
 
 /**
  * 
@@ -45,6 +53,83 @@ public final class RuntimeHelpers {
 			return i;
 		else
 			return -1;
+	}
+
+	/**
+	 * Converts integer values into a string representing the character code.
+	 * Used for %c format specification.
+	 */
+	public static String formatCharacter(ArdenValue val) {
+		int num = getPrimitiveIntegerValue(val);
+		if (num < 0 || num > Character.MAX_VALUE) {
+			return "";
+		} else {
+			return Character.toString((char) num);
+		}
+	}
+
+	public static String limitStringLength(String input, int maxLength) {
+		if (input.length() > maxLength)
+			return input.substring(0, maxLength);
+		else
+			return input;
+	}
+
+	/** Helper method for several format specifications. */
+	public static String formatNumber(ArdenValue val, NumberFormat format) {
+		if (val instanceof ArdenNumber) {
+			return format.format(((ArdenNumber) val).value);
+		} else {
+			return ExpressionHelpers.toString(val);
+		}
+	}
+
+	/** Helper method for %t format specification. */
+	public static String formatTime(ArdenValue val, int precision) {
+		if (val instanceof ArdenTime) {
+			long time = ((ArdenTime) val).value;
+			switch (precision) {
+			case 0: {
+				GregorianCalendar c = new GregorianCalendar();
+				c.setTimeInMillis(time);
+				return Integer.toString(c.get(Calendar.YEAR));
+			}
+			case 1: {
+				GregorianCalendar c = new GregorianCalendar();
+				c.setTimeInMillis(time);
+				return Integer.toString(c.get(Calendar.YEAR)) + "-" + Integer.toString(c.get(Calendar.MONTH) + 1);
+			}
+			case 2:
+				return DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(time));
+			case 3:
+				GregorianCalendar c = new GregorianCalendar();
+				c.setTimeInMillis(time);
+				return DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(time)) + " "
+						+ Integer.toString(c.get(Calendar.HOUR_OF_DAY)) + "h";
+			case 4:
+				return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(new Date(time));
+			default:
+				return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.LONG).format(new Date(time));
+			}
+		} else {
+			return ExpressionHelpers.toString(val);
+		}
+	}
+
+	public static String padRight(String input, int length, char padChar) {
+		StringBuilder b = new StringBuilder(length);
+		b.append(input);
+		while (b.length() < length)
+			b.append(padChar);
+		return b.toString();
+	}
+
+	public static String padLeft(String input, int length, char padChar) {
+		StringBuilder b = new StringBuilder(length);
+		while (b.length() + input.length() < length)
+			b.append(padChar);
+		b.append(input);
+		return b.toString();
 	}
 
 	public static DatabaseQuery constrainQueryWithinTo(DatabaseQuery q, ArdenValue start, ArdenValue end) {

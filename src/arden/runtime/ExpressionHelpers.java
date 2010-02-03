@@ -1,6 +1,7 @@
 package arden.runtime;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.regex.Pattern;
@@ -287,6 +288,15 @@ public final class ExpressionHelpers {
 		return new ArdenList(result);
 	}
 
+	/** implements the SEQTO operator */
+	public static ArdenValue reverse(ArdenValue input) {
+		ArdenValue[] inputs = unaryComma(input).values;
+		ArdenValue[] result = new ArdenValue[inputs.length];
+		for (int i = 0; i < result.length; i++)
+			result[i] = inputs[inputs.length - i - 1];
+		return new ArdenList(result);
+	}
+
 	/** implements the INCREASE operator */
 	public static ArdenValue increase(ArdenValue input) {
 		ArdenValue[] inputs = unaryComma(input).values;
@@ -426,23 +436,38 @@ public final class ExpressionHelpers {
 
 	/** Implements the string concatenation operator || */
 	public static ArdenString concat(ArdenValue lhs, ArdenValue rhs) {
-		// TODO: I think this impl is incorrect for lists of strings
 		return new ArdenString(toString(lhs) + toString(rhs));
 	}
 
-	private static String toString(ArdenValue val) {
+	/** Converts a single value to string. */
+	public static String toString(ArdenValue val) {
 		if (val instanceof ArdenString)
 			return ((ArdenString) val).value;
 		else
 			return val.toString();
 	}
 
+	/** implements the STRING... operator */
 	public static ArdenString joinString(ArdenValue input) {
 		StringBuilder b = new StringBuilder();
 		for (ArdenValue val : unaryComma(input).values) {
 			b.append(toString(val));
 		}
 		return new ArdenString(b.toString());
+	}
+
+	/** implements the EXTRACT CHARACTERS operator */
+	public static ArdenList extractCharacters(ArdenValue input) {
+		ArrayList<String> strings = new ArrayList<String>();
+		for (ArdenValue val : unaryComma(input).values) {
+			String txt = toString(val);
+			for (int i = 0; i < txt.length(); i++)
+				strings.add(txt.substring(i, i + 1));
+		}
+		ArdenValue[] result = new ArdenValue[strings.size()];
+		for (int i = 0; i < result.length; i++)
+			result[i] = new ArdenString(strings.get(i));
+		return new ArdenList(result);
 	}
 
 	/** implements the TRIM operator */

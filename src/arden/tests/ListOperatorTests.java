@@ -189,4 +189,12 @@ public class ListOperatorTests extends ExpressionTestBase {
 		assertEval("(,2)", "2 SEQTO 2");
 		assertEval("(-3,-2,-1)", "-3 SEQTO -1");
 	}
+
+	@Test
+	public void ReverseOperator() throws Exception {
+		assertEval("(3,2,1)", "REVERSE (1,2,3)");
+		assertEval("(6,5,4,3,2,1)", "reverse (1 seqto 6)");
+		assertEval("()", "reverse ()");
+		assertEval("(,null)", "reverse null");
+	}
 }
