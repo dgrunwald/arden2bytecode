@@ -3,6 +3,7 @@ package arden.runtime;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.regex.Pattern;
 
 /**
  * Static helper methods for ExpressionCompiler (mostly operators with special
@@ -312,19 +313,6 @@ public final class ExpressionHelpers {
 		return new ArdenList(outputs);
 	}
 
-	/** Implements the string concatenation operator || */
-	public static ArdenString concat(ArdenValue lhs, ArdenValue rhs) {
-		// TODO: I think this impl is incorrect for lists of strings
-		return new ArdenString(toString(lhs) + toString(rhs));
-	}
-
-	private static String toString(ArdenValue val) {
-		if (val instanceof ArdenString)
-			return ((ArdenString) val).value;
-		else
-			return val.toString();
-	}
-
 	/** Implements the IS LIST operator. */
 	public static ArdenBoolean isList(ArdenValue input) {
 		if (input instanceof ArdenList) {
@@ -434,5 +422,195 @@ public final class ExpressionHelpers {
 			return ArdenBoolean.create(true, primaryTime);
 		else
 			return ArdenNull.create(primaryTime);
+	}
+
+	/** Implements the string concatenation operator || */
+	public static ArdenString concat(ArdenValue lhs, ArdenValue rhs) {
+		// TODO: I think this impl is incorrect for lists of strings
+		return new ArdenString(toString(lhs) + toString(rhs));
+	}
+
+	private static String toString(ArdenValue val) {
+		if (val instanceof ArdenString)
+			return ((ArdenString) val).value;
+		else
+			return val.toString();
+	}
+
+	public static ArdenString joinString(ArdenValue input) {
+		StringBuilder b = new StringBuilder();
+		for (ArdenValue val : unaryComma(input).values) {
+			b.append(toString(val));
+		}
+		return new ArdenString(b.toString());
+	}
+
+	/** implements the TRIM operator */
+	public static ArdenValue trim(ArdenValue input) {
+		if (input instanceof ArdenList) {
+			ArdenValue[] list = ((ArdenList) input).values;
+			if (list.length == 0)
+				return ArdenNull.INSTANCE; // special case
+			ArdenValue[] results = new ArdenValue[list.length];
+			for (int i = 0; i < list.length; i++)
+				results[i] = trim(list[i]);
+			return new ArdenList(results);
+		} else if (input instanceof ArdenString) {
+			return new ArdenString(((ArdenString) input).value.trim(), input.primaryTime);
+		} else {
+			return ArdenNull.create(input.primaryTime);
+		}
+	}
+
+	/** implements the TRIM LEFT operator */
+	public static ArdenValue trimLeft(ArdenValue input) {
+		if (input instanceof ArdenList) {
+			ArdenValue[] list = ((ArdenList) input).values;
+			if (list.length == 0)
+				return ArdenNull.INSTANCE; // special case
+			ArdenValue[] results = new ArdenValue[list.length];
+			for (int i = 0; i < list.length; i++)
+				results[i] = trimLeft(list[i]);
+			return new ArdenList(results);
+		} else if (input instanceof ArdenString) {
+			String str = ((ArdenString) input).value;
+			int index = 0;
+			while (index < str.length() && Character.isWhitespace(str.charAt(index)))
+				index++;
+			return new ArdenString(str.substring(index), input.primaryTime);
+		} else {
+			return ArdenNull.create(input.primaryTime);
+		}
+	}
+
+	/** implements the TRIM RIGHT operator */
+	public static ArdenValue trimRight(ArdenValue input) {
+		if (input instanceof ArdenList) {
+			ArdenValue[] list = ((ArdenList) input).values;
+			if (list.length == 0)
+				return ArdenNull.INSTANCE; // special case
+			ArdenValue[] results = new ArdenValue[list.length];
+			for (int i = 0; i < list.length; i++)
+				results[i] = trimRight(list[i]);
+			return new ArdenList(results);
+		} else if (input instanceof ArdenString) {
+			String str = ((ArdenString) input).value;
+			int index = str.length();
+			while (index > 0 && Character.isWhitespace(str.charAt(index - 1)))
+				index--;
+			return new ArdenString(str.substring(0, index), input.primaryTime);
+		} else {
+			return ArdenNull.create(input.primaryTime);
+		}
+	}
+
+	/** implements the LENGTH OF operator */
+	public static ArdenValue length(ArdenValue input) {
+		if (input instanceof ArdenList) {
+			ArdenValue[] list = ((ArdenList) input).values;
+			if (list.length == 0)
+				return ArdenNull.INSTANCE; // special case
+			ArdenValue[] results = new ArdenValue[list.length];
+			for (int i = 0; i < list.length; i++)
+				results[i] = length(list[i]);
+			return new ArdenList(results);
+		} else if (input instanceof ArdenString) {
+			String str = ((ArdenString) input).value;
+			return ArdenNumber.create(str.length(), ArdenValue.NOPRIMARYTIME);
+		} else {
+			return ArdenNull.INSTANCE;
+		}
+	}
+
+	/** implements the UPPERCASE operator */
+	public static ArdenValue toUpperCase(ArdenValue input) {
+		if (input instanceof ArdenList) {
+			ArdenValue[] list = ((ArdenList) input).values;
+			if (list.length == 0)
+				return ArdenNull.INSTANCE; // special case
+			ArdenValue[] results = new ArdenValue[list.length];
+			for (int i = 0; i < list.length; i++)
+				results[i] = toUpperCase(list[i]);
+			return new ArdenList(results);
+		} else if (input instanceof ArdenString) {
+			String str = ((ArdenString) input).value;
+			return new ArdenString(str.toUpperCase(), input.primaryTime);
+		} else {
+			return ArdenNull.create(input.primaryTime);
+		}
+	}
+
+	/** implements the LOWERCASE operator */
+	public static ArdenValue toLowerCase(ArdenValue input) {
+		if (input instanceof ArdenList) {
+			ArdenValue[] list = ((ArdenList) input).values;
+			if (list.length == 0)
+				return ArdenNull.INSTANCE; // special case
+			ArdenValue[] results = new ArdenValue[list.length];
+			for (int i = 0; i < list.length; i++)
+				results[i] = toLowerCase(list[i]);
+			return new ArdenList(results);
+		} else if (input instanceof ArdenString) {
+			String str = ((ArdenString) input).value;
+			return new ArdenString(str.toLowerCase(), input.primaryTime);
+		} else {
+			return ArdenNull.create(input.primaryTime);
+		}
+	}
+
+	/** implements the MATCHES PATTERN operator */
+	public static ArdenValue matchesPattern(ArdenValue lhs, ArdenValue rhs) {
+		Pattern pattern = createPattern(rhs);
+		if (lhs instanceof ArdenString) {
+			String input = ((ArdenString) lhs).value;
+			return pattern.matcher(input).matches() ? ArdenBoolean.TRUE : ArdenBoolean.FALSE;
+		} else if (lhs instanceof ArdenList) {
+			ArdenValue[] inputs = ((ArdenList) lhs).values;
+			ArdenValue[] results = new ArdenValue[inputs.length];
+			for (int i = 0; i < inputs.length; i++) {
+				if (inputs[i] instanceof ArdenString) {
+					String input = ((ArdenString) inputs[i]).value;
+					results[i] = pattern.matcher(input).matches() ? ArdenBoolean.TRUE : ArdenBoolean.FALSE;
+				} else {
+					results[i] = ArdenNull.INSTANCE;
+				}
+			}
+			return new ArdenList(results);
+		} else {
+			return ArdenNull.INSTANCE;
+		}
+	}
+
+	/** helper for MATCHES PATTERN implementation */
+	private static Pattern createPattern(ArdenValue rhs) {
+		if (rhs instanceof ArdenString) {
+			String pattern = ((ArdenString) rhs).value;
+			StringBuilder regex = new StringBuilder();
+			int processingEndOffset = 0;
+			regex.append('^');
+			for (int i = 0; i < pattern.length(); i++) {
+				char c = pattern.charAt(i);
+				if (c == '_' || c == '%') {
+					if (processingEndOffset < i)
+						regex.append(Pattern.quote(pattern.substring(processingEndOffset, i)));
+					regex.append('.');
+					if (c == '%')
+						regex.append('*');
+					processingEndOffset = i + 1;
+				} else if (c == '\\') {
+					if (processingEndOffset < i)
+						regex.append(Pattern.quote(pattern.substring(processingEndOffset, i)));
+					processingEndOffset = i + 1; // don't output the \ itself
+					i++; // skip processing the character after the \, thus
+					// copying it to the output escaped
+				}
+			}
+			if (processingEndOffset < pattern.length())
+				regex.append(Pattern.quote(pattern.substring(processingEndOffset, pattern.length())));
+			regex.append('$');
+			return Pattern.compile(regex.toString(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+		} else {
+			return null;
+		}
 	}
 }

@@ -111,7 +111,7 @@ public class StringOperators extends ExpressionTestBase {
 		assertEvalString("", "LOWERCASE \"\"");
 		assertEval("null", "LOWERCASE 12.8");
 		assertEval("null", "LOWERCASE ()");
-		assertEval("(\"5-hiaa\",\"pos\",null)", "UPPERCASE (\"5-Hiaa\",\"Pos\",2)");
+		assertEval("(\"5-hiaa\",\"pos\",null)", "LOWERCASE (\"5-Hiaa\",\"Pos\",2)");
 	}
 
 	@Test
@@ -119,9 +119,13 @@ public class StringOperators extends ExpressionTestBase {
 		assertEvalString("example", "TRIM \"  example  \"");
 		assertEvalString("", "TRIM \"\"");
 		assertEval("null", "TRIM ()");
+		assertEval("null", "TRIM LEFT ()");
+		assertEval("null", "TRIM RIGHT ()");
 		assertEvalString("result:  ", "TRIM LEFT \"  result:  \"");
 		assertEvalString("  result:", "TRIM RIGHT \"  result:  \"");
-		assertEval("\"5 N\",\"2 E\",null)", "TRIM (\" 5 N\", \"2 E \", 2)");
+		assertEval("(\"5 N\",\"2 E\",null)", "TRIM (\" 5 N\", \"2 E \", 2)");
+		assertEval("(\"5 N\",\"2 E \",null)", "TRIM LEFT (\" 5 N\", \"2 E \", 2)");
+		assertEval("(\" 5 N\",\"2 E\",null)", "TRIM RIGHT (\" 5 N\", \"2 E \", 2)");
 	}
 
 	@Test
@@ -157,7 +161,7 @@ public class StringOperators extends ExpressionTestBase {
 		assertEvalString("d", "SUBSTRING -1 CHARACTERS STARTING AT 4 FROM \"abcdefg\"");
 		assertEvalString("bcd", "SUBSTRING -3 CHARACTERS STARTING AT 4 FROM \"abcdefg\"");
 		assertEvalString("a", "SUBSTRING 1 CHARACTERS FROM \"abcdefg\"");
-		assertEvalString("g", "SUBSTRING -1 CHARACTERS STARTING AT LENGTH OF \"abcdefg\" FROM \"abcdefg\"");
+		assertEvalString("g", "SUBSTRING -1 CHARACTERS STARTING AT (LENGTH OF \"abcdefg\") FROM \"abcdefg\"");
 		assertEval("(\"Pos\",\"Neg\",null)", "SUBSTRING 3 CHARACTERS FROM (\"Positive\",\"Negative\",2)");
 
 		assertEvalString("fg", "SUBSTRING -2 CHARACTERS FROM \"abcdefg\"");

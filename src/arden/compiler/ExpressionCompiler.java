@@ -405,13 +405,18 @@ final class ExpressionCompiler extends VisitorBase {
 	public void caseAMatchExprComparison(AMatchExprComparison node) {
 		// expr_comparison = {match} [first_string]:expr_string matches pattern
 		// [second_string]:expr_string;
-		super.caseAMatchExprComparison(node);
+		node.getFirstString().apply(this);
+		node.getSecondString().apply(this);
+		context.writer.invokeStatic(getMethod("matchesPattern", ArdenValue.class, ArdenValue.class));
 	}
 
 	// expr_string =
 	// {plus} expr_plus
 	// | {or} expr_string logor expr_plus
-	// | {form} expr_string formatted with format_string;
+	// | {form} expr_string formatted with string_literal
+	// | {trim} trim trim_option? expr_plus
+	// | {sub} substring [charcount]:expr_plus characters substring_start? from
+	// [inputstr]:expr_plus;
 	@Override
 	public void caseAPlusExprString(APlusExprString node) {
 		// expr_string = {plus} expr_plus
@@ -420,7 +425,7 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAOrExprString(AOrExprString node) {
-		// expr_string logor expr_plus
+		// expr_string = expr_string logor expr_plus
 		node.getExprString().apply(this);
 		node.getExprPlus().apply(this);
 		context.writer.invokeStatic(getMethod("concat", ArdenValue.class, ArdenValue.class));
@@ -430,6 +435,35 @@ final class ExpressionCompiler extends VisitorBase {
 	public void caseAFormExprString(AFormExprString node) {
 		// TODO Auto-generated method stub
 		super.caseAFormExprString(node);
+	}
+
+	@Override
+	public void caseATrimExprString(ATrimExprString node) {
+		// expr_string = trim trim_option? expr_plus
+		node.getExprPlus().apply(this);
+		if (node.getTrimOption() instanceof ALeftTrimOption)
+			context.writer.invokeStatic(getMethod("trimLeft", ArdenValue.class));
+		else if (node.getTrimOption() instanceof ARightTrimOption)
+			context.writer.invokeStatic(getMethod("trimRight", ArdenValue.class));
+		else
+			context.writer.invokeStatic(getMethod("trim", ArdenValue.class));
+	}
+
+	@Override
+	public void caseASubExprString(ASubExprString node) {
+		// expr_string = = substring [charcount]:expr_plus characters
+		// substring_start? from [inputstr]:expr_plus;
+
+		// substring_start = T.starting T.at expr_factor;
+		loadOperator(TernaryOperator.SUBSTRING);
+		node.getCharcount().apply(this);
+		if (node.getSubstringStart() instanceof ASubstringStart) {
+			((ASubstringStart) node.getSubstringStart()).getExprFactor().apply(this);
+		} else {
+			context.writer.loadNull();
+		}
+		node.getInputstr().apply(this);
+		invokeLoadedTernaryOperator();
 	}
 
 	// expr_find_string =

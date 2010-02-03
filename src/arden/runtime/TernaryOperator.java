@@ -56,6 +56,53 @@ public abstract class TernaryOperator {
 		};
 	};
 
+	public static final TernaryOperator SUBSTRING = new TernaryOperator("SUBSTRING") {
+		// SUBSTRING <n:number> CHARACTERS [STARTING AT <n:number>] FROM
+		// <n:string>
+		@Override
+		public ArdenValue runElement(ArdenValue arg1, ArdenValue arg2, ArdenValue arg3) {
+			int startLocation = 0;
+			if (arg2 != null) {
+				// if 'STARTING AT' is specified, the value must be a positive
+				// integer
+				startLocation = RuntimeHelpers.getPrimitiveIntegerValue(arg2);
+				if (startLocation < 1)
+					return ArdenNull.INSTANCE;
+			}
+			if (arg1 instanceof ArdenNumber && arg3 instanceof ArdenString) {
+				double count = ((ArdenNumber) arg1).value;
+				String input = ((ArdenString) arg3).value;
+
+				int countInt = (int) count;
+				if (count != countInt)
+					return ArdenNull.INSTANCE;
+				String result;
+				if (startLocation > input.length()) {
+					result = "";
+				} else {
+					if (startLocation == 0)
+						startLocation = (countInt < 0) ? input.length() : 1;
+
+					if (countInt < 0) {
+						if (countInt < -startLocation)
+							result = input.substring(0, startLocation);
+						else
+							result = input.substring(startLocation + countInt, startLocation);
+					} else {
+						startLocation--; // to 0-based coordinates
+						if (countInt > input.length() - startLocation)
+							result = input.substring(startLocation);
+						else
+							result = input.substring(startLocation, startLocation + countInt);
+					}
+				}
+				return new ArdenString(result, arg3.primaryTime);
+			} else {
+				return ArdenNull.INSTANCE;
+			}
+		};
+	};
+
 	public TernaryOperator(String name) {
 		this.name = name;
 	}

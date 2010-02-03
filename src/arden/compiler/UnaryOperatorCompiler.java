@@ -386,8 +386,8 @@ final class UnaryOperatorCompiler extends VisitorBase {
 
 	@Override
 	public void caseAStrOfNoreadFuncOp(AStrOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAStrOfNoreadFuncOp(node);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("joinString", ArdenValue.class));
 	}
 
 	@Override
@@ -404,20 +404,20 @@ final class UnaryOperatorCompiler extends VisitorBase {
 
 	@Override
 	public void caseALenOfNoreadFuncOp(ALenOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseALenOfNoreadFuncOp(node);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("length", ArdenValue.class));
 	}
 
 	@Override
 	public void caseAUcOfNoreadFuncOp(AUcOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAUcOfNoreadFuncOp(node);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("toUpperCase", ArdenValue.class));
 	}
 
 	@Override
 	public void caseALcOfNoreadFuncOp(ALcOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseALcOfNoreadFuncOp(node);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("toLowerCase", ArdenValue.class));
 	}
 
 	// from_of_func_op =
