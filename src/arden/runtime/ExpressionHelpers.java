@@ -411,6 +411,31 @@ public final class ExpressionHelpers {
 		return ArdenNumber.create(min + 1, arr[min].primaryTime);
 	}
 
+	/** Implements the INDEX MINIMUM transformation operator. */
+	public static ArdenValue indexMinimum(ArdenValue input, int numberOfElements) {
+		ArdenValue[] arr = unaryComma(input).values;
+		ArdenValue sortedInput = sortByData(input);
+		if (!(sortedInput instanceof ArdenList))
+			return ArdenNull.INSTANCE;
+		if (numberOfElements > arr.length)
+			numberOfElements = arr.length;
+		if (numberOfElements == 0)
+			return ArdenList.EMPTY;
+		ArdenValue[] output = new ArdenValue[numberOfElements];
+		ArdenValue pivot = ((ArdenList) sortedInput).values[numberOfElements - 1];
+		int pos = 0;
+		for (int i = 0; i < arr.length; i++) {
+			if (arr[i].compareTo(pivot) <= 0) {
+				output[pos++] = ArdenNumber.create(i + 1, ArdenValue.NOPRIMARYTIME);
+				if (pos == numberOfElements)
+					break;
+			}
+		}
+		if (pos != numberOfElements)
+			throw new Error("algorithm error.");
+		return new ArdenList(output);
+	}
+
 	/** Implements the INDEX MAXIMUM aggregation operator. */
 	public static ArdenValue indexMaximum(ArdenValue input) {
 		ArdenValue[] arr = unaryComma(input).values;
@@ -425,6 +450,31 @@ public final class ExpressionHelpers {
 				max = i;
 		}
 		return ArdenNumber.create(max + 1, arr[max].primaryTime);
+	}
+
+	/** Implements the INDEX MAXIMUM transformation operator. */
+	public static ArdenValue indexMaximum(ArdenValue input, int numberOfElements) {
+		ArdenValue[] arr = unaryComma(input).values;
+		ArdenValue sortedInput = sortByData(input);
+		if (!(sortedInput instanceof ArdenList))
+			return ArdenNull.INSTANCE;
+		if (numberOfElements > arr.length)
+			numberOfElements = arr.length;
+		if (numberOfElements == 0)
+			return ArdenList.EMPTY;
+		ArdenValue[] output = new ArdenValue[numberOfElements];
+		ArdenValue pivot = ((ArdenList) sortedInput).values[arr.length - numberOfElements];
+		int pos = 0;
+		for (int i = 0; i < arr.length; i++) {
+			if (arr[i].compareTo(pivot) >= 0) {
+				output[pos++] = ArdenNumber.create(i + 1, ArdenValue.NOPRIMARYTIME);
+				if (pos == numberOfElements)
+					break;
+			}
+		}
+		if (pos != numberOfElements)
+			throw new Error("algorithm error.");
+		return new ArdenList(output);
 	}
 
 	/** Implements the INDEX EARLIEST aggregation operator. */
@@ -442,7 +492,32 @@ public final class ExpressionHelpers {
 		return ArdenNumber.create(best + 1, arr[best].primaryTime);
 	}
 
-	/** Implements the INDEX EARLIEST aggregation operator. */
+	/** Implements the INDEX EARLIEST transformation operator. */
+	public static ArdenValue indexEarliest(ArdenValue input, int numberOfElements) {
+		ArdenValue[] arr = unaryComma(input).values;
+		ArdenValue sortedInput = sortByTime(input);
+		if (!(sortedInput instanceof ArdenList))
+			return ArdenNull.INSTANCE;
+		if (numberOfElements > arr.length)
+			numberOfElements = arr.length;
+		if (numberOfElements == 0)
+			return ArdenList.EMPTY;
+		ArdenValue[] output = new ArdenValue[numberOfElements];
+		ArdenValue pivot = ((ArdenList) sortedInput).values[numberOfElements - 1];
+		int pos = 0;
+		for (int i = 0; i < arr.length; i++) {
+			if (arr[i].primaryTime <= pivot.primaryTime) {
+				output[pos++] = ArdenNumber.create(i + 1, ArdenValue.NOPRIMARYTIME);
+				if (pos == numberOfElements)
+					break;
+			}
+		}
+		if (pos != numberOfElements)
+			throw new Error("algorithm error.");
+		return new ArdenList(output);
+	}
+
+	/** Implements the INDEX LATEST aggregation operator. */
 	public static ArdenValue indexLatest(ArdenValue input) {
 		ArdenValue[] arr = unaryComma(input).values;
 		if (arr.length == 0 || arr[0].primaryTime == ArdenValue.NOPRIMARYTIME)
@@ -455,6 +530,31 @@ public final class ExpressionHelpers {
 				best = i;
 		}
 		return ArdenNumber.create(best + 1, arr[best].primaryTime);
+	}
+
+	/** Implements the INDEX LATEST transformation operator. */
+	public static ArdenValue indexLatest(ArdenValue input, int numberOfElements) {
+		ArdenValue[] arr = unaryComma(input).values;
+		ArdenValue sortedInput = sortByTime(input);
+		if (!(sortedInput instanceof ArdenList))
+			return ArdenNull.INSTANCE;
+		if (numberOfElements > arr.length)
+			numberOfElements = arr.length;
+		if (numberOfElements == 0)
+			return ArdenList.EMPTY;
+		ArdenValue[] output = new ArdenValue[numberOfElements];
+		ArdenValue pivot = ((ArdenList) sortedInput).values[arr.length - numberOfElements];
+		int pos = 0;
+		for (int i = 0; i < arr.length; i++) {
+			if (arr[i].primaryTime <= pivot.primaryTime) {
+				output[pos++] = ArdenNumber.create(i + 1, ArdenValue.NOPRIMARYTIME);
+				if (pos == numberOfElements)
+					break;
+			}
+		}
+		if (pos != numberOfElements)
+			throw new Error("algorithm error.");
+		return new ArdenList(output);
 	}
 
 	/** Implements the INDEX NEAREST operator. */

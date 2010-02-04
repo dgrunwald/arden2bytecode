@@ -37,54 +37,49 @@ final class TransformationOperatorCompiler extends VisitorBase {
 	// | {lat} latest;
 	@Override
 	public void caseAMiniFromOfFuncOp(AMiniFromOfFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAMiniFromOfFuncOp(node);
+		handleTransformationOperator("indexMinimum", true);
 	}
 
 	@Override
 	public void caseAMinFromOfFuncOp(AMinFromOfFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAMinFromOfFuncOp(node);
+		handleTransformationOperator("indexMinimum", true);
 	}
 
 	@Override
 	public void caseAMaxiFromOfFuncOp(AMaxiFromOfFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAMaxiFromOfFuncOp(node);
+		handleTransformationOperator("indexMaximum", true);
 	}
 
 	@Override
 	public void caseAMaxFromOfFuncOp(AMaxFromOfFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAMaxFromOfFuncOp(node);
+		handleTransformationOperator("indexMaximum", true);
 	}
 
 	@Override
 	public void caseALastFromOfFuncOp(ALastFromOfFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseALastFromOfFuncOp(node);
+		handleTransformationOperator("last", false);
 	}
 
 	@Override
 	public void caseAFirFromOfFuncOp(AFirFromOfFuncOp node) {
-		handleTransformationOperator("first");
+		handleTransformationOperator("first", false);
 	}
 
 	@Override
 	public void caseAEarFromOfFuncOp(AEarFromOfFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAEarFromOfFuncOp(node);
+		handleTransformationOperator("indexEarliest", true);
 	}
 
 	@Override
 	public void caseALatFromOfFuncOp(ALatFromOfFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseALatFromOfFuncOp(node);
+		handleTransformationOperator("indexLatest", true);
 	}
 
-	private void handleTransformationOperator(String name) {
+	private void handleTransformationOperator(String name, boolean followedByElementAt) {
 		numberArgument.apply(parent);
 		sourceListArgument.apply(parent);
+		if (followedByElementAt)
+			context.writer.dup_x1();
 		context.writer.swap();
 		// stack: sourceList, number
 		context.writer.invokeStatic(Compiler.getRuntimeHelper("getPrimitiveIntegerValue", ArdenValue.class));
@@ -98,7 +93,7 @@ final class TransformationOperatorCompiler extends VisitorBase {
 		Label endLabel = new Label();
 		context.writer.jumpIfNegative(elseLabel);
 		// stack: sourceList, number
-		context.writer.invokeStatic(ExpressionCompiler.getMethod(name, ArdenValue.class, Integer.TYPE));
+		context.writer.invokeStatic(ExpressionCompiler.getMethod(name, ArdenValue.class, int.class));
 		// stack: result
 		context.writer.jump(endLabel);
 		context.writer.markForwardJumpsOnly(elseLabel);
@@ -115,6 +110,45 @@ final class TransformationOperatorCompiler extends VisitorBase {
 		// stack: null
 		context.writer.markForwardJumpsOnly(endLabel);
 		// stack: result or null
+		if (followedByElementAt)
+			context.writer.invokeStatic(ExpressionCompiler.getMethod("elementAt", ArdenValue.class, ArdenValue.class));
+	}
+
+	// index_from_of_func_op =
+	// {minimum} index minimum
+	// | {indexmin} index min
+	// | {maximum} index maximum
+	// | {indexmax} index max
+	// | {earliest} index earliest
+	// | {latest} index latest;
+	@Override
+	public void caseAMinimumIndexFromOfFuncOp(AMinimumIndexFromOfFuncOp node) {
+		handleTransformationOperator("indexMinimum", false);
+	}
+
+	@Override
+	public void caseAIndexminIndexFromOfFuncOp(AIndexminIndexFromOfFuncOp node) {
+		handleTransformationOperator("indexMinimum", false);
+	}
+
+	@Override
+	public void caseAMaximumIndexFromOfFuncOp(AMaximumIndexFromOfFuncOp node) {
+		handleTransformationOperator("indexMaximum", false);
+	}
+
+	@Override
+	public void caseAIndexmaxIndexFromOfFuncOp(AIndexmaxIndexFromOfFuncOp node) {
+		handleTransformationOperator("indexMaximum", false);
+	}
+
+	@Override
+	public void caseAEarliestIndexFromOfFuncOp(AEarliestIndexFromOfFuncOp node) {
+		handleTransformationOperator("indexEarliest", false);
+	}
+
+	@Override
+	public void caseALatestIndexFromOfFuncOp(ALatestIndexFromOfFuncOp node) {
+		handleTransformationOperator("indexLatest", false);
 	}
 
 	// from_func_op = nearest;
