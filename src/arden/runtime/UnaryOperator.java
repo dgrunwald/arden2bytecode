@@ -40,77 +40,12 @@ public abstract class UnaryOperator {
 		};
 	};
 
-	public static final UnaryOperator YEARS = new UnaryOperator("YEARS") {
+	public static final UnaryOperator EXTRACTSECOND = new UnaryOperator("EXTRACTSECOND") {
 		@Override
 		public ArdenValue runElement(ArdenValue val) {
-			if (val instanceof ArdenNumber) {
-				return ArdenDuration.months(12 * ((ArdenNumber) val).value, val.primaryTime);
-			} else {
-				return ArdenNull.create(val.primaryTime);
-			}
-		};
-	};
-
-	public static final UnaryOperator MONTHS = new UnaryOperator("MONTHS") {
-		@Override
-		public ArdenValue runElement(ArdenValue val) {
-			if (val instanceof ArdenNumber) {
-				return ArdenDuration.months(((ArdenNumber) val).value, val.primaryTime);
-			} else {
-				return ArdenNull.create(val.primaryTime);
-			}
-		};
-	};
-
-	public static final UnaryOperator WEEKS = new UnaryOperator("WEEKS") {
-		@Override
-		public ArdenValue runElement(ArdenValue val) {
-			if (val instanceof ArdenNumber) {
-				return ArdenDuration.seconds(604800 * ((ArdenNumber) val).value, val.primaryTime);
-			} else {
-				return ArdenNull.create(val.primaryTime);
-			}
-		};
-	};
-
-	public static final UnaryOperator DAYS = new UnaryOperator("DAYS") {
-		@Override
-		public ArdenValue runElement(ArdenValue val) {
-			if (val instanceof ArdenNumber) {
-				return ArdenDuration.seconds(86400 * ((ArdenNumber) val).value, val.primaryTime);
-			} else {
-				return ArdenNull.create(val.primaryTime);
-			}
-		};
-	};
-
-	public static final UnaryOperator HOURS = new UnaryOperator("HOURS") {
-		@Override
-		public ArdenValue runElement(ArdenValue val) {
-			if (val instanceof ArdenNumber) {
-				return ArdenDuration.seconds(3600 * ((ArdenNumber) val).value, val.primaryTime);
-			} else {
-				return ArdenNull.create(val.primaryTime);
-			}
-		};
-	};
-
-	public static final UnaryOperator MINUTES = new UnaryOperator("MINUTES") {
-		@Override
-		public ArdenValue runElement(ArdenValue val) {
-			if (val instanceof ArdenNumber) {
-				return ArdenDuration.seconds(60 * ((ArdenNumber) val).value, val.primaryTime);
-			} else {
-				return ArdenNull.create(val.primaryTime);
-			}
-		};
-	};
-
-	public static final UnaryOperator SECONDS = new UnaryOperator("SECONDS") {
-		@Override
-		public ArdenValue runElement(ArdenValue val) {
-			if (val instanceof ArdenNumber) {
-				return ArdenDuration.seconds(((ArdenNumber) val).value, val.primaryTime);
+			if (val instanceof ArdenTime) {
+				long ms = ((ArdenTime) val).value % 60000;
+				return ArdenNumber.create(ms / 1000.0, val.primaryTime);
 			} else {
 				return ArdenNull.create(val.primaryTime);
 			}

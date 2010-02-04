@@ -58,9 +58,7 @@ public class ExpressionTests extends ExpressionTestBase {
 
 	@Test
 	public void TimeStampWithFractionalSeconds() throws Exception {
-		ArdenTime t = (ArdenTime) evalExpression("1989-01-01T13:30:00.123");
-		// TODO: test whether the time is represented correctly
-		// check that the time was interpreted as local time.
+		assertEval("1989-01-01T13:30:00.123", "1989-01-01T13:30:00.123");
 	}
 
 	@Test
@@ -234,5 +232,34 @@ public class ExpressionTests extends ExpressionTestBase {
 	public void BeforeOperator() throws Exception {
 		assertEval("1990-03-11T00:00:00", "2 days BEFORE 1990-03-13T00:00:00");
 		assertEval("null", "2 days BEFORE 1 day");
+	}
+
+	@Test
+	public void AgoOperator() throws Exception {
+		assertEval("2010-02-02T00:00:00", "2 days AGO", getContextWithNow(2010, 2, 4));
+	}
+
+	@Test
+	public void StringConcat() throws Exception {
+		assertEval("\"ab\"", "\"a\" || \"b\"");
+		assertEval("\"null3\"", "null || 3");
+		assertEval("\"45\"", "4 || 5");
+		assertEval("\"4.7four\"", "4.7 || \"four\"");
+		assertEval("\"true\"", "true || \"\"");
+		assertEval("\"3 days left\"", "3 days || \" left\"");
+		assertEval("\"on 1990-03-15T13:45:01\"", "\"on \" || 1990-03-15T13:45:01");
+		assertEval("\"list=(1,2,3)\"", "\"list=\" || (1,2,3)");
+	}
+
+	@Test
+	public void ExtractTimeComponents() throws Exception {
+		assertEval("1990", "EXTRACT YEAR 1990-01-03T14:23:17.3");
+		assertEval("(1990,2009,null)", "EXTRACT YEAR (1990-01-03, 2009-01-03, 1 year)");
+
+		assertEval("1", "EXTRACT MONTH 1990-01-03T14:23:17.3");
+		assertEval("3", "EXTRACT DAY 1990-01-03T14:23:17.3");
+		assertEval("14", "EXTRACT HOUR 1990-01-03T14:23:17.3");
+		assertEval("23", "EXTRACT MINUTE 1990-01-03T14:23:17.3");
+		assertEval("17.3", "EXTRACT SECOND 1990-01-03T14:23:17.3");
 	}
 }

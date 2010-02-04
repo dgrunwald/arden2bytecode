@@ -628,25 +628,37 @@ final class ExpressionCompiler extends VisitorBase {
 	// expr_duration = expr_function duration_op;
 	@Override
 	public void caseAExprDuration(AExprDuration node) {
-		UnaryOperator op;
+		node.getExprFunction().apply(this);
+		boolean isMonths;
+		double multiplier;
 		PDurationOp durOp = node.getDurationOp();
-		if (durOp instanceof ADayDurationOp || durOp instanceof ADaysDurationOp)
-			op = UnaryOperator.DAYS;
-		else if (durOp instanceof AHourDurationOp || durOp instanceof AHoursDurationOp)
-			op = UnaryOperator.HOURS;
-		else if (durOp instanceof AMinDurationOp || durOp instanceof AMinsDurationOp)
-			op = UnaryOperator.MINUTES;
-		else if (durOp instanceof AMonthDurationOp || durOp instanceof AMonthsDurationOp)
-			op = UnaryOperator.MONTHS;
-		else if (durOp instanceof ASecDurationOp || durOp instanceof ASecsDurationOp)
-			op = UnaryOperator.SECONDS;
-		else if (durOp instanceof AWeekDurationOp || durOp instanceof AWeeksDurationOp)
-			op = UnaryOperator.WEEKS;
-		else if (durOp instanceof AYearDurationOp || durOp instanceof AYearsDurationOp)
-			op = UnaryOperator.YEARS;
-		else
+		if (durOp instanceof ADayDurationOp || durOp instanceof ADaysDurationOp) {
+			isMonths = false;
+			multiplier = 86400;
+		} else if (durOp instanceof AHourDurationOp || durOp instanceof AHoursDurationOp) {
+			isMonths = false;
+			multiplier = 3600;
+		} else if (durOp instanceof AMinDurationOp || durOp instanceof AMinsDurationOp) {
+			isMonths = false;
+			multiplier = 60;
+		} else if (durOp instanceof AMonthDurationOp || durOp instanceof AMonthsDurationOp) {
+			isMonths = true;
+			multiplier = 1;
+		} else if (durOp instanceof ASecDurationOp || durOp instanceof ASecsDurationOp) {
+			isMonths = false;
+			multiplier = 1;
+		} else if (durOp instanceof AWeekDurationOp || durOp instanceof AWeeksDurationOp) {
+			isMonths = false;
+			multiplier = 604800;
+		} else if (durOp instanceof AYearDurationOp || durOp instanceof AYearsDurationOp) {
+			isMonths = true;
+			multiplier = 12;
+		} else {
 			throw new RuntimeCompilerException("Unsupported duration operator: " + durOp.toString());
-		invokeOperator(op, node.getExprFunction());
+		}
+		context.writer.loadDoubleConstant(multiplier);
+		context.writer.loadIntegerConstant(isMonths ? 1 : 0);
+		context.writer.invokeStatic(getMethod("createDuration", ArdenValue.class, double.class, boolean.class));
 	}
 
 	// expr_function =

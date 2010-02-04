@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.GregorianCalendar;
 import java.util.regex.Pattern;
 
 /**
@@ -432,6 +433,39 @@ public final class ExpressionHelpers {
 			return ArdenBoolean.create(true, primaryTime);
 		else
 			return ArdenNull.create(primaryTime);
+	}
+
+	public static ArdenValue createDuration(ArdenValue val, double multiplier, boolean isMonths) {
+		if (val instanceof ArdenList) {
+			ArdenValue[] inputs = ((ArdenList) val).values;
+			ArdenValue[] results = new ArdenValue[inputs.length];
+			for (int i = 0; i < inputs.length; i++)
+				results[i] = createDuration(inputs[i], multiplier, isMonths);
+			return new ArdenList(results);
+		} else if (val instanceof ArdenNumber) {
+			return ArdenDuration.create(((ArdenNumber) val).value * multiplier, isMonths, val.primaryTime);
+		} else {
+			return ArdenNull.create(val.primaryTime);
+		}
+	}
+
+	public static ArdenValue extractTimeComponent(ArdenValue time, int component) {
+		if (time instanceof ArdenList) {
+			ArdenValue[] inputs = ((ArdenList) time).values;
+			ArdenValue[] results = new ArdenValue[inputs.length];
+			for (int i = 0; i < inputs.length; i++)
+				results[i] = extractTimeComponent(inputs[i], component);
+			return new ArdenList(results);
+		} else if (time instanceof ArdenTime) {
+			GregorianCalendar c = new GregorianCalendar();
+			c.setTimeInMillis(((ArdenTime) time).value);
+			int val = c.get(component);
+			if (component == GregorianCalendar.MONTH)
+				val++;
+			return ArdenNumber.create(val, time.primaryTime);
+		} else {
+			return ArdenNull.create(time.primaryTime);
+		}
 	}
 
 	/** Implements the string concatenation operator || */

@@ -1,5 +1,7 @@
 package arden.compiler;
 
+import java.util.GregorianCalendar;
+
 import arden.compiler.node.*;
 import arden.runtime.ArdenValue;
 import arden.runtime.UnaryOperator;
@@ -350,38 +352,40 @@ final class UnaryOperatorCompiler extends VisitorBase {
 
 	@Override
 	public void caseAExyOfNoreadFuncOp(AExyOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAExyOfNoreadFuncOp(node);
+		extractTimeComponent(GregorianCalendar.YEAR);
 	}
 
 	@Override
 	public void caseAExmoOfNoreadFuncOp(AExmoOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAExmoOfNoreadFuncOp(node);
+		extractTimeComponent(GregorianCalendar.MONTH);
 	}
 
 	@Override
 	public void caseAExdOfNoreadFuncOp(AExdOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAExdOfNoreadFuncOp(node);
+		extractTimeComponent(GregorianCalendar.DAY_OF_MONTH);
 	}
 
 	@Override
 	public void caseAExhOfNoreadFuncOp(AExhOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAExhOfNoreadFuncOp(node);
+		extractTimeComponent(GregorianCalendar.HOUR_OF_DAY);
 	}
 
 	@Override
 	public void caseAExmiOfNoreadFuncOp(AExmiOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAExmiOfNoreadFuncOp(node);
+		extractTimeComponent(GregorianCalendar.MINUTE);
+	}
+
+	private void extractTimeComponent(int component) {
+		argument.apply(parent);
+		context.writer.loadIntegerConstant(component);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("extractTimeComponent", ArdenValue.class, int.class));
 	}
 
 	@Override
 	public void caseAExsOfNoreadFuncOp(AExsOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAExsOfNoreadFuncOp(node);
+		// does not use extractTimeComponent because we need both seconds and
+		// milliseconds
+		parent.invokeOperator(UnaryOperator.EXTRACTSECOND, argument);
 	}
 
 	@Override

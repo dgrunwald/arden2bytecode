@@ -1,7 +1,9 @@
 package arden.compiler;
 
 import java.text.ParseException;
+import java.text.ParsePosition;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import arden.compiler.node.*;
@@ -68,11 +70,31 @@ final class ParseHelpers {
 	}
 
 	public static long parseIsoDateTime(TIsoDateTime dateTime) {
-		try {
-			return ArdenTime.isoDateTimeFormat.parse(dateTime.getText()).getTime();
-		} catch (ParseException e) {
-			throw new RuntimeCompilerException(e.getMessage());
+		String text = dateTime.getText();
+		ParsePosition parsePos = new ParsePosition(0);
+		Date date = ArdenTime.isoDateTimeFormat.parse(text, parsePos);
+		if (date == null)
+			throw new RuntimeCompilerException(dateTime, "Invalid DateTime literal");
+		long time = date.getTime();
+		int pos = parsePos.getIndex();
+		if (pos < text.length() && text.charAt(pos) == '.') {
+			// fractional seconds
+			pos++;
+			int multiplier = 100;
+			while (pos < text.length()) {
+				char c = text.charAt(pos);
+				if (c >= '0' && c <= '9') {
+					time += (c - '0') * multiplier;
+					multiplier /= 10;
+					pos++;
+				} else {
+					break;
+				}
+			}
 		}
+		if (pos != text.length())
+			throw new RuntimeCompilerException(dateTime, "Invalid DateTime literal");
+		return time;
 	}
 
 	public static long parseIsoDate(TIsoDate date) {

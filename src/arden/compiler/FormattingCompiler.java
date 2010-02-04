@@ -3,10 +3,7 @@ package arden.compiler;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
-import java.util.Formatter;
 import java.util.Locale;
-
-import javax.naming.Context;
 
 import arden.codegenerator.FieldReference;
 import arden.codegenerator.Label;

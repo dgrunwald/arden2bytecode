@@ -1,13 +1,9 @@
 package arden.tests;
 
-import java.io.FileOutputStream;
-
 import junit.framework.Assert;
 
 import org.junit.Test;
 
-import arden.compiler.CompiledMlm;
-import arden.runtime.ArdenNull;
 import arden.runtime.ArdenValue;
 import arden.runtime.MedicalLogicModule;
 

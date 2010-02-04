@@ -5,7 +5,6 @@ import java.util.GregorianCalendar;
 import org.junit.Test;
 
 import arden.runtime.ArdenNumber;
-import arden.runtime.ArdenTime;
 
 public class IsComparisonTests extends ExpressionTestBase {
 	@Test

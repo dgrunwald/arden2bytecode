@@ -6,7 +6,6 @@ import java.util.Locale;
 import org.junit.Assert;
 import org.junit.Test;
 
-import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
 import arden.runtime.ArdenString;
 
