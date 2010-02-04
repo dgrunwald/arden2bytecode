@@ -300,8 +300,12 @@ public final class ExpressionHelpers {
 		ArdenValue[] inputs = unaryComma(input).values;
 		if (inputs.length == 0)
 			return ArdenNull.INSTANCE;
+		if (!(inputs[0] instanceof ArdenNumber || inputs[0] instanceof ArdenDuration || inputs[0] instanceof ArdenTime))
+			return ArdenNull.INSTANCE;
 		ArdenValue[] outputs = new ArdenValue[inputs.length - 1];
 		for (int i = 0; i < outputs.length; i++) {
+			if (inputs[i].getClass() != inputs[i + 1].getClass())
+				return ArdenNull.INSTANCE;
 			outputs[i] = BinaryOperator.SUB.runElement(inputs[i + 1], inputs[i]).setTime(inputs[i + 1].primaryTime);
 		}
 		return new ArdenList(outputs);
@@ -312,8 +316,12 @@ public final class ExpressionHelpers {
 		ArdenValue[] inputs = unaryComma(input).values;
 		if (inputs.length == 0)
 			return ArdenNull.INSTANCE;
+		if (!(inputs[0] instanceof ArdenNumber || inputs[0] instanceof ArdenDuration))
+			return ArdenNull.INSTANCE;
 		ArdenValue[] outputs = new ArdenValue[inputs.length - 1];
 		for (int i = 0; i < outputs.length; i++) {
+			if (inputs[i].getClass() != inputs[i + 1].getClass())
+				return ArdenNull.INSTANCE;
 			outputs[i] = BinaryOperator.MUL.runElement(
 					BinaryOperator.DIV.runElement(BinaryOperator.SUB.runElement(inputs[i + 1], inputs[i]), inputs[i]),
 					ArdenNumber.ONE_HUNDRED).setTime(inputs[i + 1].primaryTime);

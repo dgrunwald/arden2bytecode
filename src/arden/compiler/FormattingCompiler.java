@@ -162,6 +162,10 @@ final class FormattingCompiler {
 				init.loadIntegerConstant(spec.precision < 0 ? 6 : spec.precision);
 				init.invokeInstance(DecimalFormat.class.getMethod("setMaximumFractionDigits", int.class));
 
+				init.loadStaticField(formatField);
+				init.loadIntegerConstant(spec.precision < 0 ? 6 : spec.precision);
+				init.invokeInstance(DecimalFormat.class.getMethod("setMinimumFractionDigits", int.class));
+
 				if (spec.numberSignFlag) {
 					// TODO: implement this
 				}

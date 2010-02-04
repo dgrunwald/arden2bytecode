@@ -228,8 +228,8 @@ final class UnaryOperatorCompiler extends VisitorBase {
 
 	@Override
 	public void caseAInterOfNoreadFuncOp(AInterOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAInterOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.TIME, argument);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("increase", ArdenValue.class));
 	}
 
 	@Override
@@ -239,104 +239,87 @@ final class UnaryOperatorCompiler extends VisitorBase {
 
 	@Override
 	public void caseAAcosOfNoreadFuncOp(AAcosOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAAcosOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.ARCCOS, argument);
 	}
 
 	@Override
 	public void caseAAsinOfNoreadFuncOp(AAsinOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAAsinOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.ARCSIN, argument);
 	}
 
 	@Override
 	public void caseAAtanOfNoreadFuncOp(AAtanOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAAtanOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.ARCTAN, argument);
 	}
 
 	@Override
 	public void caseACsinOfNoreadFuncOp(ACsinOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseACsinOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.COS, argument);
 	}
 
 	@Override
 	public void caseACosOfNoreadFuncOp(ACosOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseACosOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.COS, argument);
 	}
 
 	@Override
 	public void caseASineOfNoreadFuncOp(ASineOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseASineOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.SIN, argument);
 	}
 
 	@Override
 	public void caseASinOfNoreadFuncOp(ASinOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseASinOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.SIN, argument);
 	}
 
 	@Override
 	public void caseATangOfNoreadFuncOp(ATangOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseATangOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.TAN, argument);
 	}
 
 	@Override
 	public void caseATanOfNoreadFuncOp(ATanOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseATanOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.TAN, argument);
 	}
 
 	@Override
 	public void caseAExpOfNoreadFuncOp(AExpOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAExpOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.EXP, argument);
 	}
 
 	@Override
 	public void caseAFlrOfNoreadFuncOp(AFlrOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAFlrOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.FLOOR, argument);
 	}
 
 	@Override
 	public void caseAIntOfNoreadFuncOp(AIntOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAIntOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.FLOOR, argument);
 	}
 
 	@Override
 	public void caseARoundOfNoreadFuncOp(ARoundOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseARoundOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.ROUND, argument);
 	}
 
 	@Override
 	public void caseACeilOfNoreadFuncOp(ACeilOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseACeilOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.CEILING, argument);
 	}
 
 	@Override
 	public void caseATruncOfNoreadFuncOp(ATruncOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseATruncOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.TRUNCATE, argument);
 	}
 
 	@Override
 	public void caseALogOfNoreadFuncOp(ALogOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseALogOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.LOG, argument);
 	}
 
 	@Override
 	public void caseALogtOfNoreadFuncOp(ALogtOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseALogtOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.LOG10, argument);
 	}
 
 	@Override
@@ -346,8 +329,7 @@ final class UnaryOperatorCompiler extends VisitorBase {
 
 	@Override
 	public void caseASqrtOfNoreadFuncOp(ASqrtOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseASqrtOfNoreadFuncOp(node);
+		parent.invokeOperator(UnaryOperator.SQRT, argument);
 	}
 
 	@Override
@@ -539,7 +521,6 @@ final class UnaryOperatorCompiler extends VisitorBase {
 	// as_func_op = T.number;
 	@Override
 	public void caseAAsFuncOp(AAsFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAAsFuncOp(node);
+		parent.invokeOperator(UnaryOperator.ASNUMBER, argument);
 	}
 }

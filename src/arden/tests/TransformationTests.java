@@ -2,6 +2,10 @@ package arden.tests;
 
 import org.junit.Test;
 
+import arden.runtime.ArdenList;
+import arden.runtime.ArdenNumber;
+import arden.runtime.ArdenValue;
+
 public class TransformationTests extends ExpressionTestBase {
 	@Test
 	public void minimumFrom() throws Exception {
@@ -46,6 +50,7 @@ public class TransformationTests extends ExpressionTestBase {
 		assertEval("null", "INCREASE ()");
 		assertEval("(,1 day)", "INCREASE (1990-03-01,1990-03-02)");
 		assertEval("(,1 day)", "INCREASE (1 day, 2 days)");
+		assertEval("null", "INCREASE (1990-03-01,1990-03-02,1)");
 	}
 
 	@Test
@@ -63,6 +68,7 @@ public class TransformationTests extends ExpressionTestBase {
 		assertEval("()", "% INCREASE 3");
 		assertEval("null", "% INCREASE ()");
 		assertEval("(,100)", "PERCENT INCREASE (1 day, 2 days)");
+		assertEval("null", "% INCREASE (1990-03-01,1990-03-02,1)");
 	}
 
 	@Test
@@ -113,5 +119,16 @@ public class TransformationTests extends ExpressionTestBase {
 	public void indexLatestFrom() throws Exception {
 		assertEval("()", "LATEST 2 FROM ()");
 		assertEval("null", "LATEST 2 FROM (1,2)");
+	}
+
+	@Test
+	public void interval() throws Exception {
+		assertEval("null", "INTERVAL (3,4)");
+		assertEval("null", "INTERVAL 3");
+		assertEval("null", "INTERVAL ()");
+		assertEval("null", "INTERVAL (1990-03-01,1990-03-02)");
+
+		ArdenValue[] arg = { ArdenNumber.create(1, 1000), ArdenNumber.create(5, 1500), ArdenNumber.create(100, 500) };
+		assertEvalWithArgument("(0.5 seconds,-1 seconds)", "INTERVAL arg", new ArdenList(arg), new TestContext());
 	}
 }
