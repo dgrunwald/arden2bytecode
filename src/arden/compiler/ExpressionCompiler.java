@@ -721,36 +721,34 @@ final class ExpressionCompiler extends VisitorBase {
 	@Override
 	public void caseAIfromexprExprFunction(AIfromexprExprFunction node) {
 		// {ifromexpr} index_from_of_func_op expr_function
-		// TODO Auto-generated method stub
-		super.caseAIfromexprExprFunction(node);
+		node.getIndexFromOfFuncOp().apply(new UnaryOperatorCompiler(this, node.getExprFunction()));
 	}
 
 	@Override
 	public void caseAIfromofexprExprFunction(AIfromofexprExprFunction node) {
 		// {ifromofexpr} index_from_of_func_op of expr_function
-		// TODO Auto-generated method stub
-		super.caseAIfromofexprExprFunction(node);
+		node.getIndexFromOfFuncOp().apply(new UnaryOperatorCompiler(this, node.getExprFunction()));
 	}
 
 	@Override
 	public void caseAIfromofexprfromExprFunction(AIfromofexprfromExprFunction node) {
 		// {ifromofexprfrom} index_from_of_func_op expr_factor from
-		// expr_function
-		// TODO Auto-generated method stub
-		super.caseAIfromofexprfromExprFunction(node);
+		node.getIndexFromOfFuncOp().apply(
+				new TransformationOperatorCompiler(this, node.getExprFactor(), node.getExprFunction()));
+
 	}
 
 	@Override
 	public void caseAIfromexprfromExprFunction(AIfromexprfromExprFunction node) {
 		// {ifromexprfrom} index_from_func_op expr_factor from expr_function
-		// TODO Auto-generated method stub
-		super.caseAIfromexprfromExprFunction(node);
+		node.getIndexFromFuncOp().apply(
+				new TransformationOperatorCompiler(this, node.getExprFactor(), node.getExprFunction()));
 	}
 
 	@Override
 	public void caseAFactasExprFunction(AFactasExprFunction node) {
-		// TODO Auto-generated method stub
-		super.caseAFactasExprFunction(node);
+		// {factas} expr_factor as as_func_op
+		node.getAsFuncOp().apply(new UnaryOperatorCompiler(this, node.getExprFactor()));
 	}
 
 	// expr_factor =
@@ -765,9 +763,9 @@ final class ExpressionCompiler extends VisitorBase {
 	@Override
 	public void caseAEfeExprFactor(AEfeExprFactor node) {
 		// expr_factor = {efe} expr_factor_atom l_brk expr r_brk
-		// number [expr] is not a valid construct
-		// TODO Auto-generated method stub
-		super.caseAEfeExprFactor(node);
+		node.getExprFactorAtom().apply(this);
+		node.getExpr().apply(this);
+		context.writer.invokeStatic(getMethod("elementAt", ArdenValue.class, ArdenValue.class));
 	}
 
 	// expr_factor_atom =

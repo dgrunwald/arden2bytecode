@@ -221,12 +221,8 @@ public final class ExpressionHelpers {
 
 	/** implements the VARIANCE operator */
 	public static ArdenValue variance(ArdenValue sequence) {
-		// unlike the other operators, VARIANCE doesn't automatically build
-		// 1-element-lists
-		if (!(sequence instanceof ArdenList))
-			return ArdenNull.INSTANCE;
-		ArdenValue[] values = ((ArdenList) sequence).values;
-		if (values.length == 0)
+		ArdenValue[] values = unaryComma(sequence).values;
+		if (values.length < 2)
 			return ArdenNull.INSTANCE;
 		double sum = 0;
 		for (ArdenValue element : values) {
@@ -240,7 +236,8 @@ public final class ExpressionHelpers {
 			double diff = avg - ((ArdenNumber) element).value;
 			diffsum += diff * diff;
 		}
-		double variance = diffsum / values.length;
+		// sum/(n-1): Bessel's correction (the spec demands the sample variance)
+		double variance = diffsum / (values.length - 1);
 		return ArdenNumber.create(variance, getCommonTime(values));
 	}
 
@@ -324,6 +321,33 @@ public final class ExpressionHelpers {
 		return new ArdenList(outputs);
 	}
 
+	/** implements the SLOPE operator */
+	public static ArdenValue slope(ArdenValue input) {
+		ArdenValue[] inputs = unaryComma(input).values;
+		if (inputs.length < 2)
+			return ArdenNull.INSTANCE;
+		// linear regression through (x=primaryTime/y=value) points
+		double avgX = 0;
+		double avgY = 0;
+		for (ArdenValue val : inputs) {
+			if (!(val instanceof ArdenNumber) || val.primaryTime == ArdenValue.NOPRIMARYTIME)
+				return ArdenNull.INSTANCE;
+			avgX += val.primaryTime / 86000000.0; // x in days
+			avgY += ((ArdenNumber) val).value;
+		}
+		avgX /= inputs.length;
+		avgY /= inputs.length;
+		double z = 0;
+		double n = 0;
+		for (ArdenValue val : inputs) {
+			double x = val.primaryTime / 86000000.0;
+			double y = ((ArdenNumber) val).value;
+			z += (x - avgX) * (y - avgY);
+			n += (x - avgX) * (x - avgX);
+		}
+		return ArdenNumber.create(z / n, ArdenValue.NOPRIMARYTIME);
+	}
+
 	/** Implements the IS LIST operator. */
 	public static ArdenBoolean isList(ArdenValue input) {
 		if (input instanceof ArdenList) {
@@ -371,36 +395,108 @@ public final class ExpressionHelpers {
 		return new ArdenList(result);
 	}
 
-	/** Implements the MINIMUM aggregation operator. */
-	public static ArdenValue minimum(ArdenValue input) {
+	/** Implements the INDEX MINIMUM aggregation operator. */
+	public static ArdenValue indexMinimum(ArdenValue input) {
 		ArdenValue[] arr = unaryComma(input).values;
 		if (arr.length == 0)
 			return ArdenNull.INSTANCE;
-		ArdenValue min = arr[0];
+		int min = 0;
 		for (int i = 1; i < arr.length; i++) {
-			int r = min.compareTo(arr[i]);
+			int r = arr[min].compareTo(arr[i]);
 			if (r == Integer.MIN_VALUE)
 				return ArdenNull.INSTANCE;
-			if (r == 1 || (r == 0 && arr[i].primaryTime > min.primaryTime))
-				min = arr[i];
+			if (r == 1 || (r == 0 && arr[i].primaryTime > arr[min].primaryTime))
+				min = i;
 		}
-		return min;
+		return ArdenNumber.create(min + 1, arr[min].primaryTime);
 	}
 
-	/** Implements the MAXIMUM aggregation operator. */
-	public static ArdenValue maximum(ArdenValue input) {
+	/** Implements the INDEX MAXIMUM aggregation operator. */
+	public static ArdenValue indexMaximum(ArdenValue input) {
 		ArdenValue[] arr = unaryComma(input).values;
 		if (arr.length == 0)
 			return ArdenNull.INSTANCE;
-		ArdenValue max = arr[0];
+		int max = 0;
 		for (int i = 1; i < arr.length; i++) {
-			int r = max.compareTo(arr[i]);
+			int r = arr[max].compareTo(arr[i]);
 			if (r == Integer.MIN_VALUE)
 				return ArdenNull.INSTANCE;
-			if (r == -1 || (r == 0 && arr[i].primaryTime > max.primaryTime))
-				max = arr[i];
+			if (r == -1 || (r == 0 && arr[i].primaryTime > arr[max].primaryTime))
+				max = i;
 		}
-		return max;
+		return ArdenNumber.create(max + 1, arr[max].primaryTime);
+	}
+
+	/** Implements the INDEX EARLIEST aggregation operator. */
+	public static ArdenValue indexEarliest(ArdenValue input) {
+		ArdenValue[] arr = unaryComma(input).values;
+		if (arr.length == 0 || arr[0].primaryTime == ArdenValue.NOPRIMARYTIME)
+			return ArdenNull.INSTANCE;
+		int best = 0;
+		for (int i = 1; i < arr.length; i++) {
+			if (arr[i].primaryTime == ArdenValue.NOPRIMARYTIME)
+				return ArdenNull.INSTANCE;
+			if (arr[i].primaryTime < arr[best].primaryTime)
+				best = i;
+		}
+		return ArdenNumber.create(best + 1, arr[best].primaryTime);
+	}
+
+	/** Implements the INDEX EARLIEST aggregation operator. */
+	public static ArdenValue indexLatest(ArdenValue input) {
+		ArdenValue[] arr = unaryComma(input).values;
+		if (arr.length == 0 || arr[0].primaryTime == ArdenValue.NOPRIMARYTIME)
+			return ArdenNull.INSTANCE;
+		int best = 0;
+		for (int i = 1; i < arr.length; i++) {
+			if (arr[i].primaryTime == ArdenValue.NOPRIMARYTIME)
+				return ArdenNull.INSTANCE;
+			if (arr[i].primaryTime > arr[best].primaryTime)
+				best = i;
+		}
+		return ArdenNumber.create(best + 1, arr[best].primaryTime);
+	}
+
+	/** Implements the INDEX NEAREST operator. */
+	public static ArdenValue indexNearest(ArdenValue time, ArdenValue input) {
+		ArdenValue[] arr = unaryComma(input).values;
+		if (arr.length == 0 || arr[0].primaryTime == ArdenValue.NOPRIMARYTIME || !(time instanceof ArdenTime))
+			return ArdenNull.INSTANCE;
+		long inputTime = ((ArdenTime) time).value;
+		int bestIndex = 0;
+		long bestDiff = Math.abs(arr[0].primaryTime - inputTime);
+		for (int i = 1; i < arr.length; i++) {
+			if (arr[i].primaryTime == ArdenValue.NOPRIMARYTIME)
+				return ArdenNull.INSTANCE;
+			long diff = Math.abs(arr[i].primaryTime - inputTime);
+			if (diff < bestDiff) {
+				bestDiff = diff;
+				bestIndex = i;
+			}
+		}
+		return ArdenNumber.create(bestIndex + 1, arr[bestIndex].primaryTime);
+	}
+
+	/** implements the [] (element) operator */
+	public static ArdenValue elementAt(ArdenValue list, ArdenValue index) {
+		ArdenValue[] values = unaryComma(list).values;
+		if (index instanceof ArdenList) {
+			ArdenValue[] indices = ((ArdenList) index).values;
+			ArdenValue[] result = new ArdenValue[indices.length];
+			for (int i = 0; i < indices.length; i++) {
+				int val = RuntimeHelpers.getPrimitiveIntegerValue(indices[i]);
+				if (val < 1 || val > values.length)
+					result[i] = ArdenNull.INSTANCE;
+				else
+					result[i] = values[val - 1];
+			}
+			return new ArdenList(result);
+		} else {
+			int val = RuntimeHelpers.getPrimitiveIntegerValue(index);
+			if (val < 1 || val > values.length)
+				return ArdenNull.INSTANCE;
+			return values[val - 1];
+		}
 	}
 
 	/** implements the ANY operator */

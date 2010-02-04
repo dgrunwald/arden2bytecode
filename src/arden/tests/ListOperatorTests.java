@@ -166,19 +166,119 @@ public class ListOperatorTests extends ExpressionTestBase {
 
 	@Test
 	public void VarianceOperator() throws Exception {
-		// assertEval("2.5", "VARIANCE (12,13,14,15,16)"); // TODO: spec bug?
-		// should be 2.0 according to manual calculation
-		assertEval("0", "VARIANCE (,3)");
+		assertEval("2.5", "VARIANCE (12,13,14,15,16)");
+		assertEval("0.5", "VARIANCE (1,2)");
+		assertEval("null", "VARIANCE (,3)");
 		assertEval("null", "VARIANCE 3");
 		assertEval("null", "VARIANCE ()");
 	}
 
 	@Test
 	public void StdDevOperator() throws Exception {
-		// assertEval("1.58113883", "STDDEV (12,13,14,15,16)"); // TODO: spec
-		// bug? see variance
+		assertEval("\"1.58113883\"", "STDDEV (12,13,14,15,16) FORMATTED WITH \"%.8f\"");
 		assertEval("null", "STDDEV 3");
 		assertEval("null", "STDDEV ()");
+	}
+
+	@Test
+	public void MinimumOperator() throws Exception {
+		assertEval("12", "MINIMUM (13,12,14)");
+		assertEval("3", "MIN 3");
+		assertEval("null", "MINIMUM ()");
+		assertEval("null", "MINIMUM (1,\"abc\")");
+		assertEval("1 day", "MIN (1 day, 1 week, 1 month)");
+	}
+
+	@Test
+	public void MaximumOperator() throws Exception {
+		assertEval("14", "MAXIMUM (13,12,14)");
+		assertEval("3", "MAX 3");
+		assertEval("null", "MAXIMUM ()");
+		assertEval("null", "MAXIMUM (1,\"abc\")");
+		assertEval("1 month", "MAX (1 day, 1 week, 1 month)");
+	}
+
+	@Test
+	public void Last() throws Exception {
+		assertEval("14", "LAST (13,12,14)");
+		assertEval("3", "LAST 3");
+		assertEval("null", "LAST ()");
+	}
+
+	@Test
+	public void First() throws Exception {
+		assertEval("13", "FIRST (13,12,14)");
+		assertEval("3", "FIRST 3");
+		assertEval("null", "FIRST ()");
+	}
+
+	@Test
+	public void Any() throws Exception {
+		assertEval("true", "ANY (true,false,false)");
+		assertEval("false", "ANY false");
+		assertEval("false", "ANY ()");
+		assertEval("null", "ANY (3, 5, \"red\")");
+		assertEval("false", "ANY (false, false)");
+		assertEval("null", "ANY (false, null)");
+		assertEval("true", "ANY (true, null)");
+	}
+
+	@Test
+	public void All() throws Exception {
+		assertEval("false", "ALL (true,false,false)");
+		assertEval("true", "ALL true");
+		assertEval("true", "ALL ()");
+		assertEval("null", "ALL (3, 5, \"red\")");
+		assertEval("true", "ALL (true, true)");
+		assertEval("false", "ALL (false, null)");
+		assertEval("null", "ALL (true, null)");
+	}
+
+	@Test
+	public void No() throws Exception {
+		assertEval("false", "NO (true,false,false)");
+		assertEval("true", "NO false");
+		assertEval("true", "NO ()");
+		assertEval("null", "NO (3, 5, \"red\")");
+		assertEval("true", "NO (false, false)");
+		assertEval("null", "NO (false, null)");
+		assertEval("false", "NO (true, null)");
+	}
+
+	@Test
+	public void Latest() throws Exception {
+		assertEval("null", "LATEST ()");
+		assertEval("null", "LATEST 1");
+
+		ArdenValue[] args = { ArdenNumber.create(2, 10), ArdenNumber.create(3, 20), ArdenNumber.create(4, 15) };
+		assertEvalWithArgument("3", "LATEST arg", new ArdenList(args), new TestContext());
+
+		ArdenValue[] args2 = { ArdenNumber.create(2, 10), ArdenNumber.create(3, ArdenValue.NOPRIMARYTIME),
+				ArdenNumber.create(4, 15) };
+		assertEvalWithArgument("null", "LATEST arg", new ArdenList(args2), new TestContext());
+	}
+
+	@Test
+	public void Earliest() throws Exception {
+		assertEval("null", "EARLIEST ()");
+		assertEval("null", "EARLIEST 1");
+
+		ArdenValue[] args = { ArdenNumber.create(2, 10), ArdenNumber.create(3, 20), ArdenNumber.create(4, 15) };
+		assertEvalWithArgument("2", "EARLIEST arg", new ArdenList(args), new TestContext());
+
+		ArdenValue[] args2 = { ArdenNumber.create(2, 10), ArdenNumber.create(3, ArdenValue.NOPRIMARYTIME),
+				ArdenNumber.create(4, 15) };
+		assertEvalWithArgument("null", "EARLIEST arg", new ArdenList(args2), new TestContext());
+	}
+
+	@Test
+	public void ElementAt() throws Exception {
+		assertEval("20", "(10,20,30,40)[2]");
+		assertEval("()", "(10,20)[()]");
+		assertEval("(null,20)", "(10,20)[1.5,2]");
+		assertEval("(10,30,50)", "(10,20,30,40,50)[1,3,5]");
+		assertEval("(10,30,50)", "(10,20,30,40,50)[1,(3,5)]");
+		assertEval("(10,20,30)", "(10,20,30,40,50)[1 seqto 3]");
 	}
 
 	@Test
@@ -196,5 +296,102 @@ public class ListOperatorTests extends ExpressionTestBase {
 		assertEval("(6,5,4,3,2,1)", "reverse (1 seqto 6)");
 		assertEval("()", "reverse ()");
 		assertEval("(,null)", "reverse null");
+	}
+
+	@Test
+	public void IndexLatest() throws Exception {
+		assertEval("null", "INDEX LATEST ()");
+		assertEval("null", "INDEX LATEST 1");
+
+		ArdenValue[] args = { ArdenNumber.create(2, 10), ArdenNumber.create(3, 20), ArdenNumber.create(4, 15) };
+		assertEvalWithArgument("2", "INDEX LATEST arg", new ArdenList(args), new TestContext());
+
+		ArdenValue[] args2 = { ArdenNumber.create(2, 10), ArdenNumber.create(3, ArdenValue.NOPRIMARYTIME),
+				ArdenNumber.create(4, 15) };
+		assertEvalWithArgument("null", "INDEX LATEST arg", new ArdenList(args2), new TestContext());
+	}
+
+	@Test
+	public void IndexEarliest() throws Exception {
+		assertEval("null", "INDEX EARLIEST ()");
+		assertEval("null", "INDEX EARLIEST 1");
+
+		ArdenValue[] args = { ArdenNumber.create(2, 10), ArdenNumber.create(3, 20), ArdenNumber.create(4, 15) };
+		assertEvalWithArgument("1", "INDEX EARLIEST arg", new ArdenList(args), new TestContext());
+
+		ArdenValue[] args2 = { ArdenNumber.create(2, 10), ArdenNumber.create(3, ArdenValue.NOPRIMARYTIME),
+				ArdenNumber.create(4, 15) };
+		assertEvalWithArgument("null", "INDEX EARLIEST arg", new ArdenList(args2), new TestContext());
+	}
+
+	@Test
+	public void IndexMinimumOperator() throws Exception {
+		assertEval("2", "INDEX MINIMUM (13,12,14)");
+		assertEval("1", "INDEX MIN 3");
+		assertEval("null", "INDEX MINIMUM ()");
+		assertEval("null", "INDEX MINIMUM (1,\"abc\")");
+		assertEval("1", "INDEX MIN (1 day, 1 week, 1 month)");
+	}
+
+	@Test
+	public void IndexMaximumOperator() throws Exception {
+		assertEval("3", "INDEX MAXIMUM (13,12,14)");
+		assertEval("1", "INDEX MAX 3");
+		assertEval("null", "INDEX MAXIMUM ()");
+		assertEval("null", "INDEX MAXIMUM (1,\"abc\")");
+		assertEval("3", "INDEX MAX (1 day, 1 week, 1 month)");
+	}
+
+	@Test
+	public void nearestOperator() throws Exception {
+		assertEval("null", "NEAREST now FROM ()");
+		assertEval("null", "NEAREST now FROM (2,3)");
+
+		ArdenValue[] arg = { ArdenNumber.create(12, 1000), ArdenNumber.create(13, 2000), ArdenNumber.create(14, 3000) };
+		final ArdenTime now = new ArdenTime(2200);
+		assertEvalWithArgument("13", "NEAREST now FROM arg", new ArdenList(arg), new TestContext() {
+			@Override
+			public ArdenTime getCurrentTime() {
+				return now;
+			}
+		});
+	}
+
+	@Test
+	public void indexNearestOperator() throws Exception {
+		assertEval("null", "INDEX NEAREST now FROM ()");
+		assertEval("null", "INDEX NEAREST now FROM (2,3)");
+
+		ArdenValue[] arg = { ArdenNumber.create(12, 1000), ArdenNumber.create(13, 2000), ArdenNumber.create(14, 3000) };
+		final ArdenTime now = new ArdenTime(2200);
+		assertEvalWithArgument("2", "INDEX NEAREST now FROM arg", new ArdenList(arg), new TestContext() {
+			@Override
+			public ArdenTime getCurrentTime() {
+				return now;
+			}
+		});
+	}
+
+	@Test
+	public void slopeOperator() throws Exception {
+		assertEval("null", "SLOPE null");
+		assertEval("null", "SLOPE ()");
+		assertEval("null", "SLOPE (1,2,3)");
+
+		final int day = 86000 * 1000; // 1 day in ms
+
+		ArdenValue[] arg = { ArdenNumber.create(1, day), ArdenNumber.create(5, 2 * day) };
+		assertEvalWithArgument("4", "SLOPE arg", new ArdenList(arg), new TestContext());
+
+		ArdenValue[] arg2 = { ArdenNumber.create(1, day), ArdenNumber.create(5, ArdenValue.NOPRIMARYTIME) };
+		assertEvalWithArgument("null", "SLOPE arg", new ArdenList(arg2), new TestContext());
+
+		ArdenValue[] arg3 = { ArdenNumber.create(1, day), ArdenNumber.create(10, 2 * day),
+				ArdenNumber.create(6, day + day / 2) };
+		assertEvalWithArgument("9", "SLOPE arg", new ArdenList(arg3), new TestContext());
+
+		ArdenValue[] arg4 = { ArdenNumber.create(1, day), ArdenNumber.create(10, 2 * day),
+				ArdenNumber.create(6, day + day / 2), ArdenNumber.create(4, day * 3) };
+		assertEvalWithArgument("1.2", "SLOPE arg", new ArdenList(arg4), new TestContext());
 	}
 }

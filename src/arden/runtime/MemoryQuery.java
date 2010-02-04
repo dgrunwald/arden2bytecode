@@ -147,7 +147,7 @@ public final class MemoryQuery extends DatabaseQuery {
 	public DatabaseQuery minimum() {
 		ArdenValue[] result = new ArdenValue[values.length];
 		for (int i = 0; i < values.length; i++)
-			result[i] = ExpressionHelpers.minimum(values[i]);
+			result[i] = ExpressionHelpers.elementAt(values[i], ExpressionHelpers.indexMinimum(values[i]));
 		return new MemoryQuery(result);
 	}
 
@@ -160,7 +160,7 @@ public final class MemoryQuery extends DatabaseQuery {
 	public DatabaseQuery maximum() {
 		ArdenValue[] result = new ArdenValue[values.length];
 		for (int i = 0; i < values.length; i++)
-			result[i] = ExpressionHelpers.maximum(values[i]);
+			result[i] = ExpressionHelpers.elementAt(values[i], ExpressionHelpers.indexMaximum(values[i]));
 		return new MemoryQuery(result);
 	}
 
@@ -203,7 +203,10 @@ public final class MemoryQuery extends DatabaseQuery {
 
 	@Override
 	public DatabaseQuery latest() {
-		throw new RuntimeException("not implemented"); // TODO
+		ArdenValue[] result = new ArdenValue[values.length];
+		for (int i = 0; i < values.length; i++)
+			result[i] = ExpressionHelpers.elementAt(values[i], ExpressionHelpers.indexLatest(values[i]));
+		return new MemoryQuery(result);
 	}
 
 	@Override
@@ -213,7 +216,10 @@ public final class MemoryQuery extends DatabaseQuery {
 
 	@Override
 	public DatabaseQuery earliest() {
-		throw new RuntimeException("not implemented"); // TODO
+		ArdenValue[] result = new ArdenValue[values.length];
+		for (int i = 0; i < values.length; i++)
+			result[i] = ExpressionHelpers.elementAt(values[i], ExpressionHelpers.indexEarliest(values[i]));
+		return new MemoryQuery(result);
 	}
 
 	@Override

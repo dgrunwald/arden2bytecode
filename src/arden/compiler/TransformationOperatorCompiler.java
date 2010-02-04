@@ -82,13 +82,6 @@ final class TransformationOperatorCompiler extends VisitorBase {
 		super.caseALatFromOfFuncOp(node);
 	}
 
-	// from_func_op = nearest;
-	@Override
-	public void caseAFromFuncOp(AFromFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAFromFuncOp(node);
-	}
-
 	private void handleTransformationOperator(String name) {
 		numberArgument.apply(parent);
 		sourceListArgument.apply(parent);
@@ -122,5 +115,23 @@ final class TransformationOperatorCompiler extends VisitorBase {
 		// stack: null
 		context.writer.markForwardJumpsOnly(endLabel);
 		// stack: result or null
+	}
+
+	// from_func_op = nearest;
+	@Override
+	public void caseAFromFuncOp(AFromFuncOp node) {
+		numberArgument.apply(parent);
+		sourceListArgument.apply(parent);
+		context.writer.dup_x1();
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexNearest", ArdenValue.class, ArdenValue.class));
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("elementAt", ArdenValue.class, ArdenValue.class));
+	}
+
+	// index_from_func_op = index nearest;
+	@Override
+	public void caseAIndexFromFuncOp(AIndexFromFuncOp node) {
+		numberArgument.apply(parent);
+		sourceListArgument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexNearest", ArdenValue.class, ArdenValue.class));
 	}
 }

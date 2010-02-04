@@ -160,8 +160,8 @@ final class UnaryOperatorCompiler extends VisitorBase {
 
 	@Override
 	public void caseASlpOfNoreadFuncOp(ASlpOfNoreadFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseASlpOfNoreadFuncOp(node);
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("slope", ArdenValue.class));
 	}
 
 	@Override
@@ -436,25 +436,33 @@ final class UnaryOperatorCompiler extends VisitorBase {
 	@Override
 	public void caseAMiniFromOfFuncOp(AMiniFromOfFuncOp node) {
 		argument.apply(parent);
-		context.writer.invokeStatic(ExpressionCompiler.getMethod("minimum", ArdenValue.class));
+		context.writer.dup();
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexMinimum", ArdenValue.class));
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("elementAt", ArdenValue.class, ArdenValue.class));
 	}
 
 	@Override
 	public void caseAMinFromOfFuncOp(AMinFromOfFuncOp node) {
 		argument.apply(parent);
-		context.writer.invokeStatic(ExpressionCompiler.getMethod("minimum", ArdenValue.class));
+		context.writer.dup();
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexMinimum", ArdenValue.class));
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("elementAt", ArdenValue.class, ArdenValue.class));
 	}
 
 	@Override
 	public void caseAMaxiFromOfFuncOp(AMaxiFromOfFuncOp node) {
 		argument.apply(parent);
-		context.writer.invokeStatic(ExpressionCompiler.getMethod("maximum", ArdenValue.class));
+		context.writer.dup();
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexMaximum", ArdenValue.class));
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("elementAt", ArdenValue.class, ArdenValue.class));
 	}
 
 	@Override
 	public void caseAMaxFromOfFuncOp(AMaxFromOfFuncOp node) {
 		argument.apply(parent);
-		context.writer.invokeStatic(ExpressionCompiler.getMethod("maximum", ArdenValue.class));
+		context.writer.dup();
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexMaximum", ArdenValue.class));
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("elementAt", ArdenValue.class, ArdenValue.class));
 	}
 
 	@Override
@@ -471,13 +479,67 @@ final class UnaryOperatorCompiler extends VisitorBase {
 
 	@Override
 	public void caseAEarFromOfFuncOp(AEarFromOfFuncOp node) {
-		// TODO Auto-generated method stub
-		super.caseAEarFromOfFuncOp(node);
+		argument.apply(parent);
+		context.writer.dup();
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexEarliest", ArdenValue.class));
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("elementAt", ArdenValue.class, ArdenValue.class));
 	}
 
 	@Override
 	public void caseALatFromOfFuncOp(ALatFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.dup();
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexLatest", ArdenValue.class));
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("elementAt", ArdenValue.class, ArdenValue.class));
+	}
+
+	// index_from_of_func_op =
+	// {minimum} index minimum
+	// | {indexmin} index min
+	// | {maximum} index maximum
+	// | {indexmax} index max
+	// | {earliest} index earliest
+	// | {latest} index latest;
+	@Override
+	public void caseAMinimumIndexFromOfFuncOp(AMinimumIndexFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexMinimum", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAIndexminIndexFromOfFuncOp(AIndexminIndexFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexMinimum", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAMaximumIndexFromOfFuncOp(AMaximumIndexFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexMaximum", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAIndexmaxIndexFromOfFuncOp(AIndexmaxIndexFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexMaximum", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAEarliestIndexFromOfFuncOp(AEarliestIndexFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexEarliest", ArdenValue.class));
+	}
+
+	@Override
+	public void caseALatestIndexFromOfFuncOp(ALatestIndexFromOfFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("indexLatest", ArdenValue.class));
+	}
+
+	// as_func_op = T.number;
+	@Override
+	public void caseAAsFuncOp(AAsFuncOp node) {
 		// TODO Auto-generated method stub
-		super.caseALatFromOfFuncOp(node);
+		super.caseAAsFuncOp(node);
 	}
 }
