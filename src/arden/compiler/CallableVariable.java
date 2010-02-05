@@ -4,15 +4,16 @@ import arden.codegenerator.FieldReference;
 import arden.compiler.node.PExpr;
 import arden.compiler.node.TIdentifier;
 import arden.compiler.node.Token;
+import arden.runtime.ArdenRunnable;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
-import arden.runtime.MedicalLogicModule;
 
-/** MLM Variables */
-final class MlmVariable extends Variable {
-	final FieldReference mlmField;
+/** MLM or INTERFACE Variables */
+final class CallableVariable extends Variable {
+	// instance field of type ArdenRunnable 
+	private final FieldReference mlmField;
 
-	public MlmVariable(TIdentifier varName, FieldReference mlmField) {
+	public CallableVariable(TIdentifier varName, FieldReference mlmField) {
 		super(varName);
 		this.mlmField = mlmField;
 	}
@@ -28,8 +29,8 @@ final class MlmVariable extends Variable {
 		} else {
 			context.writer.loadNull();
 		}
-		context.writer.invokeStatic(Compiler.getRuntimeHelper("call", MedicalLogicModule.class,
-				ExecutionContext.class, ArdenValue[].class));
+		context.writer.invokeStatic(Compiler.getRuntimeHelper("call", ArdenRunnable.class, ExecutionContext.class,
+				ArdenValue[].class));
 	}
 
 	@Override

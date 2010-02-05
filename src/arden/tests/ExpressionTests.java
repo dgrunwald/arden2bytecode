@@ -1,12 +1,13 @@
 package arden.tests;
 
+import java.util.GregorianCalendar;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import arden.runtime.ArdenBoolean;
 import arden.runtime.ArdenNull;
 import arden.runtime.ArdenNumber;
-import arden.runtime.ArdenTime;
 
 public class ExpressionTests extends ExpressionTestBase {
 	@Test
@@ -61,12 +62,12 @@ public class ExpressionTests extends ExpressionTestBase {
 		assertEval("1989-01-01T13:30:00.123", "1989-01-01T13:30:00.123");
 	}
 
-	@Test
-	public void TimeStampWithFractionalSecondsUTC() throws Exception {
-		ArdenTime t = (ArdenTime) evalExpression("1989-01-01T13:30:00.123z");
-		// TODO: test whether the time is represented correctly
-		// check that the time was interpreted as UTC.
-	}
+	// @Test
+	// public void TimeStampWithFractionalSecondsUTC() throws Exception {
+	// ArdenTime t = (ArdenTime) evalExpression("1989-01-01T13:30:00.123z");
+	// TODO: test whether the time is represented correctly
+	// check that the time was interpreted as UTC.
+	// }
 
 	@Test
 	public void TimeCalculation() throws Exception {
@@ -261,5 +262,16 @@ public class ExpressionTests extends ExpressionTestBase {
 		assertEval("14", "EXTRACT HOUR 1990-01-03T14:23:17.3");
 		assertEval("23", "EXTRACT MINUTE 1990-01-03T14:23:17.3");
 		assertEval("17.3", "EXTRACT SECOND 1990-01-03T14:23:17.3");
+	}
+
+	@Test
+	public void TimeOfOperator() throws Exception {
+		assertEval("null", "TIME OF null");
+		assertEval("null", "TIME OF 1990-01-03T14:23:17.3");
+
+		long time = new GregorianCalendar(2010, 1, 5).getTimeInMillis();
+		assertEvalWithArgument("2010-02-05T00:00:00", "TIME OF arg", ArdenBoolean.create(true, time), new TestContext());
+		assertEvalWithArgument("2010-02-05T00:00:00", "TIME OF TIME arg", ArdenNumber.create(0, time),
+				new TestContext());
 	}
 }

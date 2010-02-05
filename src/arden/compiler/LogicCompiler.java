@@ -120,7 +120,9 @@ final class LogicCompiler extends VisitorBase {
 	// logic_assignment =
 	// {idex} identifier_becomes expr
 	// | {tex} time_becomes expr
-	// | {icall} identifier_becomes call_phrase;
+	// | {icall} identifier_becomes call_phrase
+	// | {lphr} l_par data_var_list r_par assign call_phrase
+	// | {llphr} let l_par data_var_list r_par be call_phrase;
 	@Override
 	public void caseAIdexLogicAssignment(AIdexLogicAssignment node) {
 		LeftHandSideAnalyzer.analyze(node.getIdentifierBecomes()).assign(context, node.getExpr());
@@ -133,7 +135,19 @@ final class LogicCompiler extends VisitorBase {
 
 	@Override
 	public void caseAIcallLogicAssignment(AIcallLogicAssignment node) {
-		// TODO: implement
-		throw new RuntimeCompilerException("CALL is not yet implemented");
+		LeftHandSideResult lhs = LeftHandSideAnalyzer.analyze(node.getIdentifierBecomes());
+		new DataCompiler(context).assignPhrase(lhs, node.getCallPhrase());
+	}
+
+	@Override
+	public void caseALphrLogicAssignment(ALphrLogicAssignment node) {
+		LeftHandSideResult lhs = LeftHandSideAnalyzer.analyze(node.getDataVarList());
+		new DataCompiler(context).assignPhrase(lhs, node.getCallPhrase());
+	}
+
+	@Override
+	public void caseALlphrLogicAssignment(ALlphrLogicAssignment node) {
+		LeftHandSideResult lhs = LeftHandSideAnalyzer.analyze(node.getDataVarList());
+		new DataCompiler(context).assignPhrase(lhs, node.getCallPhrase());
 	}
 }

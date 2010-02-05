@@ -131,4 +131,11 @@ final class ParseHelpers {
 		});
 		return output;
 	}
+
+	public static String getMlmName(TTerm term) {
+		String input = term.getText();
+		if (input.length() < 2 || input.charAt(0) != '\'' || input.charAt(input.length() - 1) != '\'')
+			throw new RuntimeCompilerException(term, "Invalid term");
+		return input.substring(1, input.length() - 1);
+	}
 }

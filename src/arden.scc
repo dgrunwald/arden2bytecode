@@ -629,7 +629,9 @@ logic_elseif =
 logic_assignment =
       {idex}   identifier_becomes expr
     | {tex}    time_becomes expr
-    | {icall}  identifier_becomes call_phrase;
+    | {icall}  identifier_becomes call_phrase
+    | {lphr}   l_par data_var_list r_par assign call_phrase
+    | {llphr}  let l_par data_var_list r_par be call_phrase;
 
 identifier_becomes =
       {id}      identifier assign

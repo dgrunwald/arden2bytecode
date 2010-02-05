@@ -47,22 +47,34 @@ public class ExecutionContext {
 	 *            The institution of the requested MLM.
 	 * @return The requested MLM.
 	 */
-	public MedicalLogicModule findModule(String name, String institution) {
-		return null;
+	public ArdenRunnable findModule(String name, String institution) {
+		throw new RuntimeException("findModule not implemented");
+	}
+
+	/**
+	 * Retrieves an interface implementation.
+	 * 
+	 * @param mapping
+	 *            The mapping clause of the interface.
+	 * @return The interface implementation.
+	 */
+	public ArdenRunnable findInterface(String mapping) {
+		throw new RuntimeException("findInterface not implemented");
 	}
 
 	/**
 	 * Calls another MLM using a delay.
 	 * 
 	 * @param mlm
-	 *            The MLM that should be called.
+	 *            The MLM that should be called. This will be an instance
+	 *            returned from findModule() or findInterface().
 	 * @param arguments
 	 *            The arguments being passed. Can be null if no arguments were
 	 *            specified.
 	 * @param delay
 	 *            The delay for calling the MLM (as ArdenDuration).
 	 */
-	public void callWithDelay(MedicalLogicModule mlm, ArdenValue[] arguments, ArdenValue delay) {
+	public void callWithDelay(ArdenRunnable mlm, ArdenValue[] arguments, ArdenValue delay) {
 		throw new RuntimeException("callWithDelay not implemented");
 	}
 

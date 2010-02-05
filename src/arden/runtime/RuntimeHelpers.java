@@ -23,7 +23,7 @@ public final class RuntimeHelpers {
 		}
 	}
 
-	public static ArdenValue[] call(MedicalLogicModule mlm, ExecutionContext context, ArdenValue[] arguments) {
+	public static ArdenValue[] call(ArdenRunnable mlm, ExecutionContext context, ArdenValue[] arguments) {
 		try {
 			return mlm.run(context, arguments);
 		} catch (InvocationTargetException e) {

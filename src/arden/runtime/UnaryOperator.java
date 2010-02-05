@@ -198,15 +198,14 @@ public abstract class UnaryOperator {
 	public static final UnaryOperator ROUND = new NumericUnaryOperator("ROUND") {
 		@Override
 		public double runNumber(double input) {
-			return Math.round(input);
+			return input < 0 ? Math.ceil(input - 0.5) : Math.floor(input + 0.5);
 		}
 	};
 
 	public static final UnaryOperator TRUNCATE = new NumericUnaryOperator("TRUNCATE") {
 		@Override
 		public double runNumber(double input) {
-			double result = Math.floor(input);
-			return result < 0 ? result + 1 : result;
+			return input < 0 ? Math.ceil(input) : Math.floor(input);
 		}
 	};
 

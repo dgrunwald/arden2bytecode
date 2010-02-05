@@ -2,15 +2,15 @@ package arden.compiler;
 
 import java.lang.reflect.Method;
 
+import arden.runtime.ArdenRunnable;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
-import arden.runtime.MedicalLogicModule;
 
 /** Contains references to the methods from the ExecutionContext class */
 final class ExecutionContextMethods {
 	public static final Method createQuery;
 	public static final Method write;
-	public static final Method findModule;
+	public static final Method findModule, findInterface;
 	public static final Method callWithDelay;
 	public static final Method getEventTime, getTriggerTime, getCurrentTime;
 
@@ -19,8 +19,9 @@ final class ExecutionContextMethods {
 			createQuery = ExecutionContext.class.getMethod("createQuery", String.class);
 			write = ExecutionContext.class.getMethod("write", ArdenValue.class, String.class);
 			findModule = ExecutionContext.class.getMethod("findModule", String.class, String.class);
-			callWithDelay = ExecutionContext.class.getMethod("callWithDelay", MedicalLogicModule.class,
-					ArdenValue[].class, ArdenValue.class);
+			findInterface = ExecutionContext.class.getMethod("findInterface", String.class);
+			callWithDelay = ExecutionContext.class.getMethod("callWithDelay", ArdenRunnable.class, ArdenValue[].class,
+					ArdenValue.class);
 			getEventTime = ExecutionContext.class.getMethod("getEventTime");
 			getTriggerTime = ExecutionContext.class.getMethod("getTriggerTime");
 			getCurrentTime = ExecutionContext.class.getMethod("getCurrentTime");

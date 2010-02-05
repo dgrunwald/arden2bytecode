@@ -7,8 +7,8 @@ import java.util.List;
 import arden.codegenerator.FieldReference;
 import arden.codegenerator.Label;
 import arden.compiler.node.*;
+import arden.runtime.ArdenRunnable;
 import arden.runtime.DatabaseQuery;
-import arden.runtime.MedicalLogicModule;
 
 /**
  * Compiler for data block.
@@ -166,7 +166,15 @@ final class DataCompiler extends VisitorBase {
 					throw new RuntimeCompilerException(lhs.getPosition(),
 							"INTERFACE variables must be simple identifiers");
 				TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
-				context.codeGenerator.addVariable(new InterfaceVariable(ident, node.getMappingFactor()));
+				FieldReference mlmField = context.codeGenerator.createField(ident.getText(), ArdenRunnable.class,
+						Modifier.PRIVATE);
+				context.writer.sequencePoint(ident.getLine());
+				context.writer.loadThis();
+				context.writer.loadVariable(context.executionContextVariable);
+				context.writer.loadStringConstant(ParseHelpers.getStringForMapping(node.getMappingFactor()));
+				context.writer.invokeInstance(ExecutionContextMethods.findInterface);
+				context.writer.storeInstanceField(mlmField);
+				context.codeGenerator.addVariable(new CallableVariable(ident, mlmField));
 			}
 
 			@Override
@@ -255,7 +263,7 @@ final class DataCompiler extends VisitorBase {
 		if (!(lhs instanceof LeftHandSideIdentifier))
 			throw new RuntimeCompilerException(lhs.getPosition(), "MLM variables must be simple identifiers");
 		TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
-		FieldReference mlmField = context.codeGenerator.createField(ident.getText(), MedicalLogicModule.class,
+		FieldReference mlmField = context.codeGenerator.createField(ident.getText(), ArdenRunnable.class,
 				Modifier.PRIVATE);
 		context.writer.sequencePoint(ident.getLine());
 		context.writer.loadThis();
@@ -263,7 +271,7 @@ final class DataCompiler extends VisitorBase {
 			context.writer.loadVariable(context.selfMLMVariable);
 		} else {
 			context.writer.loadVariable(context.executionContextVariable);
-			context.writer.loadStringConstant(name.getText());
+			context.writer.loadStringConstant(ParseHelpers.getMlmName(name));
 			if (institution != null) {
 				context.writer.loadStringConstant(ParseHelpers.getLiteralStringValue(institution));
 			} else {
@@ -272,7 +280,7 @@ final class DataCompiler extends VisitorBase {
 			context.writer.invokeInstance(ExecutionContextMethods.findModule);
 		}
 		context.writer.storeInstanceField(mlmField);
-		context.codeGenerator.addVariable(new MlmVariable(ident, mlmField));
+		context.codeGenerator.addVariable(new CallableVariable(ident, mlmField));
 	}
 
 	/** Assigns the argument to the variable. */
@@ -296,10 +304,26 @@ final class DataCompiler extends VisitorBase {
 	}
 
 	/** Assigns a call phrase to the variable. */
-	private void assignPhrase(LeftHandSideResult lhs, PCallPhrase callPhrase) {
-		// TODO
-		throw new RuntimeCompilerException("TODO");
-		// assignResultFromPhrase(lhs);
+	public void assignPhrase(LeftHandSideResult lhs, PCallPhrase callPhrase) {
+		context.writer.sequencePoint(lhs.getPosition().getLine());
+
+		// call_phrase =
+		// {id} call identifier
+		// | {idex} call identifier with expr;
+		TIdentifier identifier;
+		PExpr arguments;
+		if (callPhrase instanceof AIdCallPhrase) {
+			identifier = ((AIdCallPhrase) callPhrase).getIdentifier();
+			arguments = null;
+		} else if (callPhrase instanceof AIdexCallPhrase) {
+			identifier = ((AIdexCallPhrase) callPhrase).getIdentifier();
+			arguments = ((AIdexCallPhrase) callPhrase).getExpr();
+		} else {
+			throw new RuntimeException("unknown call phrase");
+		}
+		Variable var = context.codeGenerator.getVariableOrShowError(identifier);
+		var.call(context, lhs.getPosition(), arguments);
+		assignResultFromPhrase(lhs);
 	}
 
 	private void assignResultFromPhrase(LeftHandSideResult lhs) {

@@ -55,15 +55,15 @@ public class NumericTests extends ExpressionTestBase {
 
 	@Test
 	public void floor() throws Exception {
-		assertEval("-2", "INT -1.5");
-		assertEval("-2", "INT -2.0");
+		assertEval("-2", "INT (-1.5)");
+		assertEval("-2", "INT (-2.0)");
 		assertEval("1", "INT (1.5)");
 		assertEval("-3", "INT (-2.5)");
 		assertEval("-4", "INT (-3.1)");
 		assertEval("-4", "INT (-4)");
 
-		assertEval("-2", "FLOOR -1.5");
-		assertEval("-2", "FLOOR -2.0");
+		assertEval("-2", "FLOOR (-1.5)");
+		assertEval("-2", "FLOOR (-2.0)");
 		assertEval("1", "FLOOR (1.5)");
 		assertEval("-3", "FLOOR (-2.5)");
 		assertEval("-4", "FLOOR (-3.1)");
@@ -72,9 +72,9 @@ public class NumericTests extends ExpressionTestBase {
 
 	@Test
 	public void ceiling() throws Exception {
-		assertEval("-1", "CEILING -1.5");
-		assertEval("-1", "CEILING -2.0");
-		assertEval("1", "CEILING (1.5)");
+		assertEval("-1", "CEILING (-1.5)");
+		assertEval("-1", "CEILING (-1.0)");
+		assertEval("2", "CEILING (1.5)");
 		assertEval("-2", "CEILING (-2.5)");
 		assertEval("-3", "CEILING (-3.9)");
 		assertEval("-4", "CEILING (-4)");
@@ -82,8 +82,8 @@ public class NumericTests extends ExpressionTestBase {
 
 	@Test
 	public void truncate() throws Exception {
-		assertEval("-1", "TRUNCATE -1.5");
-		assertEval("-1", "TRUNCATE -1");
+		assertEval("-1", "TRUNCATE (-1.5)");
+		assertEval("-1", "TRUNCATE (-1)");
 		assertEval("1", "TRUNCATE (1.5)");
 	}
 
@@ -92,9 +92,9 @@ public class NumericTests extends ExpressionTestBase {
 		assertEval("1", "ROUND 0.5");
 		assertEval("3", "ROUND 3.4");
 		assertEval("4", "ROUND 3.5");
-		assertEval("-4", "ROUND -3.5");
-		assertEval("-3", "ROUND -3.4");
-		assertEval("-4", "ROUND -3.7");
+		assertEval("-4", "ROUND (-3.5)");
+		assertEval("-3", "ROUND (-3.4)");
+		assertEval("-4", "ROUND (-3.7)");
 	}
 
 	@Test
@@ -106,7 +106,7 @@ public class NumericTests extends ExpressionTestBase {
 	@Test
 	public void sqrt() throws Exception {
 		assertEval("2", "SQRT 4");
-		assertEval("null", "SQRT -1.5");
+		assertEval("null", "SQRT (-1.5)");
 	}
 
 	@Test
