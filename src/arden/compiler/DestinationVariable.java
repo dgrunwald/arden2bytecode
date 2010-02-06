@@ -1,13 +1,13 @@
 package arden.compiler;
 
-import arden.compiler.node.PMappingFactor;
+import arden.codegenerator.FieldReference;
 import arden.compiler.node.TIdentifier;
 
 final class DestinationVariable extends Variable {
-	final PMappingFactor mapping;
+	final FieldReference field;
 
-	public DestinationVariable(TIdentifier name, PMappingFactor mapping) {
+	public DestinationVariable(TIdentifier name, FieldReference field) {
 		super(name);
-		this.mapping = mapping;
+		this.field = field;
 	}
 }

@@ -162,19 +162,13 @@ final class DataCompiler extends VisitorBase {
 			@Override
 			public void caseAImapDataAssignPhrase(AImapDataAssignPhrase node) {
 				// {imap} interface mapping_factor
-				if (!(lhs instanceof LeftHandSideIdentifier))
-					throw new RuntimeCompilerException(lhs.getPosition(),
-							"INTERFACE variables must be simple identifiers");
-				TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
-				FieldReference mlmField = context.codeGenerator.createField(ident.getText(), ArdenRunnable.class,
-						Modifier.PRIVATE);
-				context.writer.sequencePoint(ident.getLine());
+				CallableVariable var = getCallableVariable(lhs);
+				context.writer.sequencePoint(lhs.getPosition().getLine());
 				context.writer.loadThis();
 				context.writer.loadVariable(context.executionContextVariable);
 				context.writer.loadStringConstant(ParseHelpers.getStringForMapping(node.getMappingFactor()));
 				context.writer.invokeInstance(ExecutionContextMethods.findInterface);
-				context.writer.storeInstanceField(mlmField);
-				context.codeGenerator.addVariable(new CallableVariable(ident, mlmField));
+				context.writer.storeInstanceField(var.mlmField);
 			}
 
 			@Override
@@ -189,21 +183,45 @@ final class DataCompiler extends VisitorBase {
 			@Override
 			public void caseAMmapDataAssignPhrase(AMmapDataAssignPhrase node) {
 				// {mmap} message mapping_factor
-				if (!(lhs instanceof LeftHandSideIdentifier))
-					throw new RuntimeCompilerException(lhs.getPosition(),
-							"MESSAGE variables must be simple identifiers");
-				TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
-				context.codeGenerator.addVariable(new MessageVariable(ident, node.getMappingFactor()));
+				final String mappingString = ParseHelpers.getStringForMapping(node.getMappingFactor());
+				lhs.assign(context, new Switchable() {
+					@Override
+					public void apply(Switch sw) {
+						context.writer.loadVariable(context.executionContextVariable);
+						context.writer.loadStringConstant(mappingString);
+						context.writer.invokeInstance(ExecutionContextMethods.getMessage);
+					}
+				});
 			}
 
 			@Override
 			public void caseADmapDataAssignPhrase(ADmapDataAssignPhrase node) {
 				// {dmap} destination mapping_factor
+				DestinationVariable v = getDestinationVariable(lhs);
+				context.writer.loadThis();
+				context.writer.loadStringConstant(ParseHelpers.getStringForMapping(node.getMappingFactor()));
+				context.writer.storeInstanceField(v.field);
+			}
+
+			/**
+			 * Gets the DestinationVariable for the LHSR, or creates it on
+			 * demand.
+			 */
+			private DestinationVariable getDestinationVariable(LeftHandSideResult lhs) {
 				if (!(lhs instanceof LeftHandSideIdentifier))
 					throw new RuntimeCompilerException(lhs.getPosition(),
 							"DESTINATION variables must be simple identifiers");
 				TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
-				context.codeGenerator.addVariable(new DestinationVariable(ident, node.getMappingFactor()));
+				Variable variable = context.codeGenerator.getVariable(ident.getText());
+				if (variable instanceof DestinationVariable) {
+					return (DestinationVariable) variable;
+				} else {
+					FieldReference mlmField = context.codeGenerator.createField(ident.getText(), String.class,
+							Modifier.PRIVATE);
+					DestinationVariable cv = new DestinationVariable(ident, mlmField);
+					context.codeGenerator.addVariable(cv);
+					return cv;
+				}
 			}
 
 			@Override
@@ -260,12 +278,8 @@ final class DataCompiler extends VisitorBase {
 
 	/** Creates an MLM variable. */
 	private void createMlmVariable(LeftHandSideResult lhs, TTerm name, TStringLiteral institution) {
-		if (!(lhs instanceof LeftHandSideIdentifier))
-			throw new RuntimeCompilerException(lhs.getPosition(), "MLM variables must be simple identifiers");
-		TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
-		FieldReference mlmField = context.codeGenerator.createField(ident.getText(), ArdenRunnable.class,
-				Modifier.PRIVATE);
-		context.writer.sequencePoint(ident.getLine());
+		CallableVariable var = getCallableVariable(lhs);
+		context.writer.sequencePoint(lhs.getPosition().getLine());
 		context.writer.loadThis();
 		if (name == null) {
 			context.writer.loadVariable(context.selfMLMVariable);
@@ -279,8 +293,25 @@ final class DataCompiler extends VisitorBase {
 			}
 			context.writer.invokeInstance(ExecutionContextMethods.findModule);
 		}
-		context.writer.storeInstanceField(mlmField);
-		context.codeGenerator.addVariable(new CallableVariable(ident, mlmField));
+		context.writer.storeInstanceField(var.mlmField);
+	}
+
+	/** Gets the CallableVariable for the LHSR, or creates it on demand. */
+	private CallableVariable getCallableVariable(LeftHandSideResult lhs) {
+		if (!(lhs instanceof LeftHandSideIdentifier))
+			throw new RuntimeCompilerException(lhs.getPosition(),
+					"MLM or INTERFACE variables must be simple identifiers");
+		TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
+		Variable variable = context.codeGenerator.getVariable(ident.getText());
+		if (variable instanceof CallableVariable) {
+			return (CallableVariable) variable;
+		} else {
+			FieldReference mlmField = context.codeGenerator.createField(ident.getText(), ArdenRunnable.class,
+					Modifier.PRIVATE);
+			CallableVariable cv = new CallableVariable(ident, mlmField);
+			context.codeGenerator.addVariable(cv);
+			return cv;
+		}
 	}
 
 	/** Assigns the argument to the variable. */

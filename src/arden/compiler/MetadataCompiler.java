@@ -31,6 +31,12 @@ import arden.compiler.node.AVrsnArdenVersionSlot;
 import arden.runtime.LibraryMetadata;
 import arden.runtime.MaintenanceMetadata;
 
+/**
+ * Collects metadata from the source tree.
+ * 
+ * @author Daniel Grunwald
+ * 
+ */
 final class MetadataCompiler extends DepthFirstAdapter {
 	final MaintenanceMetadata maintenance = new MaintenanceMetadata();
 	final LibraryMetadata library = new LibraryMetadata();

@@ -12,7 +12,8 @@ import arden.compiler.node.Token;
 import arden.runtime.ArdenValue;
 
 /**
- * Represents the result of a LeftHandSideAnalyzer-run.
+ * Represents the result of a LeftHandSideAnalyzer-run. That is, a high-level
+ * representation of the syntax tree on the left hand side of expressions.
  * 
  * @author Daniel Grunwald
  * 
@@ -20,9 +21,14 @@ import arden.runtime.ArdenValue;
 abstract class LeftHandSideResult {
 	public abstract Token getPosition();
 
+	/**
+	 * Assigns an expression (to be compiled with ExpressionCompiler) to the
+	 * variable represented by this LeftHandSideResult
+	 */
 	public abstract void assign(CompilerContext context, Switchable expr);
 }
 
+/** Represents a simple identifier on the left-hand-side: "identifier := ...;" */
 final class LeftHandSideIdentifier extends LeftHandSideResult {
 	public final TIdentifier identifier;
 
@@ -49,6 +55,10 @@ final class LeftHandSideIdentifier extends LeftHandSideResult {
 	};
 }
 
+/**
+ * Represents a list of identifiers on the left-hand-side:
+ * "(ident1, ident2) := ...;"
+ */
 final class LeftHandSideIdentifierList extends LeftHandSideResult {
 	private final ArrayList<LeftHandSideIdentifier> list = new ArrayList<LeftHandSideIdentifier>();
 
@@ -75,6 +85,10 @@ final class LeftHandSideIdentifierList extends LeftHandSideResult {
 	}
 }
 
+/**
+ * Represents the time-of operator on the left-hand-side:
+ * "TIME identifier := ...;"
+ */
 final class LeftHandSideTimeOfIdentifier extends LeftHandSideResult {
 	public final TIdentifier identifier;
 
@@ -98,6 +112,7 @@ final class LeftHandSideTimeOfIdentifier extends LeftHandSideResult {
 	}
 }
 
+/** Represents the now keyword on the left-hand-side: "NOW := ...;" */
 final class LeftHandSideNow extends LeftHandSideResult {
 	private final TNow now;
 

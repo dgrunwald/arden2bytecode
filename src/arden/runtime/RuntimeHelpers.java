@@ -8,11 +8,9 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 /**
- * 
  * Static helper methods.
  * 
  * @author Daniel Grunwald
- * 
  */
 public final class RuntimeHelpers {
 	public static ArdenValue changeTime(ArdenValue input, ArdenValue newTime) {

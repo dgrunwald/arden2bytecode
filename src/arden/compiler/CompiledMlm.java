@@ -13,6 +13,18 @@ import arden.runtime.MaintenanceMetadata;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.MedicalLogicModuleImplementation;
 
+/**
+ * Represents a compiled MedicalLogicModule.
+ * 
+ * Allows saving the compiled bytecode into a .class file by calling the
+ * saveClassFile() method.
+ * 
+ * When createInstance() or run() is called, the compiled bytecode is loaded
+ * using the InMemoryClassLoader for execution.
+ * 
+ * @author Daniel Grunwald
+ * 
+ */
 public final class CompiledMlm implements MedicalLogicModule {
 	private final byte[] data;
 	private final MaintenanceMetadata maintenance;
@@ -60,6 +72,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 	}
 
 	/** Creates an instance of the implementation class. */
+	@Override
 	public MedicalLogicModuleImplementation createInstance(ExecutionContext context, ArdenValue[] arguments)
 			throws InvocationTargetException {
 		if (context == null)
@@ -85,6 +98,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 	 * @return Returns the value(s) provided by the "return" statement, or
 	 *         (Java) null if no return statement was executed.
 	 */
+	@Override
 	public ArdenValue[] run(ExecutionContext context, ArdenValue[] arguments) throws InvocationTargetException {
 		MedicalLogicModuleImplementation impl = createInstance(context, arguments);
 		try {
@@ -111,7 +125,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 	public String getName() {
 		return mlmname;
 	}
-	
+
 	@Override
 	public double getPriority() {
 		return priority;

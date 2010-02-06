@@ -2,8 +2,7 @@ package arden.tests;
 
 import java.lang.reflect.InvocationTargetException;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import arden.runtime.ArdenList;
@@ -16,8 +15,6 @@ import arden.runtime.ExecutionContext;
 import arden.runtime.MedicalLogicModule;
 
 public class LogicTests {
-	static int i;
-
 	private ArdenValue eval(String data, String logic, String action, ExecutionContext context) throws Exception {
 		MedicalLogicModule mlm = ActionTests.parseTemplate(data, logic, action);
 		ArdenValue[] result = mlm.run(context, null);
@@ -64,7 +61,7 @@ public class LogicTests {
 	}
 
 	@Test
-	public void Call() throws Exception {
+	public void CallMlm() throws Exception {
 		ArdenValue val = eval("x := MLM 'xtest'", "data1 := CALL x WITH 1,(2,3),4; conclude true;", "return data1;",
 				new TestContext() {
 					@Override
@@ -88,10 +85,10 @@ public class LogicTests {
 	}
 
 	@Test
-	public void CallWithMultipleReturn() throws Exception {
+	public void CallMlmWithMultipleReturn() throws Exception {
 		ArdenValue val = eval("x := MLM 'ytest' FROM INSTITUTION \"abc\"",
-				"(data1, data2, data3) := CALL x WITH 1,(2,3),4; conclude true;", "return (COUNT data1, data2, data3);",
-				new TestContext() {
+				"(data1, data2, data3) := CALL x WITH 1,(2,3),4; conclude true;",
+				"return (COUNT data1, data2, data3);", new TestContext() {
 					@Override
 					public ArdenRunnable findModule(String name, String institution) {
 						Assert.assertEquals("ytest", name);
@@ -110,5 +107,62 @@ public class LogicTests {
 					}
 				});
 		Assert.assertEquals("(0,\"hello\",null)", val.toString());
+	}
+
+	@Test
+	public void CallInterface() throws Exception {
+		ArdenValue val = eval("x := INTERFACE {ytest}", "data1 := CALL x WITH 1,(2,3),4; conclude true;",
+				"return data1;", new TestContext() {
+					@Override
+					public ArdenRunnable findInterface(String mapping) {
+						Assert.assertEquals("ytest", mapping);
+						return new ArdenRunnable() {
+							@Override
+							public ArdenValue[] run(ExecutionContext context, ArdenValue[] arguments)
+									throws InvocationTargetException {
+								Assert.assertEquals(3, arguments.length);
+								Assert.assertEquals("1", arguments[0].toString());
+								Assert.assertEquals("(2,3)", arguments[1].toString());
+								Assert.assertEquals("4", arguments[2].toString());
+								return new ArdenValue[] { ArdenNumber.create(42, 0) };
+							}
+						};
+					}
+				});
+		Assert.assertEquals("42", val.toString());
+	}
+
+	@Test
+	public void CallInterfaceWithMultipleReturn() throws Exception {
+		ArdenValue val = eval("x := INTERFACE {ytest}",
+				"(data1, data2, data3) := CALL x WITH 1,(2,3),4; conclude true;",
+				"return (COUNT data1, data2, data3);", new TestContext() {
+					@Override
+					public ArdenRunnable findInterface(String mapping) {
+						Assert.assertEquals("ytest", mapping);
+						return new ArdenRunnable() {
+							@Override
+							public ArdenValue[] run(ExecutionContext context, ArdenValue[] arguments)
+									throws InvocationTargetException {
+								Assert.assertEquals(3, arguments.length);
+								Assert.assertEquals("1", arguments[0].toString());
+								Assert.assertEquals("(2,3)", arguments[1].toString());
+								Assert.assertEquals("4", arguments[2].toString());
+								return new ArdenValue[] { ArdenList.EMPTY, new ArdenString("hello") };
+							}
+						};
+					}
+				});
+		Assert.assertEquals("(0,\"hello\",null)", val.toString());
+	}
+
+	@Test
+	public void RecursiveMlm() throws Exception {
+		MedicalLogicModule mlm = ActionTests.parseTemplate("this := MLM mlm_self; arg := ARGUMENT;", "If arg > 1 THEN"
+				+ "  result := CALL this WITH (arg-1);" + "ELSE" + "  result := 1;" + "ENDIF; conclude true;",
+				"return result * arg;");
+		ArdenValue[] result = mlm.run(new TestContext(), new ArdenValue[] { new ArdenNumber(10) });
+		Assert.assertEquals(1, result.length);
+		Assert.assertEquals("3628800", result[0].toString());
 	}
 }

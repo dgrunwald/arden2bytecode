@@ -185,8 +185,8 @@ final class ActionCompiler extends VisitorBase {
 		if (!(destination instanceof DestinationVariable))
 			throw new RuntimeCompilerException(node.getIdentifier(), "'" + node.getIdentifier().getText()
 					+ "' is not a valid destination variable.");
-		PMappingFactor destinationMapping = ((DestinationVariable) destination).mapping;
-		context.writer.loadStringConstant(ParseHelpers.getStringForMapping(destinationMapping));
+		context.writer.loadThis();
+		context.writer.loadInstanceField(((DestinationVariable) destination).field);
 		context.writer.invokeInstance(ExecutionContextMethods.write);
 	}
 

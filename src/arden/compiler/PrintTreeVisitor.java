@@ -10,7 +10,7 @@ import arden.compiler.node.Node;
  * 
  * @author Daniel Grunwald
  */
-public final class PrintTreeVisitor extends DepthFirstAdapter {
+final class PrintTreeVisitor extends DepthFirstAdapter {
 	PrintStream out;
 	int indentation;
 	

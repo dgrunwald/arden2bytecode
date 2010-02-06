@@ -14,8 +14,10 @@ import arden.compiler.node.TIdentifier;
 
 /**
  * 
- * Analyzes the left-hand side of an assignment. Supported productions:
- * identifier_becomes, time_becomes, data_var_list
+ * Analyzes the left-hand side of an assignment.
+ * Produces a LeftHandSideResult, a high-level representation of the syntax tree on the left hand side of expressions.
+ * 
+ * Supported productions: identifier_becomes, time_becomes, data_var_list
  * 
  * @author Daniel Grunwald
  * 

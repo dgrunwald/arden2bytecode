@@ -9,3 +9,12 @@ To compile the parser in Eclipse:
 	
 	2. Select the file "arden.scc" and run SableCC.
 	3. Right-click "src" and press Refresh so that Eclipse loads the generated files.
+
+	
+	
+Languages features not yet implemented:
+	From Arden Syntax 2.1 specification:
+	  Timezones
+	  10.2.4.6 Event Call
+	  11.2.2 Event Statement
+	  13 Evoke Slot

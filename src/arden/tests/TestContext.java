@@ -2,14 +2,20 @@ package arden.tests;
 
 import arden.runtime.ArdenString;
 import arden.runtime.ArdenValue;
+import arden.runtime.DatabaseQuery;
 import arden.runtime.ExecutionContext;
 
 public class TestContext extends ExecutionContext {
 	StringBuilder b = new StringBuilder();
 
 	@Override
+	public DatabaseQuery createQuery(String mapping) {
+		return DatabaseQuery.NULL;
+	}
+
+	@Override
 	public void write(ArdenValue message, String destination) {
-		b.append(((ArdenString)message).value);
+		b.append(((ArdenString) message).value);
 		b.append("\n");
 	}
 

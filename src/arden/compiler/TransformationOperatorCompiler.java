@@ -9,6 +9,11 @@ import arden.runtime.ArdenValue;
  * Compiles transformation operators (from_of_func_op and from_func_op
  * productions). example: "LAST number FROM sourceList"
  * 
+ * Every operator.apply(this) call will generate code that pushes the operator's
+ * result value onto the evaluation stack. The parent compiler is used to
+ * generate code for the specified argument. Every possible code path will emit
+ * code that evaluates the numberArgument and sourceListArgument exactly once.
+ * 
  * @author Daniel Grunwald
  * 
  */

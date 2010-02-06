@@ -46,7 +46,7 @@ public final class MemoryQuery extends DatabaseQuery {
 		ArdenValue[] result = new ArdenValue[values.length];
 		for (int i = 0; i < values.length; i++) {
 			ArdenValue inputTime = UnaryOperator.TIME.run(values[i]);
-			result[i] = ExpressionHelpers.where(values[i], BinaryOperator.BEFORE.run(inputTime, time));
+			result[i] = ExpressionHelpers.where(values[i], BinaryOperator.ISBEFORE.run(inputTime, time));
 		}
 		return new MemoryQuery(result);
 	}
@@ -56,7 +56,7 @@ public final class MemoryQuery extends DatabaseQuery {
 		ArdenValue[] result = new ArdenValue[values.length];
 		for (int i = 0; i < values.length; i++) {
 			ArdenValue inputTime = UnaryOperator.TIME.run(values[i]);
-			result[i] = ExpressionHelpers.where(values[i], UnaryOperator.NOT.run(BinaryOperator.BEFORE.run(inputTime,
+			result[i] = ExpressionHelpers.where(values[i], UnaryOperator.NOT.run(BinaryOperator.ISBEFORE.run(inputTime,
 					time)));
 		}
 		return new MemoryQuery(result);
@@ -67,7 +67,7 @@ public final class MemoryQuery extends DatabaseQuery {
 		ArdenValue[] result = new ArdenValue[values.length];
 		for (int i = 0; i < values.length; i++) {
 			ArdenValue inputTime = UnaryOperator.TIME.run(values[i]);
-			result[i] = ExpressionHelpers.where(values[i], BinaryOperator.AFTER.run(inputTime, time));
+			result[i] = ExpressionHelpers.where(values[i], BinaryOperator.ISAFTER.run(inputTime, time));
 		}
 		return new MemoryQuery(result);
 	}
@@ -77,7 +77,7 @@ public final class MemoryQuery extends DatabaseQuery {
 		ArdenValue[] result = new ArdenValue[values.length];
 		for (int i = 0; i < values.length; i++) {
 			ArdenValue inputTime = UnaryOperator.TIME.run(values[i]);
-			result[i] = ExpressionHelpers.where(values[i], UnaryOperator.NOT.run(BinaryOperator.AFTER.run(inputTime,
+			result[i] = ExpressionHelpers.where(values[i], UnaryOperator.NOT.run(BinaryOperator.ISAFTER.run(inputTime,
 					time)));
 		}
 		return new MemoryQuery(result);

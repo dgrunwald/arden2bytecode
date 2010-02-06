@@ -18,8 +18,8 @@ public abstract class DatabaseQuery {
 	 * Executes the query.
 	 * 
 	 * @return Returns an array containing the result values. Every entry in the
-	 *         entry represents one column of the result. If the query returns
-	 *         multiple rows, every entry in the array will be an ArdenList.
+	 *         array represents one column of the result. If the result set has
+	 *         multiple rows, the array entries will be ArdenLists..
 	 * 
 	 */
 	public abstract ArdenValue[] execute();

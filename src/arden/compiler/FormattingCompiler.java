@@ -30,8 +30,8 @@ final class FormattingCompiler {
 		this.locationForParseErrors = locationForParseErrors;
 	}
 
-	CompilerContext context;
-	int valuesVariable;
+	private CompilerContext context;
+	private int valuesVariable;
 
 	/**
 	 * Creates code that pops an ArdenValue (the input data) from the stack and

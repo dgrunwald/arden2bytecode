@@ -11,7 +11,7 @@ import arden.runtime.ExecutionContext;
 /** MLM or INTERFACE Variables */
 final class CallableVariable extends Variable {
 	// instance field of type ArdenRunnable 
-	private final FieldReference mlmField;
+	final FieldReference mlmField;
 
 	public CallableVariable(TIdentifier varName, FieldReference mlmField) {
 		super(varName);

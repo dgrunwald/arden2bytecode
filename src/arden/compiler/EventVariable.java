@@ -4,7 +4,7 @@ import arden.compiler.node.PMappingFactor;
 import arden.compiler.node.TIdentifier;
 
 final class EventVariable extends Variable {
-	public final PMappingFactor mapping;
+	final PMappingFactor mapping;
 
 	public EventVariable(TIdentifier name, PMappingFactor mapping) {
 		super(name);

@@ -42,10 +42,12 @@ public class CompilerException extends Exception {
 		this.pos = pos;
 	}
 
+	/** Gets the line number where the compile error occurred. */
 	public int getLine() {
 		return line;
 	}
 
+	/** Gets the line position (column) where the compile error occurred. */
 	public int getPos() {
 		return pos;
 	}

@@ -27,6 +27,11 @@ public class ExecutionContext {
 		return DatabaseQuery.NULL;
 	}
 
+	/** Gets a value represents the message of a MESSAGE variable. */
+	public ArdenValue getMessage(String mapping) {
+		return new ArdenString(mapping);
+	}
+
 	/**
 	 * Called by write statements.
 	 * 

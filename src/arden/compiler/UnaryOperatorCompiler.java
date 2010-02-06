@@ -12,7 +12,7 @@ import arden.runtime.UnaryOperator;
  * 
  * Every operator.apply(this) call will generate code that pushes the operator's
  * result value onto the evaluation stack. The parent compiler is used to
- * generate code for the specified argument. Every possible codepath will emit
+ * generate code for the specified argument. Every possible code path will emit
  * code that evaluates the argument exactly once.
  * 
  * @author Daniel Grunwald
