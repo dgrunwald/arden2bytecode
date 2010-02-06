@@ -1,7 +1,5 @@
 package arden.runtime;
 
-import java.util.GregorianCalendar;
-
 /**
  * This class is used to implement operators of the form '<n:type> := <n:type>
  * op <n:type>'
@@ -256,18 +254,8 @@ public abstract class BinaryOperator {
 	public static final BinaryOperator WITHINSAMEDAY = new BinaryOperator("WITHINSAMEDAY") {
 		@Override
 		public final ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
-			long newTime = combinePrimaryTime(lhs.primaryTime, rhs.primaryTime);
-			if (lhs instanceof ArdenTime && rhs instanceof ArdenTime) {
-				GregorianCalendar c1 = new GregorianCalendar();
-				GregorianCalendar c2 = new GregorianCalendar();
-				c1.setTimeInMillis(((ArdenTime) lhs).value);
-				c2.setTimeInMillis(((ArdenTime) rhs).value);
-				boolean result = c1.get(GregorianCalendar.DAY_OF_MONTH) == c2.get(GregorianCalendar.DAY_OF_MONTH)
-						&& c1.get(GregorianCalendar.MONTH) == c2.get(GregorianCalendar.MONTH)
-						&& c1.get(GregorianCalendar.YEAR) == c2.get(GregorianCalendar.YEAR);
-				return ArdenBoolean.create(result, newTime);
-			}
-			return ArdenNull.create(newTime);
+			return TernaryOperator.WITHINTO.runElement(lhs, RuntimeHelpers.getStartOfDay(rhs), RuntimeHelpers
+					.getEndOfDay(rhs));
 		}
 	};
 

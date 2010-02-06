@@ -275,9 +275,9 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Definiert eine lokale Variable. Dies ist nicht zwingend notwendig, ein
-	 * Aufruf von legt lediglich einen Eintrag in der LocalVariableTable an, die
-	 * von Debuggern verwendet wird.
+	 * Defines a new local variable. This is not necessary for using variables;
+	 * calling defineLocalVariable just provides additional information about
+	 * the variable for debuggers.
 	 */
 	public void defineLocalVariable(int vindex, String name, Class<?> type) {
 		if (localVariableTable != null)
@@ -285,8 +285,8 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Markiert den Anfang eines Statements. Die Java Runtime nutzt diese, um
-	 * Zeilennummern in Stack Traces anzuzeigen.
+	 * Marks the beginning of a statement. Used by debuggers and for display of
+	 * line numbers in stack traces.
 	 */
 	public void sequencePoint(int lineNumber) {
 		if (stackSize > 0)
@@ -306,7 +306,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Legt einen konstanten Integer auf den Stack (ohne Wrapper-Klasse).
+	 * Loads a constant int onto the stack.
 	 * 
 	 * Stack: .. => .., val
 	 */
@@ -323,7 +323,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Legt einen konstanten String auf den Stack (ohne Wrapper-Klasse).
+	 * Loads a constant string onto the stack.
 	 * 
 	 * Stack: .. => .., val
 	 */
@@ -337,7 +337,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Legt einen konstanten Double auf den Stack (ohne Wrapper-Klasse).
+	 * Loads a constant double onto the stack.
 	 * 
 	 * Stack: .. => .., val
 	 */
@@ -354,7 +354,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Legt einen konstanten Long auf den Stack (ohne Wrapper-Klasse).
+	 * Loads a constant long onto the stack.
 	 * 
 	 * Stack: .. => .., val
 	 */
@@ -371,7 +371,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Legt die null-Referenz auf den Stack.
+	 * Loads the null reference onto the stack.
 	 * 
 	 * Stack: .. => .., null
 	 */
@@ -381,7 +381,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Legt die this-Referenz auf den Stack.
+	 * Loads the this reference onto the stack.
 	 * 
 	 * Stack: .. => .., this
 	 */
@@ -402,9 +402,9 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Legt den Wert einer Variablen auf den Stack.
+	 * Loads the value of a reference-type variable onto the stack.
 	 * 
-	 * Stack: .. => .., wert
+	 * Stack: .. => .., reference
 	 */
 	public void loadVariable(int vindex) {
 		checkLocalCount(vindex);
@@ -422,9 +422,9 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Legt den Wert einer primitven int-Variablen auf den Stack.
+	 * Loads the value of a primitive int variable onto the stack.
 	 * 
-	 * Stack: .. => .., wert
+	 * Stack: .. => .., value
 	 */
 	public void loadIntVariable(int vindex) {
 		checkLocalCount(vindex);
@@ -442,9 +442,9 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Speichert einen Wert vom Stack in der angegebenen Variablen.
+	 * Stores a reference from the stack in the local variable.
 	 * 
-	 * Stack: .., wert => ..
+	 * Stack: .., reference => ..
 	 */
 	public void storeVariable(int vindex) {
 		checkLocalCount(vindex);
@@ -462,10 +462,9 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Speichert einen primitiven int-Wert vom Stack in der angegebenen
-	 * Variablen.
+	 * Stores an int value from the stack in the local variable.
 	 * 
-	 * Stack: .., wert => ..
+	 * Stack: .., value => ..
 	 */
 	public void storeIntVariable(int vindex) {
 		checkLocalCount(vindex);
@@ -483,7 +482,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Erhoeht eine int-Variable um einen konstanten Inkrement
+	 * Increments a primitive int-variable by a constant amount.
 	 * 
 	 * Stack: .. => ..
 	 */
@@ -600,9 +599,9 @@ public final class MethodWriter {
 	}
 
 	private void unconditionalControlTransfer() {
-		// nach einem unbedingten Sprung ist die neue Stackgröße
-		// unbekannt, da sie unabhängig von der Stackgröße der
-		// vorherigen Anweisung ist.
+		// following an unconditional jump, the new stack size is unknown:
+		// it doesn't depend on the previous stack size, but only on jumps
+		// pointing to the new instruction
 		stackSize = -1;
 	}
 
@@ -693,15 +692,17 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Gibt switch aus.
+	 * Emits a switch instruction. A primitive int value from the top of the
+	 * will be compared with a set of values.
 	 * 
 	 * @param constantValues
-	 *            Die Werte, mit denen verglichen wird. Das Array muss sortiert
-	 *            sein.
+	 *            The values for comparing with. The array must be sorted.
 	 * @param targetLabels
-	 *            Die Label, zu denen gesprungen wird.
+	 *            The labels for jumping to. if (intvalue == constantValues[i])
+	 *            goto targetLabels[i];
 	 * @param defaultLabel
-	 *            Das default-Label
+	 *            The default label, used if the int value doesn't match any of
+	 *            the constantValues.
 	 * 
 	 *            Stack: .., int => ..
 	 */
@@ -741,15 +742,15 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Markiert die aktuelle Codestelle mit dem Label. Es sind nur
-	 * Vorwärtssprünge zum Label erlaubt. Es dürfen Elements auf dem Stack
-	 * liegen.
+	 * Marks the current code location with the specified Label. Only forward
+	 * jumps to the label are allowed. The stack does not have to be empty for
+	 * using this method.
 	 */
 	public void markForwardJumpsOnly(Label label) {
 		if (label.markedPosition == -1) {
 			label.markedPosition = getCurrentPosition();
 			label.allowJumps = false;
-			// "synchronisiere" stackSize mit label.stackSize
+			// "synchronize" stackSize with label.stackSize
 			if (stackSize == -1) {
 				stackSize = label.stackSize;
 			} else if (label.stackSize == -1) {
@@ -766,9 +767,9 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Markiert die aktuelle Codestelle mit dem Label. Es sind Vorwärtssprünge
-	 * sowie Rückwärtssprunge zum Label erlaubt. Der Stack muss während des
-	 * Sprunges leer sein.
+	 * Marks the current code location with the specified Label. Both forward
+	 * and backward jumps to the label are allowed. The stack must be empty
+	 * during jumps.
 	 */
 	public void mark(Label label) {
 		if (label.markedPosition == -1) {
@@ -827,9 +828,9 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Liest den Wert des Feldes aus.
+	 * Loads the value from a reference-type field.
 	 * 
-	 * Stack: .., objectref => .., wert
+	 * Stack: .., objectref => .., valueref
 	 */
 	public void loadInstanceField(Field field) {
 		if (isStatic(field))
@@ -837,6 +838,11 @@ public final class MethodWriter {
 		loadInstanceField(pool.getFieldref(field));
 	}
 
+	/**
+	 * Loads the value from a reference-type field.
+	 * 
+	 * Stack: .., objectref => .., valueref
+	 */
 	public void loadInstanceField(FieldReference field) {
 		poppush(1, 1);
 		emit(180); // getfield
@@ -844,9 +850,9 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Speichert den Wert auf dem Stack in das Feld.
+	 * Saves the reference from the stack in the instance field.
 	 * 
-	 * Stack: .., objectref, wert => ..
+	 * Stack: .., objectref, valueref => ..
 	 */
 	public void storeInstanceField(Field field) {
 		if (isStatic(field))
@@ -854,6 +860,11 @@ public final class MethodWriter {
 		storeInstanceField(pool.getFieldref(field));
 	}
 
+	/**
+	 * Saves the reference from the stack in the instance field.
+	 * 
+	 * Stack: .., objectref, valueref => ..
+	 */
 	public void storeInstanceField(FieldReference field) {
 		poppush(2, 0);
 		emit(181); // putfield
@@ -861,9 +872,9 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Liest den Wert des Feldes aus.
+	 * Loads the value from a reference-type static field.
 	 * 
-	 * Stack: .. => .., wert
+	 * Stack: .. => .., valueref
 	 */
 	public void loadStaticField(Field field) {
 		if (!isStatic(field))
@@ -871,6 +882,11 @@ public final class MethodWriter {
 		loadStaticField(pool.getFieldref(field));
 	}
 
+	/**
+	 * Loads the value from a reference-type static field.
+	 * 
+	 * Stack: .. => .., valueref
+	 */
 	public void loadStaticField(FieldReference field) {
 		poppush(0, 1);
 		emit(178); // getstatic
@@ -878,9 +894,9 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Speichert den Wert auf dem Stack in das Feld.
+	 * Stores a reference from the stack in a static field.
 	 * 
-	 * Stack: .., wert => ..
+	 * Stack: .., valueref => ..
 	 */
 	public void storeStaticField(Field field) {
 		if (!isStatic(field))
@@ -888,13 +904,18 @@ public final class MethodWriter {
 		storeStaticField(pool.getFieldref(field));
 	}
 
+	/**
+	 * Stores a reference from the stack in a static field.
+	 * 
+	 * Stack: .., valueref => ..
+	 */
 	public void storeStaticField(FieldReference field) {
 		poppush(1, 0);
 		emit(179); // putstatic
 		emitUInt16(field.index);
 	}
 
-	static int getStackSize(Class<?> type) {
+	private static int getStackSize(Class<?> type) {
 		if (type.equals(Void.TYPE))
 			return 0;
 		if (type.equals(Double.TYPE) || type.equals(Long.TYPE))
@@ -903,7 +924,7 @@ public final class MethodWriter {
 			return 1;
 	}
 
-	static int getStackSize(Class<?>[] types) {
+	private static int getStackSize(Class<?>[] types) {
 		int total = 0;
 		for (Class<?> type : types)
 			total += getStackSize(type);
@@ -911,7 +932,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Ruft eine Instanzmethode auf.
+	 * Calls an instance method.
 	 * 
 	 * Stack: .., objectref[, parameter1, parameter2] => ..[, returnval]
 	 */
@@ -924,7 +945,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Ruft eine statische Methode auf.
+	 * Calls a static method.
 	 * 
 	 * Stack: ..[, parameter1, parameter2] => ..[, returnval]
 	 */
@@ -941,7 +962,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Erzeugt ein neues Objekt (ohne den Konstruktor aufzurufen).
+	 * Creates a new object without calling any constructor.
 	 * 
 	 * Stack: .. => .., objectref
 	 */
@@ -952,7 +973,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Ruft den Konstruktor eines Objektes auf.
+	 * Calls the constructor of an object.
 	 * 
 	 * Stack: .., objectref, parameters => ..
 	 */
@@ -1004,7 +1025,8 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Casts an object to the target type.
+	 * Casts an object to the target type. Causes an exception if the cast
+	 * fails.
 	 * 
 	 * Stack: obj => obj
 	 */
@@ -1015,7 +1037,7 @@ public final class MethodWriter {
 	}
 
 	/**
-	 * Casts an object to the target type.
+	 * Casts an object to the target type. Produces null if the cast fails.
 	 * 
 	 * Stack: obj => obj
 	 */

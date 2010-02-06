@@ -127,6 +127,34 @@ public final class RuntimeHelpers {
 		return b.toString();
 	}
 
+	public static ArdenValue getStartOfDay(ArdenValue time) {
+		if (time instanceof ArdenTime) {
+			GregorianCalendar c = new GregorianCalendar();
+			c.setTimeInMillis(((ArdenTime) time).value);
+			c.set(Calendar.HOUR_OF_DAY, 0);
+			c.set(Calendar.MINUTE, 0);
+			c.set(Calendar.SECOND, 0);
+			c.set(Calendar.MILLISECOND, 0);
+			return new ArdenTime(c.getTimeInMillis(), time.primaryTime);
+		} else {
+			return ArdenNull.create(time.primaryTime);
+		}
+	}
+
+	public static ArdenValue getEndOfDay(ArdenValue time) {
+		if (time instanceof ArdenTime) {
+			GregorianCalendar c = new GregorianCalendar();
+			c.setTimeInMillis(((ArdenTime) time).value);
+			c.set(Calendar.HOUR_OF_DAY, 23);
+			c.set(Calendar.MINUTE, 59);
+			c.set(Calendar.SECOND, 59);
+			c.set(Calendar.MILLISECOND, 999);
+			return new ArdenTime(c.getTimeInMillis(), time.primaryTime);
+		} else {
+			return ArdenNull.create(time.primaryTime);
+		}
+	}
+
 	public static DatabaseQuery constrainQueryWithinTo(DatabaseQuery q, ArdenValue start, ArdenValue end) {
 		if (start instanceof ArdenTime && end instanceof ArdenTime)
 			return q.occursWithinTo((ArdenTime) start, (ArdenTime) end);
@@ -139,6 +167,26 @@ public final class RuntimeHelpers {
 			return q.occursNotWithinTo((ArdenTime) start, (ArdenTime) end);
 		else
 			return DatabaseQuery.NULL;
+	}
+
+	public static DatabaseQuery constrainQueryWithinSurrounding(DatabaseQuery q, ArdenValue duration, ArdenValue time) {
+		// within DURATION surrounding TIME
+		return constrainQueryWithinTo(q, BinaryOperator.BEFORE.run(duration, time), BinaryOperator.AFTER.run(duration,
+				time));
+	}
+
+	public static DatabaseQuery constrainQueryNotWithinSurrounding(DatabaseQuery q, ArdenValue duration, ArdenValue time) {
+		// NOT within DURATION surrounding TIME
+		return constrainQueryNotWithinTo(q, BinaryOperator.BEFORE.run(duration, time), BinaryOperator.AFTER.run(
+				duration, time));
+	}
+
+	public static DatabaseQuery constrainQueryWithinSameDay(DatabaseQuery q, ArdenValue time) {
+		return constrainQueryWithinTo(q, getStartOfDay(time), getEndOfDay(time));
+	}
+
+	public static DatabaseQuery constrainQueryNotWithinSameDay(DatabaseQuery q, ArdenValue time) {
+		return constrainQueryNotWithinTo(q, getStartOfDay(time), getEndOfDay(time));
 	}
 
 	public static DatabaseQuery constrainQueryBefore(DatabaseQuery q, ArdenValue time) {
@@ -165,6 +213,20 @@ public final class RuntimeHelpers {
 	public static DatabaseQuery constrainQueryNotAfter(DatabaseQuery q, ArdenValue time) {
 		if (time instanceof ArdenTime)
 			return q.occursNotAfter((ArdenTime) time);
+		else
+			return DatabaseQuery.NULL;
+	}
+
+	public static DatabaseQuery constrainQueryAt(DatabaseQuery q, ArdenValue time) {
+		if (time instanceof ArdenTime)
+			return q.occursAt((ArdenTime) time);
+		else
+			return DatabaseQuery.NULL;
+	}
+
+	public static DatabaseQuery constrainQueryNotAt(DatabaseQuery q, ArdenValue time) {
+		if (time instanceof ArdenTime)
+			return q.occursNotAt((ArdenTime) time);
 		else
 			return DatabaseQuery.NULL;
 	}

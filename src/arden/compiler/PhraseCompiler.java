@@ -262,8 +262,15 @@ final class ReadPhraseCompiler extends VisitorBase {
 			@Override
 			public void caseASurTemporalCompOp(ASurTemporalCompOp node) {
 				// within [left]:expr_string surrounding [right]:expr_string
-				// TODO Auto-generated method stub
-				throw new RuntimeCompilerException("TODO");
+				node.getLeft().apply(expressionCompiler);
+				node.getRight().apply(expressionCompiler);
+				if (negate) {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryNotWithinSurrounding",
+							DatabaseQuery.class, ArdenValue.class, ArdenValue.class));
+				} else {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryWithinSurrounding",
+							DatabaseQuery.class, ArdenValue.class, ArdenValue.class));
+				}
 			}
 
 			@Override
@@ -294,8 +301,13 @@ final class ReadPhraseCompiler extends VisitorBase {
 			@Override
 			public void caseASameTemporalCompOp(ASameTemporalCompOp node) {
 				// within same day as expr_string
-				// TODO Auto-generated method stub
-				throw new RuntimeCompilerException("TODO");
+				if (negate) {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryNotWithinSameDay",
+							DatabaseQuery.class, ArdenValue.class));
+				} else {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryWithinSameDay",
+							DatabaseQuery.class, ArdenValue.class));
+				}
 			}
 
 			@Override
@@ -327,15 +339,27 @@ final class ReadPhraseCompiler extends VisitorBase {
 			@Override
 			public void caseAEqualTemporalCompOp(AEqualTemporalCompOp node) {
 				// equal expr_string
-				// TODO Auto-generated method stub
-				throw new RuntimeCompilerException("TODO");
+				node.getExprString().apply(expressionCompiler);
+				if (negate) {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryNotAt", DatabaseQuery.class,
+							ArdenValue.class));
+				} else {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryAt", DatabaseQuery.class,
+							ArdenValue.class));
+				}
 			}
 
 			@Override
 			public void caseAAtTemporalCompOp(AAtTemporalCompOp node) {
 				// at expr_string
-				// TODO Auto-generated method stub
-				throw new RuntimeCompilerException("TODO");
+				node.getExprString().apply(expressionCompiler);
+				if (negate) {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryNotAt", DatabaseQuery.class,
+							ArdenValue.class));
+				} else {
+					context.writer.invokeStatic(Compiler.getRuntimeHelper("constrainQueryAt", DatabaseQuery.class,
+							ArdenValue.class));
+				}
 			}
 		});
 	}
