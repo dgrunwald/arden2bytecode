@@ -209,6 +209,8 @@ final class ComparisonCompiler extends VisitorBase {
 	// | {dur} duration
 	// | {str} T.string
 	// | {list} list
+	// | {obj} object  TODO
+	// | {typeof} identifier; TODO
 	@Override
 	public void caseAPresUnaryCompOp(APresUnaryCompOp node) {
 		// is present

@@ -168,7 +168,7 @@ public final class Compiler {
 			// | {id} identifier;
 			if (val instanceof ANumUrgencyVal) {
 				context.writer.loadDoubleConstant(ParseHelpers
-						.getLiteralDoubleValue(((ANumUrgencyVal) val).getNumber()));
+						.getLiteralDoubleValue(((ANumUrgencyVal) val).getNumberLiteral()));
 			} else if (val instanceof AIdUrgencyVal) {
 				TIdentifier ident = ((AIdUrgencyVal) val).getIdentifier();
 				Variable var = codeGen.getVariableOrShowError(ident);

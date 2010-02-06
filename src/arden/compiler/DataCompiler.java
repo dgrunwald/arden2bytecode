@@ -1,13 +1,10 @@
 package arden.compiler;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
-import arden.codegenerator.FieldReference;
 import arden.codegenerator.Label;
 import arden.compiler.node.*;
-import arden.runtime.ArdenRunnable;
 import arden.runtime.DatabaseQuery;
 
 /**
@@ -124,21 +121,33 @@ final class DataCompiler extends VisitorBase {
 
 		// data_assign_phrase =
 		// {read} read read_phrase
+		// | {readas} read as identifier read_phrase
 		// | {mlm} T.mlm term
 		// | {mlmi} T.mlm term from institution string_literal
 		// | {mlms} T.mlm T.mlm_self
 		// | {imap} interface mapping_factor
 		// | {emap} event mapping_factor
 		// | {mmap} message mapping_factor
+		// | {masmap} message as identifier mapping_factor?
 		// | {dmap} destination mapping_factor
+		// | {dasmap} destination as identifier mapping_factor?
+		// | {object} object l_brk object_attribute_list r_brk
 		// | {arg} argument
 		// | {cphr} call_phrase
+		// | {newobj} new_object_phrase
 		// | {expr} expr;
 		node.getDataAssignPhrase().apply(new VisitorBase() {
 			@Override
 			public void caseAReadDataAssignPhrase(AReadDataAssignPhrase node) {
 				// {read} read read_phrase
 				assignPhrase(lhs, node.getReadPhrase());
+			}
+
+			@Override
+			public void caseAReadasDataAssignPhrase(AReadasDataAssignPhrase node) {
+				// {readas} read as identifier read_phrase
+				// TODO Auto-generated method stub
+				super.caseAReadasDataAssignPhrase(node);
 			}
 
 			@Override
@@ -162,7 +171,7 @@ final class DataCompiler extends VisitorBase {
 			@Override
 			public void caseAImapDataAssignPhrase(AImapDataAssignPhrase node) {
 				// {imap} interface mapping_factor
-				CallableVariable var = getCallableVariable(lhs);
+				CallableVariable var = CallableVariable.getCallableVariable(context.codeGenerator, lhs);
 				context.writer.sequencePoint(lhs.getPosition().getLine());
 				context.writer.loadThis();
 				context.writer.loadVariable(context.executionContextVariable);
@@ -195,33 +204,32 @@ final class DataCompiler extends VisitorBase {
 			}
 
 			@Override
+			public void caseAMasmapDataAssignPhrase(AMasmapDataAssignPhrase node) {
+				// {masmap} message as identifier mapping_factor?
+				// TODO Auto-generated method stub
+				super.caseAMasmapDataAssignPhrase(node);
+			}
+
+			@Override
 			public void caseADmapDataAssignPhrase(ADmapDataAssignPhrase node) {
 				// {dmap} destination mapping_factor
-				DestinationVariable v = getDestinationVariable(lhs);
+				DestinationVariable v = DestinationVariable.getDestinationVariable(context.codeGenerator, lhs);
 				context.writer.loadThis();
 				context.writer.loadStringConstant(ParseHelpers.getStringForMapping(node.getMappingFactor()));
 				context.writer.storeInstanceField(v.field);
 			}
 
-			/**
-			 * Gets the DestinationVariable for the LHSR, or creates it on
-			 * demand.
-			 */
-			private DestinationVariable getDestinationVariable(LeftHandSideResult lhs) {
-				if (!(lhs instanceof LeftHandSideIdentifier))
-					throw new RuntimeCompilerException(lhs.getPosition(),
-							"DESTINATION variables must be simple identifiers");
-				TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
-				Variable variable = context.codeGenerator.getVariable(ident.getText());
-				if (variable instanceof DestinationVariable) {
-					return (DestinationVariable) variable;
-				} else {
-					FieldReference mlmField = context.codeGenerator.createField(ident.getText(), String.class,
-							Modifier.PRIVATE);
-					DestinationVariable cv = new DestinationVariable(ident, mlmField);
-					context.codeGenerator.addVariable(cv);
-					return cv;
-				}
+			@Override
+			public void caseADasmapDataAssignPhrase(ADasmapDataAssignPhrase node) {
+				// {dasmap} destination as identifier mapping_factor?
+				// TODO Auto-generated method stub
+				super.caseADasmapDataAssignPhrase(node);
+			}
+
+			@Override
+			public void caseAObjectDataAssignPhrase(AObjectDataAssignPhrase node) {
+				// {object} object l_brk object_attribute_list r_brk
+				ObjectTypeVariable.create(context.codeGenerator, lhs, node.getObjectAttributeList());
 			}
 
 			@Override
@@ -237,9 +245,15 @@ final class DataCompiler extends VisitorBase {
 			}
 
 			@Override
+			public void caseANewobjDataAssignPhrase(ANewobjDataAssignPhrase node) {
+				// {newobj} new_object_phrase
+				lhs.assign(context, node.getNewObjectPhrase());
+			}
+
+			@Override
 			public void caseAExprDataAssignPhrase(AExprDataAssignPhrase node) {
 				// {expr} expr
-				assignExpression(lhs, node.getExpr());
+				lhs.assign(context, node.getExpr());
 			}
 		});
 	}
@@ -247,7 +261,7 @@ final class DataCompiler extends VisitorBase {
 	@Override
 	public void caseATexprDataAssignment(ATexprDataAssignment node) {
 		// data_assignment = {texpr} time_becomes expr
-		assignExpression(LeftHandSideAnalyzer.analyze(node.getTimeBecomes()), node.getExpr());
+		LeftHandSideAnalyzer.analyze(node.getTimeBecomes()).assign(context, node.getExpr());
 	}
 
 	@Override
@@ -278,7 +292,7 @@ final class DataCompiler extends VisitorBase {
 
 	/** Creates an MLM variable. */
 	private void createMlmVariable(LeftHandSideResult lhs, TTerm name, TStringLiteral institution) {
-		CallableVariable var = getCallableVariable(lhs);
+		CallableVariable var = CallableVariable.getCallableVariable(context.codeGenerator, lhs);
 		context.writer.sequencePoint(lhs.getPosition().getLine());
 		context.writer.loadThis();
 		if (name == null) {
@@ -294,24 +308,6 @@ final class DataCompiler extends VisitorBase {
 			context.writer.invokeInstance(ExecutionContextMethods.findModule);
 		}
 		context.writer.storeInstanceField(var.mlmField);
-	}
-
-	/** Gets the CallableVariable for the LHSR, or creates it on demand. */
-	private CallableVariable getCallableVariable(LeftHandSideResult lhs) {
-		if (!(lhs instanceof LeftHandSideIdentifier))
-			throw new RuntimeCompilerException(lhs.getPosition(),
-					"MLM or INTERFACE variables must be simple identifiers");
-		TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
-		Variable variable = context.codeGenerator.getVariable(ident.getText());
-		if (variable instanceof CallableVariable) {
-			return (CallableVariable) variable;
-		} else {
-			FieldReference mlmField = context.codeGenerator.createField(ident.getText(), ArdenRunnable.class,
-					Modifier.PRIVATE);
-			CallableVariable cv = new CallableVariable(ident, mlmField);
-			context.codeGenerator.addVariable(cv);
-			return cv;
-		}
 	}
 
 	/** Assigns the argument to the variable. */
@@ -397,9 +393,5 @@ final class DataCompiler extends VisitorBase {
 				}
 			});
 		}
-	}
-
-	private void assignExpression(LeftHandSideResult lhs, PExpr expr) {
-		lhs.assign(context, expr);
 	}
 }

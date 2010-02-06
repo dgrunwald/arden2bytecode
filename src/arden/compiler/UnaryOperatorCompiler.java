@@ -136,7 +136,9 @@ final class UnaryOperatorCompiler extends VisitorBase {
 	// | {rev} reverse
 	// | {len} length
 	// | {uc} uppercase
-	// | {lc} lowercase;
+	// | {lc} lowercase
+    // | {clone}   clone // TODO
+    // | {exattr}  extract attribute names; // TODO
 
 	@Override
 	public void caseAAnyOfNoreadFuncOp(AAnyOfNoreadFuncOp node) {

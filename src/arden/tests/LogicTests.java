@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import arden.runtime.ArdenList;
 import arden.runtime.ArdenNumber;
+import arden.runtime.ArdenObject;
 import arden.runtime.ArdenRunnable;
 import arden.runtime.ArdenString;
 import arden.runtime.ArdenTime;
@@ -164,5 +165,14 @@ public class LogicTests {
 		ArdenValue[] result = mlm.run(new TestContext(), new ArdenValue[] { new ArdenNumber(10) });
 		Assert.assertEquals(1, result.length);
 		Assert.assertEquals("3628800", result[0].toString());
+	}
+
+	@Test
+	public void NewObject() throws Exception {
+		ArdenObject obj = (ArdenObject) eval("MedicationDose := OBJECT [ Medication, Dose, Status ];",
+				"dose := NEW MedicationDose with \"Ampicillin\", (500, 700), \"Active\"; conclude true;",
+				"return dose;", new TestContext());
+		Assert.assertEquals("MedicationDose := OBJECT [ Medication, Dose, Status ]", obj.type.toString());
+		Assert.assertEquals("NEW MedicationDose WITH \"Ampicillin\", (500,700), \"Active\"", obj.toString());
 	}
 }

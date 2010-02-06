@@ -122,7 +122,8 @@ final class LogicCompiler extends VisitorBase {
 	// | {tex} time_becomes expr
 	// | {icall} identifier_becomes call_phrase
 	// | {lphr} l_par data_var_list r_par assign call_phrase
-	// | {llphr} let l_par data_var_list r_par be call_phrase;
+	// | {llphr} let l_par data_var_list r_par be call_phrase
+	// | {new} identifier_becomes new_object_phrase;
 	@Override
 	public void caseAIdexLogicAssignment(AIdexLogicAssignment node) {
 		LeftHandSideAnalyzer.analyze(node.getIdentifierBecomes()).assign(context, node.getExpr());
@@ -149,5 +150,10 @@ final class LogicCompiler extends VisitorBase {
 	public void caseALlphrLogicAssignment(ALlphrLogicAssignment node) {
 		LeftHandSideResult lhs = LeftHandSideAnalyzer.analyze(node.getDataVarList());
 		new DataCompiler(context).assignPhrase(lhs, node.getCallPhrase());
+	}
+
+	@Override
+	public void caseANewLogicAssignment(ANewLogicAssignment node) {
+		LeftHandSideAnalyzer.analyze(node.getIdentifierBecomes()).assign(context, node.getNewObjectPhrase());
 	}
 }

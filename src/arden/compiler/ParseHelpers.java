@@ -56,8 +56,8 @@ final class ParseHelpers {
 		return ((AMappingFactor) mapping).getDataMapping().getText();
 	}
 
-	public static double getLiteralDoubleValue(PNumber number) {
-		String input = number.toString().replace(" ", "");
+	public static double getLiteralDoubleValue(TNumberLiteral number) {
+		String input = number.getText();
 		double d;
 		try {
 			d = Double.parseDouble(input);
@@ -65,7 +65,7 @@ final class ParseHelpers {
 			throw new RuntimeCompilerException(e.getMessage());
 		}
 		if (Double.isInfinite(d) || Double.isNaN(d))
-			throw new RuntimeCompilerException("Invalid number literal: " + input);
+			throw new RuntimeCompilerException(number, "Invalid number literal: " + input);
 		return d;
 	}
 

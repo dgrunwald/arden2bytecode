@@ -650,6 +650,16 @@ public final class MethodWriter {
 		poppush(2, 0);
 		emitJump(161, label); // if_icmplt
 	}
+	
+	/**
+	 * Jump to Label, if lhs is less than or equal to rhs.
+	 * 
+	 * Stack: .., lhs (int), rhs (int) => ..
+	 */
+	public void jumpIfLessThanOrEqual(Label label) {
+		poppush(2, 0);
+		emitJump(160, label); // if_icmple
+	}
 
 	/**
 	 * Jump to Label, if reference is null.

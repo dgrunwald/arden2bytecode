@@ -4,13 +4,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import arden.codegenerator.Label;
 import arden.compiler.node.*;
 import arden.runtime.ArdenBoolean;
 import arden.runtime.ArdenList;
 import arden.runtime.ArdenNull;
+import arden.runtime.ArdenObject;
 import arden.runtime.ArdenValue;
 import arden.runtime.BinaryOperator;
 import arden.runtime.ExpressionHelpers;
+import arden.runtime.ObjectType;
 import arden.runtime.TernaryOperator;
 import arden.runtime.UnaryOperator;
 
@@ -673,7 +676,8 @@ final class ExpressionCompiler extends VisitorBase {
 	// | {ifromofexpr} index_from_of_func_op of expr_function
 	// | {ifromofexprfrom} index_from_of_func_op expr_factor from expr_function
 	// | {ifromexprfrom} index_from_func_op expr_factor from expr_function
-	// | {factas} expr_factor as as_func_op;
+	// | {factas} expr_factor as as_func_op
+	// | {attr} attribute expr_factor from expr_function; // TODO
 	@Override
 	public void caseAExprExprFunction(AExprExprFunction node) {
 		// expr_function = {expr} expr_factor
@@ -753,7 +757,8 @@ final class ExpressionCompiler extends VisitorBase {
 
 	// expr_factor =
 	// {expf} expr_factor_atom
-	// | {efe} expr_factor_atom l_brk expr r_brk ;
+	// | {efe} expr_factor_atom l_brk expr r_brk
+	// | {dot} expr_factor dot identifier; TODO
 	@Override
 	public void caseAExpfExprFactor(AExpfExprFactor node) {
 		// expr_factor = {expf} expr_factor_atom
@@ -770,7 +775,7 @@ final class ExpressionCompiler extends VisitorBase {
 
 	// expr_factor_atom =
 	// {id} identifier
-	// | {num} P.number
+	// | {num} number_literal
 	// | {string} string_literal
 	// | {time} time_value
 	// | {bool} boolean_value
@@ -790,8 +795,8 @@ final class ExpressionCompiler extends VisitorBase {
 
 	@Override
 	public void caseANumExprFactorAtom(ANumExprFactorAtom node) {
-		// expr_factor_atom = {num} P.number
-		double value = ParseHelpers.getLiteralDoubleValue(node.getNumber());
+		// expr_factor_atom = {num} number_literal
+		double value = ParseHelpers.getLiteralDoubleValue(node.getNumberLiteral());
 		context.writer.loadStaticField(context.codeGenerator.getNumberLiteral(value));
 	}
 
@@ -931,5 +936,82 @@ final class ExpressionCompiler extends VisitorBase {
 		// time_value = {ctim} currenttime
 		context.writer.loadVariable(context.executionContextVariable);
 		context.writer.invokeInstance(ExecutionContextMethods.getCurrentTime);
+	}
+
+	// new_object_phrase =
+	// {simple} new identifier
+	// | {init} new identifier with expr;
+	@Override
+	public void caseASimpleNewObjectPhrase(ASimpleNewObjectPhrase node) {
+		createNewObject(node.getIdentifier());
+	}
+
+	private void createNewObject(TIdentifier typeName) {
+		Variable v = context.codeGenerator.getVariableOrShowError(typeName);
+		if (!(v instanceof ObjectTypeVariable))
+			throw new RuntimeCompilerException(typeName, typeName.getText() + " is not an OBJECT type.");
+
+		context.writer.newObject(ArdenObject.class);
+		context.writer.dup();
+		context.writer.loadStaticField(((ObjectTypeVariable) v).field);
+		try {
+			context.writer.invokeConstructor(ArdenObject.class.getConstructor(ObjectType.class));
+		} catch (NoSuchMethodException e) {
+			throw new Error(e);
+		}
+	}
+
+	@Override
+	public void caseAInitNewObjectPhrase(AInitNewObjectPhrase node) {
+		// new identifier with expr
+		Field objectFieldsField;
+		try {
+			objectFieldsField = ArdenObject.class.getField("fields");
+		} catch (NoSuchFieldException e) {
+			throw new Error(e);
+		}
+		// stack: (empty)
+		createNewObject(node.getIdentifier());
+		// stack: newobj
+		context.writer.dup();
+		// stack: newobj, newobj
+		context.writer.loadInstanceField(objectFieldsField);
+		// stack: newobj, fields
+		int fieldsVariable = context.allocateVariable();
+		context.writer.storeVariable(fieldsVariable);
+		// stack: newobj
+		List<PExprSort> arguments = ParseHelpers.toCommaSeparatedList(node.getExpr());
+		for (int i = 0; i < arguments.size(); i++) {
+			// emit: if (i < fields.length) fields[i] = arg[i];
+			// stack: newobj
+			context.writer.loadVariable(fieldsVariable);
+			context.writer.loadIntegerConstant(i);
+			arguments.get(i).apply(this);
+			context.writer.loadIntegerConstant(i);
+			context.writer.loadVariable(fieldsVariable);
+
+			// stack: newobj, fields, i, arg[i], i, fields
+			context.writer.arrayLength();
+			// stack: newobj, fields, i, arg[i], i, fields.length
+			Label endLabel = new Label();
+			Label trueLabel = new Label();
+			context.writer.jumpIfLessThan(trueLabel);
+
+			// false:
+			// stack: newobj, fields, i, arg[i]
+			context.writer.pop();
+			context.writer.pop();
+			context.writer.pop();
+			// stack: newobj
+			context.writer.jump(endLabel);
+
+			context.writer.markForwardJumpsOnly(trueLabel);
+			// stack: newobj, fields, i, arg[i]
+			// emit: fields[i] = arg[i];
+			context.writer.storeObjectToArray();
+			// stack: newobj
+			context.writer.markForwardJumpsOnly(endLabel);
+		}
+		// stack: newobj
 	}
 }

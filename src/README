@@ -23,3 +23,38 @@ Languages features not implemented:
 	Citation/links slots are not syntax checked.
 	The compiler does not check that no languages features newer than the specified 'Arden Version' are used.
 
+
+
+2.5 changes that still need cross-checking:
+Summary of changes from Version 2.1 to Version 2.5: 
+ 
+The following relate to new Object capabilities: 
+Added new sections: 
+•  10.2.7, New statement. 
+•  11.2.1.9, Read As statement. 
+•  11.2.5.2 Message As statement 
+•  11.2.5.6 Destination As statement 
+•  11.2.13, Object statement. 
+•  10.2.1.1, Attribute assignment statement. 
+•  9.18, Dot notation (attribute reference) 
+•  9.19, Clone operator
+o  9.18.3, Extract Attribute Names … operator 
+o  9.18.4, Attribute .. From … operator 
+•  8.10, Object data type 
+•  9.6.24, Is [Not] Object 
+•  9.6.25, Is [Not] <Object-Type> 
+•  Annex A6, Objects in Arden: rationale, details, etc. 
+ •  12.2.7, Assignment statements now permitted in the action slot. 
+ 
+Section A4.3, new operators is object, is not object, is <object-name>, is not <object-name> were added. 
+ 
+The following updates relate to new recommendations for formatting structured citations and links 
+•  6.2.4, Citations slot now recommends ANSI/NISO OpenURL format for structured citations 
+•  6.2.5, Links slot now recommends ANSI/NISO OpenURL format for structured links 
+•  Annex A1, XML schema for MLMs replaces DTD 
+ 
+The following updates relate to new recommendations for representing MLMs using XML 
+•  Appendix X1, XML schema for structured write replaces DTD for structured write 
+•  Appendix X2, XML schema for MLMs added 
+
+ 

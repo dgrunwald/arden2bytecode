@@ -2,11 +2,13 @@ package arden.compiler;
 
 import arden.compiler.node.AIdDataVarList;
 import arden.compiler.node.AIdIdentifierBecomes;
+import arden.compiler.node.AIdIdentifierOrObjectRef;
 import arden.compiler.node.AIdlDataVarList;
 import arden.compiler.node.ALetIdentifierBecomes;
 import arden.compiler.node.ALettoTimeBecomes;
 import arden.compiler.node.ALtimeTimeBecomes;
 import arden.compiler.node.ANowIdentifierBecomes;
+import arden.compiler.node.AObjrefIdentifierOrObjectRef;
 import arden.compiler.node.ATimeTimeBecomes;
 import arden.compiler.node.ATimeofTimeBecomes;
 import arden.compiler.node.Switchable;
@@ -14,8 +16,9 @@ import arden.compiler.node.TIdentifier;
 
 /**
  * 
- * Analyzes the left-hand side of an assignment.
- * Produces a LeftHandSideResult, a high-level representation of the syntax tree on the left hand side of expressions.
+ * Analyzes the left-hand side of an assignment. Produces a LeftHandSideResult,
+ * a high-level representation of the syntax tree on the left hand side of
+ * expressions.
  * 
  * Supported productions: identifier_becomes, time_becomes, data_var_list
  * 
@@ -32,12 +35,12 @@ final class LeftHandSideAnalyzer extends VisitorBase {
 	}
 
 	// identifier_becomes =
-	// {id} identifier assign
+	// {id} identifier_or_object_ref assign
 	// | {let} let identifier be
 	// | {now} now assign;
 	@Override
 	public void caseAIdIdentifierBecomes(AIdIdentifierBecomes node) {
-		result = new LeftHandSideIdentifier(node.getIdentifier());
+		node.getIdentifierOrObjectRef().apply(this);
 	}
 
 	@Override
@@ -48,6 +51,20 @@ final class LeftHandSideAnalyzer extends VisitorBase {
 	@Override
 	public void caseANowIdentifierBecomes(ANowIdentifierBecomes node) {
 		result = new LeftHandSideNow(node.getNow());
+	}
+
+	// identifier_or_object_ref =
+	// {id} identifier
+	// | {objref} identifier_or_object_ref dot identifier;
+	@Override
+	public void caseAIdIdentifierOrObjectRef(AIdIdentifierOrObjectRef node) {
+		result = new LeftHandSideIdentifier(node.getIdentifier());
+	}
+
+	@Override
+	public void caseAObjrefIdentifierOrObjectRef(AObjrefIdentifierOrObjectRef node) {
+		// TODO Auto-generated method stub
+		super.caseAObjrefIdentifierOrObjectRef(node);
 	}
 
 	// time_becomes =

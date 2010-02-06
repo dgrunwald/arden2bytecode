@@ -210,7 +210,7 @@ final class MetadataCompiler extends DepthFirstAdapter {
 
 	// priority_slot =
 	// {empty}
-	// | {pri} priority P.number semicolons;
+	// | {pri} priority number_literal semicolons;
 	@Override
 	public void caseAEmptyPrioritySlot(AEmptyPrioritySlot node) {
 		// keep default priority of 50
@@ -218,6 +218,6 @@ final class MetadataCompiler extends DepthFirstAdapter {
 
 	@Override
 	public void caseAPriPrioritySlot(APriPrioritySlot node) {
-		priority = ParseHelpers.getLiteralDoubleValue(node.getNumber());
+		priority = ParseHelpers.getLiteralDoubleValue(node.getNumberLiteral());
 	}
 }

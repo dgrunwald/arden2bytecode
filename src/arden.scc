@@ -187,7 +187,7 @@ Tokens
   action      = a c t i o n ':';
   after       = a f t e r;
   ago         = a g o;
-  alert       = 'alert';
+  alert       = a l e r t;
   all         = a l l;
   and         = a n d;
   any         = a n y;
@@ -199,6 +199,7 @@ Tokens
   argument    = a r g u m e n t;
   as          = a s;
   at          = a t;
+  attribute   = a t t r i b u t e;
   {normal -> text}author      = a u t h o r ':';
   average     = a v e r a g e;
   avg         = a v g;
@@ -213,6 +214,7 @@ Tokens
   cos         = c o s;
   cosine      = c o s i n e;
   count       = c o u n t;
+  clone       = c l o n e;
   currenttime = c u r r e n t t i m e;
   data        = d a t a;
   data_colon  = d a t a ':';
@@ -260,6 +262,7 @@ Tokens
   hours       = h o u r s;
   if          = i f;
   in          = i n;
+  include     = i n c l u d e;
   increase    = i n c r e a s e;
   index       = i n d e x;
   institution = i n s t i t u t i o n;
@@ -301,13 +304,16 @@ Tokens
   mlm_self    = m l m us s e l f;
   month       = m o n t h;
   months      = m o n t h s;
+  names       = n a m e s;
   ne          = n e;
   nearest     = n e a r e s t;
+  new         = n e w;
   no          = n o;
   not         = n o t;
   now         = n o w;
   null        = n u l l ;
   number      = n u m b e r;
+  object      = o b j e c t;
   occur       = o c c u r;
   occurred    = o c c u r r e d;
   occurs      = o c c u r s;
@@ -399,12 +405,7 @@ Tokens
   /* any string of characters enclosed in double quotes (" ASCII 22) with nested "" but without semicolons */
   {normal} string_literal = '"' sstring? '"';
 
-  digits = ddigits;
-
-  /* no spaces are permitted between elements */
-  /* null */
-  number_with_exponent = (ddigits ('.' ddigits?)? exponent) | ('.' ddigits exponent);
-
+  number_literal = (ddigits ('.' ddigits?)? exponent?) | ('.' ddigits exponent?);
 
   /* no spaces are permitted between elements */
   iso_date =  digit digit digit digit '-' digit digit '-' digit digit;
@@ -585,7 +586,7 @@ data_slot =
 
 priority_slot =
       {empty}
-    | {pri}     priority P.number semicolons;
+    | {pri}     priority number_literal semicolons;
 
 evoke_slot =
                 evoke evoke_block semicolons;
@@ -601,7 +602,7 @@ urgency_slot =
     | {urg}     urgency urgency_val semicolons;
 
 urgency_val =
-      {num}     P.number
+      {num}     number_literal
     | {id}      identifier;
 
 /****** logic block ******/
@@ -631,12 +632,17 @@ logic_assignment =
     | {tex}    time_becomes expr
     | {icall}  identifier_becomes call_phrase
     | {lphr}   l_par data_var_list r_par assign call_phrase
-    | {llphr}  let l_par data_var_list r_par be call_phrase;
+    | {llphr}  let l_par data_var_list r_par be call_phrase
+    | {new}    identifier_becomes new_object_phrase;
 
 identifier_becomes =
-      {id}      identifier assign
+      {id}      identifier_or_object_ref assign
     | {let}     let identifier be
     | {now}     now assign;
+
+identifier_or_object_ref =
+      {id}      identifier
+    | {objref}  identifier_or_object_ref dot identifier;
 
 time_becomes =
       {timeof}  time of identifier assign
@@ -759,17 +765,17 @@ expr_function =
     | {ifromofexpr}    index_from_of_func_op of expr_function
     | {ifromofexprfrom}   index_from_of_func_op expr_factor from expr_function
     | {ifromexprfrom}    index_from_func_op expr_factor from expr_function
-    | {factas}  expr_factor as as_func_op;
+    | {factas}  expr_factor as as_func_op
+    | {attr}    attribute expr_factor from expr_function;
 
 expr_factor =
       {expf}   expr_factor_atom
-    | {efe}   expr_factor_atom l_brk expr r_brk ;
-                  /* number [expr] is not   */
-                  /* a valid construct      */
+    | {efe}    expr_factor_atom l_brk expr r_brk
+    | {dot}    expr_factor dot identifier;
 
 expr_factor_atom =
       {id}      identifier
-    | {num}     P.number
+    | {num}     number_literal
     | {string}  string_literal
     | {time}    time_value
     | {bool}    boolean_value
@@ -843,7 +849,9 @@ unary_comp_op =
     | {time}    time
     | {dur}     duration
     | {str}     T.string
-    | {list}    list;
+    | {list}    list
+    | {obj}     object
+    | {typeof}  identifier;
 
 binary_comp_op =
       {lt}      less than
@@ -912,7 +920,9 @@ of_noread_func_op =
     | {rev}     reverse
     | {len}     length
     | {uc}      uppercase
-    | {lc}      lowercase;
+    | {lc}      lowercase
+    | {clone}   clone
+    | {exattr}  extract attribute names;
 
 from_func_op =
                 nearest;
@@ -1006,15 +1016,20 @@ data_var_list =
 
 data_assign_phrase =
       {read}    read read_phrase
+    | {readas}  read as identifier read_phrase
     | {mlm}     T.mlm term
     | {mlmi}    T.mlm term from institution string_literal
     | {mlms}    T.mlm T.mlm_self
     | {imap}    interface mapping_factor
     | {emap}    event mapping_factor
     | {mmap}    message mapping_factor
+    | {masmap}  message as identifier mapping_factor?
     | {dmap}    destination mapping_factor
+    | {dasmap}  destination as identifier mapping_factor?
+    | {object}  object l_brk object_attribute_list r_brk
     | {arg}     argument
     | {cphr}    call_phrase
+    | {newobj}  new_object_phrase
     | {expr}    expr;
 
 read_phrase =
@@ -1033,6 +1048,14 @@ read_where =
 
 mapping_factor =
                 l_brc data_mapping r_brc;
+
+object_attribute_list =
+	  {ident}    identifier
+	| {list}     identifier comma object_attribute_list;
+
+new_object_phrase =
+	  {simple}   new identifier
+	| {init}     new identifier with expr;
 
 /****** evoke block ******/
 evoke_block =
@@ -1080,7 +1103,7 @@ simple_evoke_cycle =
                 every [dur_l]:evoke_duration for [dur_r]:evoke_duration starting evoke_time;
 
 evoke_duration =
-                P.number duration_op;
+                number_literal duration_op;
 
 /****** action block ******/
 action_block =
@@ -1105,12 +1128,3 @@ action_elseif =
       {end}     endif
     | {else}    else action_block semicolon endif
     | {elseif}  elseif action_if_then_else2;
-
-number =
-      {dexp}    number_with_exponent
-    | {dig}     digits
-    | {ddot}    digits dot
-    | {ddotd}   [whole]:digits dot [decimal]:digits
-    | {dotd}    dot digits;
-                /* no spaces are permitted between elements */
-
