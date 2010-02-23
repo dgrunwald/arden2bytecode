@@ -163,4 +163,27 @@ public class DataTests {
 		mlm.run(context, null);
 		Assert.assertEquals("Hello, World\n", context.getOutputText());
 	}
+
+	@Test
+	public void ReadAs() throws Exception {
+		final ArdenList sodium = new ArdenList(new ArdenValue[] { new ArdenString("s1"), new ArdenString("s2") });
+		final ArdenList chloride = new ArdenList(new ArdenValue[] { new ArdenString("c1"), new ArdenString("c2") });
+		final ArdenList bicarb = new ArdenList(new ArdenValue[] { new ArdenString("b1"), new ArdenString("b2") });
+		ArdenValue result = eval("AnionGap := Object [Na, Cl, HCO3]; "
+				+ "gaps := read as AnionGap last 3 from {select sodium, chloride, bicarb from electro};",
+				"CONCLUDE true;", "return gaps;", new TestContext() {
+					@Override
+					public DatabaseQuery createQuery(String mapping) {
+						Assert.assertEquals("select sodium, chloride, bicarb from electro", mapping);
+						return new DatabaseQuery() {
+							@Override
+							public ArdenValue[] execute() {
+								return new ArdenValue[] { sodium, chloride, bicarb };
+							}
+						};
+					}
+				});
+		Assert.assertEquals("(NEW AnionGap WITH \"s1\", \"c1\", \"b1\",NEW AnionGap WITH \"s2\", \"c2\", \"b2\")",
+				result.toString());
+	}
 }

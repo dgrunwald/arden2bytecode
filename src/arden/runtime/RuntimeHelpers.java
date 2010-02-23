@@ -230,4 +230,64 @@ public final class RuntimeHelpers {
 		else
 			return DatabaseQuery.NULL;
 	}
+
+	public static ArdenValue readAs(ArdenValue[] inputs, ObjectType type) {
+		if (type == null || inputs == null || inputs.length == 0)
+			return ArdenNull.INSTANCE;
+		boolean allInputsAreLists = true;
+		int shortestListLength = Integer.MAX_VALUE;
+		for (ArdenValue input : inputs) {
+			if (input instanceof ArdenList)
+				shortestListLength = Math.min(shortestListLength, ((ArdenList) input).values.length);
+			else
+				allInputsAreLists = false;
+		}
+		if (allInputsAreLists) {
+			ArdenValue[] results = new ArdenValue[shortestListLength];
+			for (int i = 0; i < results.length; i++) {
+				ArdenObject obj = new ArdenObject(type);
+				for (int j = 0; j < inputs.length && j < obj.fields.length; j++)
+					obj.fields[j] = ((ArdenList) inputs[j]).values[i];
+				results[i] = obj;
+			}
+			return new ArdenList(results);
+		} else {
+			ArdenObject obj = new ArdenObject(type);
+			for (int j = 0; j < inputs.length && j < obj.fields.length; j++)
+				obj.fields[j] = inputs[j];
+			return obj;
+		}
+	}
+
+	public static ArdenValue getObjectMember(ArdenValue objref, String upperCaseFieldName) {
+		if (objref instanceof ArdenObject) {
+			ArdenObject obj = (ArdenObject) objref;
+			int index = obj.type.getFieldIndex(upperCaseFieldName);
+			if (index < 0)
+				return ArdenNull.INSTANCE;
+			else
+				return obj.fields[index];
+		} else if (objref instanceof ArdenList) {
+			ArdenValue[] inputs = ((ArdenList) objref).values;
+			ArdenValue[] results = new ArdenValue[inputs.length];
+			for (int i = 0; i < inputs.length; i++)
+				results[i] = getObjectMember(inputs[i], upperCaseFieldName);
+			return new ArdenList(results);
+		} else {
+			return ArdenNull.INSTANCE;
+		}
+	}
+
+	public static void setObjectMember(ArdenValue objref, String upperCaseFieldName, ArdenValue newValue) {
+		if (objref instanceof ArdenObject) {
+			ArdenObject obj = (ArdenObject) objref;
+			int index = obj.type.getFieldIndex(upperCaseFieldName);
+			if (index >= 0)
+				obj.fields[index] = newValue;
+		} else if (objref instanceof ArdenList) {
+			for (ArdenValue listEntry : ((ArdenList) objref).values) {
+				setObjectMember(listEntry, upperCaseFieldName, newValue);
+			}
+		}
+	}
 }

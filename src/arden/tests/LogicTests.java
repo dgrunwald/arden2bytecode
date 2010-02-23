@@ -175,4 +175,61 @@ public class LogicTests {
 		Assert.assertEquals("MedicationDose := OBJECT [ Medication, Dose, Status ]", obj.type.toString());
 		Assert.assertEquals("NEW MedicationDose WITH \"Ampicillin\", (500,700), \"Active\"", obj.toString());
 	}
+
+	@Test
+	public void NewObjectWithoutInitialization() throws Exception {
+		ArdenObject obj = (ArdenObject) eval("MedicationDose := OBJECT [ Medication, Dose, Status ];",
+				"dose := NEW MedicationDose; conclude true;", "return dose;", new TestContext());
+		Assert.assertEquals("MedicationDose := OBJECT [ Medication, Dose, Status ]", obj.type.toString());
+		Assert.assertEquals("NEW MedicationDose WITH null, null, null", obj.toString());
+	}
+
+	@Test
+	public void NewObjectWithTooMuchInitialization() throws Exception {
+		ArdenObject obj = (ArdenObject) eval("MedicationDose := OBJECT [ Medication, Dose, Status ];",
+				"dose := NEW MedicationDose WITH 1, 2, 3, 4; conclude true;", "return dose;", new TestContext());
+		Assert.assertEquals("MedicationDose := OBJECT [ Medication, Dose, Status ]", obj.type.toString());
+		Assert.assertEquals("NEW MedicationDose WITH 1, 2, 3", obj.toString());
+	}
+
+	@Test
+	public void AttributeAssignment() throws Exception {
+		ArdenObject obj = (ArdenObject) eval("Rectangle := Object [ aLeft, aTop, aWidth, aHeight ];",
+				"rect := NEW Rectangle; rect.aLeft := 0; rect.aTop := 0; rect.aWidth := 10; rect.aHeight := 20; "
+						+ " conclude true;", "return rect;", new TestContext());
+		Assert.assertEquals("Rectangle := OBJECT [ aLeft, aTop, aWidth, aHeight ]", obj.type.toString());
+		Assert.assertEquals("NEW Rectangle WITH 0, 0, 10, 20", obj.toString());
+	}
+
+	@Test
+	public void ReferenceIdentity() throws Exception {
+		ArdenObject obj = (ArdenObject) eval("Rectangle := Object [ aLeft, aTop, aWidth, aHeight ];",
+				"rect := NEW RectanGle; rect2 := rect; rect.aTop := 10; " + " conclude true;", "return rect2;",
+				new TestContext());
+		Assert.assertEquals("Rectangle := OBJECT [ aLeft, aTop, aWidth, aHeight ]", obj.type.toString());
+		Assert.assertEquals("NEW Rectangle WITH null, 10, null, null", obj.toString());
+	}
+
+	@Test
+	public void InvalidAttributeAssignment() throws Exception {
+		ArdenObject obj = (ArdenObject) eval("Rectangle := Object [ aLeft, aTop, aWidth, aHeight ];",
+				"rect := NEW Rectangle; rect.aLeft := 0; rect.Invalid := 20; " + " conclude true;", "return rect;",
+				new TestContext());
+		Assert.assertEquals("Rectangle := OBJECT [ aLeft, aTop, aWidth, aHeight ]", obj.type.toString());
+		Assert.assertEquals("NEW Rectangle WITH 0, null, null, null", obj.toString());
+	}
+
+	@Test
+	public void GetInvalidAttribute() throws Exception {
+		ArdenValue val = eval("Rectangle := Object [ aLeft, aTop, aWidth, aHeight ];",
+				"rect := NEW Rectangle WITH 1,2,3,4; " + " conclude true;", "return rect.invalid;", new TestContext());
+		Assert.assertEquals("null", val.toString());
+	}
+
+	@Test
+	public void GetWidthAttribute() throws Exception {
+		ArdenValue val = eval("Rectangle := Object [ aLeft, aTop, aWidth, aHeight ];",
+				"rect := NEW Rectangle WITH 1,2,3,4; " + " conclude true;", "return rect.awidth;", new TestContext());
+		Assert.assertEquals("3", val.toString());
+	}
 }

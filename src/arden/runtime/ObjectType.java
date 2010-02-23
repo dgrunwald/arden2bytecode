@@ -17,6 +17,14 @@ public class ObjectType {
 		this.fieldNames = fieldNames;
 	}
 
+	public int getFieldIndex(String uppercaseName) {
+		for (int i = 0; i < fieldNames.length; i++) {
+			if (fieldNames[i].equalsIgnoreCase(uppercaseName))
+				return i;
+		}
+		return -1;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();

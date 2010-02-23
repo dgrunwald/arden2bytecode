@@ -5,7 +5,9 @@ import java.util.List;
 
 import arden.codegenerator.Label;
 import arden.compiler.node.*;
+import arden.runtime.ArdenValue;
 import arden.runtime.DatabaseQuery;
+import arden.runtime.ObjectType;
 
 /**
  * Compiler for data block.
@@ -144,10 +146,25 @@ final class DataCompiler extends VisitorBase {
 			}
 
 			@Override
-			public void caseAReadasDataAssignPhrase(AReadasDataAssignPhrase node) {
+			public void caseAReadasDataAssignPhrase(final AReadasDataAssignPhrase node) {
 				// {readas} read as identifier read_phrase
-				// TODO Auto-generated method stub
-				super.caseAReadasDataAssignPhrase(node);
+				final Variable v = context.codeGenerator.getVariableOrShowError(node.getIdentifier());
+				if (!(v instanceof ObjectTypeVariable))
+					throw new RuntimeCompilerException(lhs.getPosition(), "EVENT variables must be simple identifiers");
+				lhs.assign(context, new Switchable() {
+					@Override
+					public void apply(Switch sw) {
+						node.getReadPhrase().apply(new ReadPhraseCompiler(context));
+						try {
+							context.writer.invokeInstance(DatabaseQuery.class.getMethod("execute"));
+						} catch (NoSuchMethodException e) {
+							throw new RuntimeException(e);
+						}
+						context.writer.loadStaticField(((ObjectTypeVariable) v).field);
+						context.writer.invokeStatic(Compiler.getRuntimeHelper("readAs", ArdenValue[].class,
+								ObjectType.class));
+					}
+				});
 			}
 
 			@Override
@@ -322,8 +339,6 @@ final class DataCompiler extends VisitorBase {
 		readPhrase.apply(new ReadPhraseCompiler(context));
 		try {
 			context.writer.invokeInstance(DatabaseQuery.class.getMethod("execute"));
-		} catch (SecurityException e) {
-			throw new RuntimeException(e);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}

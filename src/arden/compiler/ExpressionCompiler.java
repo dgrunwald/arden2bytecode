@@ -3,6 +3,7 @@ package arden.compiler;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
 
 import arden.codegenerator.Label;
 import arden.compiler.node.*;
@@ -758,7 +759,7 @@ final class ExpressionCompiler extends VisitorBase {
 	// expr_factor =
 	// {expf} expr_factor_atom
 	// | {efe} expr_factor_atom l_brk expr r_brk
-	// | {dot} expr_factor dot identifier; TODO
+	// | {dot} expr_factor dot identifier;
 	@Override
 	public void caseAExpfExprFactor(AExpfExprFactor node) {
 		// expr_factor = {expf} expr_factor_atom
@@ -771,6 +772,14 @@ final class ExpressionCompiler extends VisitorBase {
 		node.getExprFactorAtom().apply(this);
 		node.getExpr().apply(this);
 		context.writer.invokeStatic(getMethod("elementAt", ArdenValue.class, ArdenValue.class));
+	}
+
+	@Override
+	public void caseADotExprFactor(ADotExprFactor node) {
+		// expr_factor = {dot} expr_factor dot identifier
+		node.getExprFactor().apply(this);
+		context.writer.loadStringConstant(node.getIdentifier().getText().toUpperCase(Locale.ENGLISH));
+		context.writer.invokeStatic(Compiler.getRuntimeHelper("getObjectMember", ArdenValue.class, String.class));
 	}
 
 	// expr_factor_atom =

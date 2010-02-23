@@ -63,8 +63,8 @@ final class LeftHandSideAnalyzer extends VisitorBase {
 
 	@Override
 	public void caseAObjrefIdentifierOrObjectRef(AObjrefIdentifierOrObjectRef node) {
-		// TODO Auto-generated method stub
-		super.caseAObjrefIdentifierOrObjectRef(node);
+		node.getIdentifierOrObjectRef().apply(this);
+		result = new LeftHandSideObjectMember(result, node.getIdentifier());
 	}
 
 	// time_becomes =
