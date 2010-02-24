@@ -49,7 +49,10 @@ final class ActionCompiler extends VisitorBase {
 	// | {cdel} call_phrase delay expr
 	// | {write} write expr
 	// | {wrtat} write expr at identifier
-	// | {return} return expr;
+	// | {return} return expr
+	// | {assign1} identifier_becomes expr
+	// | {assign2} time_becomes expr
+	// | {assign3} identifier_becomes new_object_phrase
 	@Override
 	public void caseAEmptyActionStatement(AEmptyActionStatement node) {
 	}
@@ -192,7 +195,7 @@ final class ActionCompiler extends VisitorBase {
 
 	@Override
 	public void caseAReturnActionStatement(AReturnActionStatement node) {
-		// action_statement = {return} return expr;
+		// action_statement = {return} return expr
 
 		context.writer.sequencePoint(node.getReturn().getLine());
 
@@ -201,6 +204,27 @@ final class ActionCompiler extends VisitorBase {
 		// "RETURN (a, b);" and "RETURN a, b;" are not equivalent!
 		new ExpressionCompiler(context).buildArrayForCommaSeparatedExpression(node.getExpr());
 		context.writer.returnObjectFromFunction();
+	}
+
+	@Override
+	public void caseAAssign1ActionStatement(AAssign1ActionStatement node) {
+		// action_statement = {assign1} identifier_becomes expr
+		LeftHandSideResult lhs = LeftHandSideAnalyzer.analyze(node.getIdentifierBecomes());
+		lhs.assign(context, node.getExpr());
+	}
+
+	@Override
+	public void caseAAssign2ActionStatement(AAssign2ActionStatement node) {
+		// action_statement = {assign2} time_becomes expr
+		LeftHandSideResult lhs = LeftHandSideAnalyzer.analyze(node.getTimeBecomes());
+		lhs.assign(context, node.getExpr());
+	}
+
+	@Override
+	public void caseAAssign3ActionStatement(AAssign3ActionStatement node) {
+		// action_statement = {assign3} identifier_becomes new_object_phrase
+		LeftHandSideResult lhs = LeftHandSideAnalyzer.analyze(node.getIdentifierBecomes());
+		lhs.assign(context, node.getNewObjectPhrase());
 	}
 
 	// action_if_then_else2 =

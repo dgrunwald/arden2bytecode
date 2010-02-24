@@ -3,6 +3,7 @@ package arden.compiler;
 import arden.compiler.node.*;
 import arden.runtime.ArdenValue;
 import arden.runtime.BinaryOperator;
+import arden.runtime.ObjectType;
 import arden.runtime.TernaryOperator;
 import arden.runtime.UnaryOperator;
 
@@ -209,8 +210,8 @@ final class ComparisonCompiler extends VisitorBase {
 	// | {dur} duration
 	// | {str} T.string
 	// | {list} list
-	// | {obj} object  TODO
-	// | {typeof} identifier; TODO
+	// | {obj} object
+	// | {typeof} identifier;
 	@Override
 	public void caseAPresUnaryCompOp(APresUnaryCompOp node) {
 		// is present
@@ -254,11 +255,30 @@ final class ComparisonCompiler extends VisitorBase {
 		// is string
 		expressionCompiler.invokeOperator(UnaryOperator.ISSTRING, argument);
 	}
-	
+
 	@Override
 	public void caseAListUnaryCompOp(AListUnaryCompOp node) {
 		// is list
 		argument.apply(expressionCompiler);
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("isList", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAObjUnaryCompOp(AObjUnaryCompOp node) {
+		// is object
+		expressionCompiler.invokeOperator(UnaryOperator.ISOBJECT, argument);
+	}
+
+	@Override
+	public void caseATypeofUnaryCompOp(ATypeofUnaryCompOp node) {
+		// is <object-type> (unary_comp_op = identifier)
+		TIdentifier typeName = node.getIdentifier();
+		Variable v = context.codeGenerator.getVariable(typeName.getText());
+		if (!(v instanceof ObjectTypeVariable))
+			throw new RuntimeCompilerException(typeName, typeName.getText() + " is not an OBJECT type.");
+
+		argument.apply(expressionCompiler);
+		context.writer.loadStaticField(((ObjectTypeVariable) v).field);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("isObjectType", ArdenValue.class, ObjectType.class));
 	}
 }

@@ -1119,7 +1119,10 @@ action_statement =
     | {cdel}   call_phrase delay expr
     | {write}   write expr
     | {wrtat}  write expr at identifier
-    | {return}  return expr;
+    | {return}  return expr
+    | {assign1} identifier_becomes expr
+    | {assign2} time_becomes expr
+    | {assign3} identifier_becomes new_object_phrase;
 
 action_if_then_else2 =
                 expr then action_block semicolon action_elseif;

@@ -157,4 +157,12 @@ public class ActionTests {
 		mlm.run(context, null);
 		Assert.assertEquals("delaycall with 1 day\n", context.getOutputText());
 	}
+
+	@Test
+	public void AssignmentInActionSlot() throws Exception {
+		MedicalLogicModule mlm = parseAction("a := \"Hello, World!\"; return a;");
+		ArdenValue[] result = mlm.run(new TestContext(), null);
+		Assert.assertEquals(1, result.length);
+		Assert.assertEquals("Hello, World!", ((ArdenString) result[0]).value);
+	}
 }

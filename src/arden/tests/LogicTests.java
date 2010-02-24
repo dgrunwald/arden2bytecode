@@ -248,4 +248,20 @@ public class LogicTests {
 				"return ATTRIBUTE attrNames FROM dose;", new TestContext());
 		Assert.assertEquals("(1,3,2)", val.toString());
 	}
+
+	@Test
+	public void IsObject() throws Exception {
+		ArdenValue val = eval("MedicationDose := OBJECT [ Medication, Dose, Status ];",
+				"dose := NEW MedicationDose WITH 1,2,3; conclude true;", "return (dose IS OBJECT, 1 IS OBJECT);",
+				new TestContext());
+		Assert.assertEquals("(true,false)", val.toString());
+	}
+
+	@Test
+	public void IsObjectType() throws Exception {
+		ArdenValue val = eval("MedicationDose := OBJECT [ Medication, Dose, Status ];",
+				"dose := NEW MedicationDose WITH 1,2,3; conclude true;",
+				"return (dose IS MedicationDose, 1 IS MedicationDose);", new TestContext());
+		Assert.assertEquals("(true,false)", val.toString());
+	}
 }

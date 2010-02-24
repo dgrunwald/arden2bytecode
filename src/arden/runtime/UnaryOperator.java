@@ -104,6 +104,13 @@ public abstract class UnaryOperator {
 		};
 	};
 
+	public static final UnaryOperator ISOBJECT = new UnaryOperator("ISOBJECT") {
+		@Override
+		public ArdenValue runElement(ArdenValue val) {
+			return ArdenBoolean.create(val instanceof ArdenObject, val.primaryTime);
+		};
+	};
+
 	public static final UnaryOperator ABS = new NumericUnaryOperator("ABS") {
 		@Override
 		public double runNumber(double input) {

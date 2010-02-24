@@ -931,4 +931,19 @@ public final class ExpressionHelpers {
 			attributeNames[i] = new ArdenString(type.fieldNames[i]);
 		return new ArdenList(attributeNames);
 	}
+
+	/** IS <Object-Type> operator implementation */
+	public static ArdenValue isObjectType(ArdenValue input, ObjectType type) {
+		if (input instanceof ArdenList) {
+			ArdenValue[] inputs = ((ArdenList) input).values;
+			ArdenValue[] results = new ArdenValue[inputs.length];
+			for (int i = 0; i < inputs.length; i++)
+				results[i] = isObjectType(inputs[i], type);
+			return new ArdenList(results);
+		} else if (input instanceof ArdenObject) {
+			return ArdenBoolean.create(((ArdenObject) input).type == type, input.primaryTime);
+		} else {
+			return ArdenBoolean.create(false, input.primaryTime);
+		}
+	}
 }

@@ -962,7 +962,7 @@ final class ExpressionCompiler extends VisitorBase {
 	}
 
 	private void createNewObject(TIdentifier typeName) {
-		Variable v = context.codeGenerator.getVariableOrShowError(typeName);
+		Variable v = context.codeGenerator.getVariable(typeName.getText());
 		if (!(v instanceof ObjectTypeVariable))
 			throw new RuntimeCompilerException(typeName, typeName.getText() + " is not an OBJECT type.");
 
