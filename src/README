@@ -30,9 +30,6 @@ The following relate to new Object capabilities:
 Added new sections: 
 •  11.2.5.2 Message As statement 
 •  11.2.5.6 Destination As statement 
-•  9.19, Clone operator
-o  9.18.3, Extract Attribute Names … operator 
-o  9.18.4, Attribute .. From … operator 
 •  8.10, Object data type 
 •  9.6.24, Is [Not] Object 
 •  9.6.25, Is [Not] <Object-Type> 

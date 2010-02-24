@@ -232,4 +232,20 @@ public class LogicTests {
 				"rect := NEW Rectangle WITH 1,2,3,4; " + " conclude true;", "return rect.awidth;", new TestContext());
 		Assert.assertEquals("3", val.toString());
 	}
+
+	@Test
+	public void ExtractAttributeNames() throws Exception {
+		ArdenValue val = eval("MedicationDose := OBJECT [ Medication, Dose, Status ];",
+				"dose := NEW MedicationDose; conclude true;", "return EXTRACT ATTRIBUTE NAMES dose;", new TestContext());
+		Assert.assertEquals("(\"Medication\",\"Dose\",\"Status\")", val.toString());
+	}
+
+	@Test
+	public void AttributeFrom() throws Exception {
+		ArdenValue val = eval("MedicationDose := OBJECT [ Medication, Dose, Status ];",
+				"dose := NEW MedicationDose WITH 1,2,3;"
+						+ "attrNames := (\"Medication\",\"Status\",\"Dose\"); conclude true;",
+				"return ATTRIBUTE attrNames FROM dose;", new TestContext());
+		Assert.assertEquals("(1,3,2)", val.toString());
+	}
 }

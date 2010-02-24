@@ -1,5 +1,7 @@
 package arden.runtime;
 
+import java.util.Locale;
+
 /**
  * This class is used to implement operators of the form '<n:type> := <n:type>
  * op <n:type>'
@@ -256,6 +258,16 @@ public abstract class BinaryOperator {
 		public final ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
 			return TernaryOperator.WITHINTO.runElement(lhs, RuntimeHelpers.getStartOfDay(rhs), RuntimeHelpers
 					.getEndOfDay(rhs));
+		}
+	};
+
+	public static final BinaryOperator ATTRIBUTEFROM = new BinaryOperator("ATTRIBUTEFROM") {
+		@Override
+		public final ArdenValue runElement(ArdenValue lhs, ArdenValue rhs) {
+			if (lhs instanceof ArdenString) {
+				return RuntimeHelpers.getObjectMember(rhs, ((ArdenString) lhs).value.toUpperCase(Locale.ENGLISH));
+			}
+			return ArdenNull.INSTANCE;
 		}
 	};
 

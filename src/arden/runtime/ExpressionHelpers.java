@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 
 /**
@@ -875,5 +876,59 @@ public final class ExpressionHelpers {
 		} else {
 			return null;
 		}
+	}
+
+	/** CLONE operator implementation */
+	public static ArdenValue cloneObjects(ArdenValue input) {
+		return cloneObjects(input, new HashMap<ArdenObject, ArdenObject>());
+	}
+
+	private static ArdenValue cloneObjects(ArdenValue input, HashMap<ArdenObject, ArdenObject> objectMap) {
+		if (input instanceof ArdenList) {
+			ArdenValue[] inputs = ((ArdenList) input).values;
+			ArdenValue[] results = new ArdenValue[inputs.length];
+			for (int i = 0; i < inputs.length; i++)
+				results[i] = cloneObjects(inputs[i], objectMap);
+			return new ArdenList(results);
+		} else if (input instanceof ArdenObject) {
+			ArdenObject oldObj = (ArdenObject) input;
+			ArdenObject newObj = objectMap.get(oldObj);
+			if (newObj == null) {
+				newObj = new ArdenObject(oldObj.type);
+				objectMap.put(oldObj, newObj); // store mapping
+				for (int i = 0; i < oldObj.fields.length; i++)
+					newObj.fields[i] = cloneObjects(oldObj.fields[i], objectMap);
+			}
+			return newObj;
+		} else {
+			return input;
+		}
+	}
+
+	/** EXTRACT ATTRIBUTE NAMES operator implementation */
+	public static ArdenValue extractAttributeNames(ArdenValue input) {
+		ObjectType type;
+		if (input instanceof ArdenObject) {
+			// get type of object
+			type = ((ArdenObject) input).type;
+		} else if (input instanceof ArdenList) {
+			// if all objects in list have the same type, get that type
+			ArdenValue[] inputs = ((ArdenList) input).values;
+			if (inputs.length == 0 || !(inputs[0] instanceof ArdenObject))
+				return ArdenNull.INSTANCE;
+			type = ((ArdenObject) inputs[0]).type;
+			for (int i = 1; i < inputs.length; i++) {
+				if (!(inputs[i] instanceof ArdenObject))
+					return ArdenNull.INSTANCE;
+				if (((ArdenObject) inputs[i]).type != type)
+					return ArdenNull.INSTANCE;
+			}
+		} else {
+			return ArdenNull.INSTANCE;
+		}
+		ArdenValue[] attributeNames = new ArdenValue[type.fieldNames.length];
+		for (int i = 0; i < attributeNames.length; i++)
+			attributeNames[i] = new ArdenString(type.fieldNames[i]);
+		return new ArdenList(attributeNames);
 	}
 }

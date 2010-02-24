@@ -678,7 +678,7 @@ final class ExpressionCompiler extends VisitorBase {
 	// | {ifromofexprfrom} index_from_of_func_op expr_factor from expr_function
 	// | {ifromexprfrom} index_from_func_op expr_factor from expr_function
 	// | {factas} expr_factor as as_func_op
-	// | {attr} attribute expr_factor from expr_function; // TODO
+	// | {attr} attribute expr_factor from expr_function;
 	@Override
 	public void caseAExprExprFunction(AExprExprFunction node) {
 		// expr_function = {expr} expr_factor
@@ -754,6 +754,12 @@ final class ExpressionCompiler extends VisitorBase {
 	public void caseAFactasExprFunction(AFactasExprFunction node) {
 		// {factas} expr_factor as as_func_op
 		node.getAsFuncOp().apply(new UnaryOperatorCompiler(this, node.getExprFactor()));
+	}
+
+	@Override
+	public void caseAAttrExprFunction(AAttrExprFunction node) {
+		// {attr} attribute expr_factor from expr_function
+		invokeOperator(BinaryOperator.ATTRIBUTEFROM, node.getExprFactor(), node.getExprFunction());
 	}
 
 	// expr_factor =

@@ -137,8 +137,8 @@ final class UnaryOperatorCompiler extends VisitorBase {
 	// | {len} length
 	// | {uc} uppercase
 	// | {lc} lowercase
-    // | {clone}   clone // TODO
-    // | {exattr}  extract attribute names; // TODO
+	// | {clone} clone
+	// | {exattr} extract attribute names;
 
 	@Override
 	public void caseAAnyOfNoreadFuncOp(AAnyOfNoreadFuncOp node) {
@@ -406,6 +406,18 @@ final class UnaryOperatorCompiler extends VisitorBase {
 	public void caseALcOfNoreadFuncOp(ALcOfNoreadFuncOp node) {
 		argument.apply(parent);
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("toLowerCase", ArdenValue.class));
+	}
+
+	@Override
+	public void caseACloneOfNoreadFuncOp(ACloneOfNoreadFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("cloneObjects", ArdenValue.class));
+	}
+
+	@Override
+	public void caseAExattrOfNoreadFuncOp(AExattrOfNoreadFuncOp node) {
+		argument.apply(parent);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("extractAttributeNames", ArdenValue.class));
 	}
 
 	// from_of_func_op =
