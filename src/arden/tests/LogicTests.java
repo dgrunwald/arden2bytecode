@@ -159,8 +159,13 @@ public class LogicTests {
 
 	@Test
 	public void RecursiveMlm() throws Exception {
-		MedicalLogicModule mlm = ActionTests.parseTemplate("this := MLM mlm_self; arg := ARGUMENT;", "If arg > 1 THEN"
-				+ "  result := CALL this WITH (arg-1);" + "ELSE" + "  result := 1;" + "ENDIF; conclude true;",
+		MedicalLogicModule mlm = ActionTests.parseTemplate(
+				"this := MLM mlm_self; arg := ARGUMENT;",
+				"If arg > 1 THEN"
+				+ "  result := CALL this WITH (arg-1);"
+				+ "ELSE"
+				+ "  result := 1;"
+				+ "ENDIF; conclude true;",
 				"return result * arg;");
 		ArdenValue[] result = mlm.run(new TestContext(), new ArdenValue[] { new ArdenNumber(10) });
 		Assert.assertEquals(1, result.length);

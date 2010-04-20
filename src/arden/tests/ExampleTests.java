@@ -21,7 +21,7 @@ public class ExampleTests {
 		Compiler c = new Compiler();
 		c.enableDebugging(filename + ".mlm");
 		CompiledMlm mlm = c
-				.compileMlm(new InputStreamReader(MetadataTests.class.getResourceAsStream(filename + ".mlm")));
+				.compileMlm(new InputStreamReader(ExampleTests.class.getResourceAsStream(filename + ".mlm")));
 		FileOutputStream fos = new FileOutputStream("bin/" + mlm.getName() + ".class");
 		mlm.saveClassFile(fos);
 		fos.close();
