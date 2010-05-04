@@ -3,31 +3,7 @@ package arden.compiler;
 import java.util.Date;
 
 import arden.compiler.analysis.DepthFirstAdapter;
-import arden.compiler.node.AAuthorSlot;
-import arden.compiler.node.ACitationsSlot;
-import arden.compiler.node.ADateMlmDate;
-import arden.compiler.node.ADateSlot;
-import arden.compiler.node.ADtimeMlmDate;
-import arden.compiler.node.AEmptyArdenVersionSlot;
-import arden.compiler.node.AEmptyPrioritySlot;
-import arden.compiler.node.AExpValidationCode;
-import arden.compiler.node.AExplanationSlot;
-import arden.compiler.node.AFnameMlmnameSlot;
-import arden.compiler.node.AInstitutionSlot;
-import arden.compiler.node.AKeywordsSlot;
-import arden.compiler.node.ALinksSlot;
-import arden.compiler.node.AMnameMlmnameSlot;
-import arden.compiler.node.APriPrioritySlot;
-import arden.compiler.node.AProdValidationCode;
-import arden.compiler.node.APurposeSlot;
-import arden.compiler.node.AResValidationCode;
-import arden.compiler.node.ASpecialistSlot;
-import arden.compiler.node.ATestValidationCode;
-import arden.compiler.node.ATitleSlot;
-import arden.compiler.node.ATwoArdenVersion;
-import arden.compiler.node.ATwooneArdenVersion;
-import arden.compiler.node.AVersionSlot;
-import arden.compiler.node.AVrsnArdenVersionSlot;
+import arden.compiler.node.*;
 import arden.runtime.LibraryMetadata;
 import arden.runtime.MaintenanceMetadata;
 
@@ -76,31 +52,18 @@ final class MetadataCompiler extends DepthFirstAdapter {
 	}
 
 	// arden_version_slot =
-	// {vrsn} arden arden_version semicolons
+	// {vrsn} arden version version_number semicolons
 	// | {empty};
 	@Override
 	public void caseAVrsnArdenVersionSlot(AVrsnArdenVersionSlot node) {
 		if (usedFileNameForMlmName)
 			throw new RuntimeCompilerException("Cannot use 'filename' with Arden version 2");
-		node.getArdenVersion().apply(this);
+		maintenance.setArdenVersion(node.getVersionNumber().getText());
 	}
 
 	@Override
 	public void caseAEmptyArdenVersionSlot(AEmptyArdenVersionSlot node) {
 		maintenance.setArdenVersion("1");
-	}
-
-	// arden_version =
-	// {two} version two
-	// | {twoone} version twopointone;
-	@Override
-	public void caseATwoArdenVersion(ATwoArdenVersion node) {
-		maintenance.setArdenVersion("2");
-	}
-
-	@Override
-	public void caseATwooneArdenVersion(ATwooneArdenVersion node) {
-		maintenance.setArdenVersion("2.1");
 	}
 
 	// version_slot = version colon text semicolons;

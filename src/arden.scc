@@ -386,8 +386,7 @@ Tokens
   years       = y e a r s;
 
   ct           = 'T';
-  {arden}two            = '2';
-  {arden}twopointone        = '2' '.' '1';
+  {arden}version_number  = digit ('.' digit)?;
 
   {normal}identifier = letter (letter | digit | us)*;
   /* up to 80 characters total (no reserved words allowed) */
@@ -507,14 +506,10 @@ mlmname_slot =
 /* of arden_version_slot            */
 
 arden_version_slot =
-      {vrsn}    arden arden_version semicolons
+      {vrsn}    arden version version_number semicolons
     | {empty};    /* the empty version is only valid    */
                   /* combination with the "FILENAME"    */
                   /* form of < mlmname_slot >           */
-
-arden_version =
-      {two}     version two
-    | {twoone}  version twopointone;
 
 version_slot =
                 version colon text semicolons;

@@ -1,0 +1,5 @@
+/bin
+/src/arden/compiler/analysis
+/src/arden/compiler/lexer
+/src/arden/compiler/node
+/src/arden/compiler/parser
