@@ -1,16 +1,31 @@
-License: GPL (because arden.scc is GPL)
+Copyright 2009-2010, Daniel Grunwald
+Portions (arden.scc) Copyright 2004, University of British Columbia
+See LICENSE.txt for licensing information.
 
 
-To compile the parser in Eclipse:
+To compile the compiler, you first need to generate the parser using
+the SableCC parser generator.
+To do this, run
+"java -classpath ../tools/sablecc.jar org.sablecc.sablecc.SableCC arden.scc"
+in the arden2bytecode/src directory.
+This will create the directories "analysis","lexer","node","parser" within
+arden2bytecode/src/arden.
+
+When the input grammar is changed, you will need to re-generate the parser.
+Before regenerating the parser, you should delete the old "analysis","lexer",
+"node","parser" directories to ensure there aren't any old files left behind. 
+
+
+To configure SableCC as external tool in Eclipse:
 	1. Create an external tool configuration:
 		Location: javaw.exe (from your Java runtime)
 		Working directory: ${container_loc}
 		Arguments: -classpath ${project_loc}\tools\sablecc.jar org.sablecc.sablecc.SableCC ${resource_name}
-	
 	2. Select the file "arden.scc" and run SableCC.
 	3. Right-click "src" and press Refresh so that Eclipse loads the generated files.
 
-	
+
+I believe this compiler fully implements Arden Syntax 2.5 with the following exceptions:
 
 Languages features not implemented:
 	From Arden Syntax 2.1 specification:
@@ -26,3 +41,4 @@ Languages features not implemented:
 	There is no way to use Arden variables within mapping clauses.
 	Citation/links slots are not syntax checked.
 	The compiler does not check that no languages features newer than the specified 'Arden Version' are used.
+

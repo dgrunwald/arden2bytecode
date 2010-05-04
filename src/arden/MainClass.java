@@ -11,29 +11,30 @@ import arden.compiler.CompilerException;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenString;
 import arden.runtime.ArdenValue;
-import arden.runtime.DatabaseQuery;
 import arden.runtime.ExecutionContext;
 
 public class MainClass {
 
-	/**
-	 * @param args
-	 */
 	public static void main(String[] args) {
+		System.out.println("arden2bytecode Interpreter example");
+		System.out.println("Copyright 2010 Daniel Grunwald");
+		System.out.println("");
+		System.out.println("This program is free software; you can redistribute it and/or modify it");
+		System.out.println("under the terms of the GNU General Public License.");
+		System.out.println("");
+
 		Compiler compiler = new Compiler();
 		CompiledMlm mlm;
 		try {
+			compiler.enableDebugging(args[0]);
 			mlm = compiler.compileMlm(new FileReader(args[0]));
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		} catch (CompilerException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -42,20 +43,12 @@ public class MainClass {
 			public void write(ArdenValue message, String destination) {
 				System.out.println(message.toString());
 			}
-			
-			@Override
-			public DatabaseQuery createQuery(String mapping) {
-				// TODO Auto-generated method stub
-				return super.createQuery(mapping);
-			}
-			
-			// hier weitere Methoden von ExecutionContext überschreiben
 		};
-		ArdenValue[] arguments = { new ArdenNumber(3), new ArdenNumber(99), new ArdenNumber(140), new ArdenString("a") };
 		try {
-			mlm.run(context, arguments);
+			ArdenValue result = mlm.run(context, null);
+			if (result != null)
+				System.out.println("Return Value: " + result.toString());
 		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
