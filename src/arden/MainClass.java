@@ -35,8 +35,6 @@ import java.lang.reflect.InvocationTargetException;
 import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
-import arden.runtime.ArdenNumber;
-import arden.runtime.ArdenString;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 
@@ -72,9 +70,9 @@ public class MainClass {
 			}
 		};
 		try {
-			ArdenValue result = mlm.run(context, null);
-			if (result != null)
-				System.out.println("Return Value: " + result.toString());
+			ArdenValue[] result = mlm.run(context, null);
+			if (result != null && result.length == 1)
+				System.out.println("Return Value: " + result[0].toString());
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		}
