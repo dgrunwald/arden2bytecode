@@ -3,3 +3,4 @@
 /src/arden/compiler/lexer
 /src/arden/compiler/node
 /src/arden/compiler/parser
+/dist/
