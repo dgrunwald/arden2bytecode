@@ -54,13 +54,17 @@ public class MainClass {
 			compiler.enableDebugging(args[0]);
 			mlm = compiler.compileMlm(new FileReader(args[0]));
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			System.err.println("error: File " + args[0] + " was not found.");
 			return;
 		} catch (CompilerException e) {
 			e.printStackTrace();
 			return;
 		} catch (IOException e) {
 			e.printStackTrace();
+			return;
+		} catch (ArrayIndexOutOfBoundsException e) {
+			System.err.println("error: No MLM source file given.");
+			System.err.println("usage: java -jar arden2bytecode.jar <MLM-file>");
 			return;
 		}
 		ExecutionContext context = new ExecutionContext() {
@@ -71,8 +75,11 @@ public class MainClass {
 		};
 		try {
 			ArdenValue[] result = mlm.run(context, null);
-			if (result != null && result.length == 1)
+			if (result != null && result.length == 1) {
 				System.out.println("Return Value: " + result[0].toString());
+			} else {
+				System.out.println("There was no return value or result length was not equal to 1.");
+			}
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		}

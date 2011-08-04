@@ -5,7 +5,7 @@
     
     Author: hflicka
 -->
-<project name="arden2bytecode" default="default" basedir=".">
+<project name="arden2bytecode" default="default" basedir="."> 	
     <target name="default" depends="compile"></target>
 
     <target name="init">
@@ -40,20 +40,37 @@
     <target name="clean" depends="init">
         <mkdir dir="${build.dir}" />
         <mkdir dir="${dist.dir}" />
+    	<mkdir dir="${src.dir}/arden/compiler/analysis" />
+    	<mkdir dir="${src.dir}/arden/compiler/lexer" />
+    	<mkdir dir="${src.dir}/arden/compiler/node" />
+    	<mkdir dir="${src.dir}/arden/compiler/parser" />
         <delete includeemptydirs="true">
             <fileset dir="${build.dir}" includes="**/*" />
             <fileset dir="${dist.dir}" includes="**/*" />
+        	<fileset dir="${src.dir}/arden/compiler/analysis" includes="**/*" />
+        	<fileset dir="${src.dir}/arden/compiler/lexer" includes="**/*" />
+        	<fileset dir="${src.dir}/arden/compiler/node" includes="**/*" />
+            <fileset dir="${src.dir}/arden/compiler/parser" includes="**/*" />
         </delete>
     </target>
 
 	<target name="sableCC" depends="init">
-		<java jar="${tools.dir}/sablecc.jar" 
+		<!-- <java jar="${tools.dir}/sablecc.jar" 
 			dir="${src.dir}"
 			fork="true"
 		    failonerror="true"
 		    maxmemory="128m">
 		    <arg value="arden.scc"/>
-		</java>
+		</java> -->
+
+	    <taskdef name="sablecc" classname="org.sablecc.ant.taskdef.Sablecc">
+	        <classpath>
+	            <pathelement location="${tools.dir}/sablecc.jar"/>
+	        </classpath>
+	    </taskdef> 
+		
+		<sablecc src="${src.dir}" includes="arden.scc"
+			outputdirectory="${src.dir}"></sablecc>
 	</target>
 	
     <target name="compile" depends="init,sableCC">
@@ -68,7 +85,7 @@
                debug="${debug}" 
                classpathref="build.classpath" 
                optimize="${optimize}" 
-               source="1.5">
+               source="1.6">
             <include name="**/*.java" />
         </javac>
     </target>
@@ -92,7 +109,7 @@
         <basename property="jar.filename" file="${dist.jar}" />
         <echo file="${dist.dir}/run.cmd" append="false">@echo off
              java -jar %~dp0${jar.filename} %*
-             pause
+             rem pause
     </echo>
     </target>
 
