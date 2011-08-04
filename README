@@ -1,7 +1,11 @@
+*** arden2bytecode - Compiler for Arden Syntax with Java Bytecode output.
+
 Copyright 2009-2010, Daniel Grunwald
 Portions (arden.scc) Copyright 2004, University of British Columbia
 See LICENSE.txt for licensing information.
 
+
+** Building Notes
 
 To compile the compiler, you first need to generate the parser using
 the SableCC parser generator.
@@ -15,15 +19,31 @@ When the input grammar is changed, you will need to re-generate the parser.
 Before regenerating the parser, you should delete the old "analysis","lexer",
 "node","parser" directories to ensure there aren't any old files left behind. 
 
+If you use Eclipse to build, compiling the compiler is done automatically.
+The Eclipse project has a SableCC builder in Project -> Properties -> Builders.
+The SableCC builder of the project basically starts the Ant task "sableCC" 
+contained in build.xml.
+As building the compiler has only to be done initially and after changes of 
+the grammar, you can disable the SableCC builder if you want to save time.
 
-To configure SableCC as external tool in Eclipse:
-	1. Create an external tool configuration:
-		Location: javaw.exe (from your Java runtime)
-		Working directory: ${container_loc}
-		Arguments: -classpath ${project_loc}\tools\sablecc.jar org.sablecc.sablecc.SableCC ${resource_name}
-	2. Select the file "arden.scc" and run SableCC.
-	3. Right-click "src" and press Refresh so that Eclipse loads the generated files.
+If you use Ant to build, SableCC is started automatically. Again, if you want
+to save time, you can disable the "sableCC" target by removing the "sableCC"
+dependency from the "compile" target.
 
+
+** Building Howto
+
+To build with Eclipse, import the project and choose 
+Project -> Build project... from the menu.
+
+To build with Ant, cd into the source root and type 'ant' at the command 
+prompt.
+
+This is explained in detail in the project's wiki at GitHub:
+https://github.com/hflicka/arden2bytecode/wiki/Getting-Started-with-arden2bytecode
+
+
+** Notes to the present implementeation
 
 I believe this compiler fully implements Arden Syntax 2.5 with the following exceptions:
 

@@ -64,7 +64,10 @@ public class MainClass {
 			return;
 		} catch (ArrayIndexOutOfBoundsException e) {
 			System.err.println("error: No MLM source file given.");
-			System.err.println("usage: java -jar arden2bytecode.jar <MLM-file>");
+			System.err.println("usage: java <arden2bytecode program> <MLM-file>");
+			System.err.println("");
+			System.err.println("e.g.: java -jar arden2bytecode.jar <MLM-file>");
+			System.err.println("or: java arden.MainClass <MLM-file>");
 			return;
 		}
 		ExecutionContext context = new ExecutionContext() {
