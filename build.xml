@@ -73,7 +73,7 @@
 			outputdirectory="${src.dir}"></sablecc>
 	</target>
 	
-    <target name="compile" depends="init,sableCC">
+    <target name="compileOnly" depends="init">
         <mkdir dir="${build.dir}" />
     	<copy todir="${build.dir}">
     		<fileset dir="${src.dir}">
@@ -89,8 +89,11 @@
             <include name="**/*.java" />
         </javac>
     </target>
-
-    <target name="jar" depends="compile">
+	
+	<target name="compile" depends="sableCC,compileOnly">
+	</target>
+	
+    <target name="jarOnly" depends="init">
         <mkdir dir="${dist.dir}" />
         <manifestclasspath property="manifest.classpath" jarfile="${dist.jar}">
             <classpath refid="jar.classpath" />
@@ -113,13 +116,19 @@
     </echo>
     </target>
 
-    <target name="run" depends="compile">
+	<target name="jar" depends="compile,jarOnly">
+	</target>
+	
+    <target name="runOnly" depends="init">
         <property name="myclasspath" refid="run.classpath" />
         <echo message="Running ${run.entrypoint} with classpath: ${myclasspath}" />
         <java classname="${run.entrypoint}" classpathref="run.classpath" fork="true"></java>
     </target>
+	
+	<target name="run" depends="compile,runOnly">
+	</target>
 
-    <target name="runAndRedirect" depends="compile">
+    <target name="runAndRedirectOutput" depends="compile">
         <property name="myclasspath" refid="run.classpath" />
         <echo message="Redirecting output to 'output.txt'" />
         <echo message="Running ${run.entrypoint} with classpath: ${myclasspath}" />
