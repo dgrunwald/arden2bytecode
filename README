@@ -43,7 +43,7 @@ This is explained in detail in the project's wiki at GitHub:
 https://github.com/hflicka/arden2bytecode/wiki/Getting-Started-with-arden2bytecode
 
 
-** Notes to the present implementeation
+** Notes to the Present Implementeation
 
 I believe this compiler fully implements Arden Syntax 2.5 with the following exceptions:
 

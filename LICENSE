@@ -1,3 +1,8 @@
+*** License of arden2bytecode
+
+
+** Note to License Used
+
 I would like to publish this compiler using the BSD license,
 but this is not possible because it's based on the
 Arden Syntax parser from the EGADSS Arden Compiler, which is
@@ -9,6 +14,15 @@ But until this happens, this Arden Compiler as a whole is using the GNU GPL.
 
 Daniel Grunwald, 4th May 2010
 
+
+** Libraries Used in arden2bytecode
+
+arden2bytecode as of the repository forked by Hannes Flicka 
+(hflicka on GitHub) uses the JewelCLI binary distribution which 
+is licensed under the terms of the Apache License version 2.0
+
+
+** arden2bytecode License Text
 
 		  GNU LESSER GENERAL PUBLIC LICENSE
 		       Version 2.1, February 1999
