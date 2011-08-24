@@ -60,7 +60,7 @@ import arden.runtime.MedicalLogicModuleImplementation;
  * 
  */
 public final class RawCompiledMlm implements MedicalLogicModule {
-	private final byte[] data;
+	private byte[] data;
 	private final String mlmname;
 	private Constructor<? extends MedicalLogicModuleImplementation> ctor;
 
@@ -73,6 +73,8 @@ public final class RawCompiledMlm implements MedicalLogicModule {
 	
 	public RawCompiledMlm(File mlmfile, String mlmname) throws IOException {		
 		this((byte[])null, mlmname);
+		System.err.println("mlm: " + mlmfile.getPath());
+		System.err.println("mlmname: " + mlmname);
 		loadClassFile(mlmfile);
 	}
 
@@ -83,15 +85,13 @@ public final class RawCompiledMlm implements MedicalLogicModule {
 	public void loadClassFile(File file) throws IOException {
 		loadClassFile(
 				new BufferedInputStream(
-						new FileInputStream(file)));
+						new FileInputStream(file)),
+				(int)(file.length()));
 	}
 	
 	public void loadClassFile(InputStream in, int len) throws IOException {
+		data = new byte[len];
 		in.read(data, 0, len);
-	}
-	
-	public void loadClassFile(InputStream in) throws IOException {
-		in.read(data);
 	}
 
 	@SuppressWarnings("unchecked")

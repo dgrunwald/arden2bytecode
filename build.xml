@@ -114,7 +114,7 @@
         	<zipgroupfileset dir="${lib.dir}" includes="*.jar" />
         </jar>
         <basename property="jar.filename" file="${dist.jar}" />
-        <echo file="${dist.dir}/run.cmd" append="false">@echo off
+        <echo file="${dist.dir}/${name}.cmd" append="false">@echo off
              java -jar %~dp0${jar.filename} %*
              rem pause
     </echo>

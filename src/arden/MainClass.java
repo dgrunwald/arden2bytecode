@@ -52,8 +52,9 @@ public class MainClass {
 	private final static Pattern JAVA_CLASS_NAME = 
 		Pattern.compile("[A-Za-z$_][A-Za-z0-9$_]*(?:\\.[A-Za-z$_][A-Za-z0-9$_]*)*");
 	
-	private final static Pattern MLM_NAME_MATCHER =
+	private final static Pattern MLM_CLASS_FILE_NAME_MATCHER =
 		Pattern.compile("(?:[A-Za-z$_][A-Za-z0-9$_]*\\.)*([A-Za-z$_][A-Za-z0-9$_]*)\\.class");
+		//Pattern.compile("([A-Za-z$_][A-Za-z0-9$_]*)\\.class");
 	
 	public static void main(String[] args) {
 		System.out.println("arden2bytecode Compiler");
@@ -61,8 +62,6 @@ public class MainClass {
 		System.out.println("");
 		System.out.println("This program is free software; you can redistribute it and/or modify it");
 		System.out.println("under the terms of the GNU General Public License.");
-		System.out.println("");
-		System.out.println("Supply argument -h or -? to display help.");
 		System.out.println("");
 
 		List<File> inputFiles = new LinkedList<File>();
@@ -74,20 +73,39 @@ public class MainClass {
 			System.err.println(e.getMessage());
 			System.exit(1);
 		}
-		// check input files to this compiler
-		for (String filePath : options.getFiles()) {
+		
+		// suggest using help if no options given
+		if (args.length < 1) {
+			System.out.println("Supply argument -h or -? to display help.");
+			System.out.println("");
+		}
+		
+		// check input files to this main method	
+		if (!options.isInputFiles()) {
+			System.err.println("No input files given.");
+			System.exit(1);
+		}
+		List<String> files = options.getInputFiles();
+		for (String filePath : files) {
 			File file = new File(filePath);
 			if (file.exists()) {
 				inputFiles.add(file);
 			} else {
 				Matcher m = JAVA_CLASS_NAME.matcher(filePath);
 				if (m.matches()) {
-					inputFiles.add(new File("." + 
-							File.separatorChar + 
+					inputFiles.add(new File(
 							filePath.replace('.', File.separatorChar) +
 							".class"));
+				} else {
+					System.err.println("File \"" + filePath 
+							+ "\" is neither an existing file "
+							+ "nor a valid class name.");
 				}
 			}
+		}
+		
+		for (File f : inputFiles) {
+			System.out.println("input file: " + f.getPath());
 		}
 		
 		if (options.getRun()) {
@@ -98,25 +116,36 @@ public class MainClass {
 				System.exit(1);
 			}
 			File fileToRun = inputFiles.get(0);
-			MedicalLogicModule mlmToRun = null;
+			MedicalLogicModule mlm = null;
 			if (fileToRun.getName().endsWith(".class")) {
 				// TODO: load class with ClassLoader
-				Matcher m = MLM_NAME_MATCHER.matcher(fileToRun.getName());
-				if (!m.matches()) {
-					String mlmname = m.group();					
+				Matcher m = MLM_CLASS_FILE_NAME_MATCHER.matcher(fileToRun.getName());
+				if (m.matches()) {
+					String mlmname = m.group(1);					
 					try {
-						mlmToRun = new RawCompiledMlm(fileToRun, mlmname);
+						mlm = new RawCompiledMlm(fileToRun, mlmname);
 					} catch (IOException e) {
 						System.err.println("Error loading " +
-								fileToRun.getName());
+								fileToRun.getPath());
 						e.printStackTrace();
+						System.exit(1);
 					}
+					if (mlm == null) {
+						System.err.println("Could not load " +
+								fileToRun.getPath());
+						System.exit(1);
+					}
+				} else {
+					System.err.println("File \""
+							+ fileToRun.getName()
+							+ "\" has invalid name.");
+					System.exit(1);
 				}
 			} else if (fileToRun.getName().endsWith(".mlm")) {
 				Compiler compiler = new Compiler();
 				try {
 					compiler.enableDebugging(fileToRun.getPath());
-					mlmToRun = compiler.compileMlm(new FileReader(fileToRun.getPath()));
+					mlm = compiler.compileMlm(new FileReader(fileToRun.getPath()));
 				} catch (CompilerException e) {
 					System.err.println("exception compiling " + fileToRun.getPath() + ":");
 					e.printStackTrace();
@@ -130,6 +159,11 @@ public class MainClass {
 					e.printStackTrace();
 					System.exit(1);
 				} 
+			} else {
+				System.err.println("File \"" + fileToRun.getPath() 
+						+ "\" is neither .class nor .mlm file.");
+				System.err.println("Can't run such a file.");
+				System.exit(1);
 			}
 
 			ExecutionContext context = new ExecutionContext() {
@@ -140,7 +174,7 @@ public class MainClass {
 			};
 
 			try {
-				ArdenValue[] result = mlmToRun.run(context, null);
+				ArdenValue[] result = mlm.run(context, null);
 				if (result != null && result.length == 1) {
 					System.out.println("Return Value: " + result[0].toString());
 				} else {
@@ -151,6 +185,12 @@ public class MainClass {
 			}
 		} else {
 			// TODO: handle other options
+			System.err.println("");
+			System.err.println("You should specify -r to run the files.");
+			System.err.println("");
+			System.err.println("Specifying files without an option is not implemented.");
+			System.err.println("");
+			System.exit(1);
 		}
 		
 		
