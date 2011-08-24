@@ -3,7 +3,7 @@
     Alternate build option for arden2bytecode.
     Used in Eclipse Project to launch SableCC.
     
-    Author: hflicka
+    Author: Hannes Flicka (hflicka@github)
 -->
 <project name="arden2bytecode" default="default" basedir="."> 	
     <target name="default" depends="compile"></target>
@@ -17,6 +17,7 @@
         <property name="name" value="${ant.project.name}" />
         <property name="src.dir" value="src" />
         <property name="tools.dir" value="tools" />
+        <property name="lib.dir" value="lib" />
         <property name="build.dir" value="bin" />
         <property name="dist.dir" value="dist" />
         <property name="dist.jar" value="${dist.dir}/${name}-${version}.jar" />
@@ -24,7 +25,9 @@
         <filter token="log" value="true" />
         <filter token="verbose" value="true" />
         <path id="build.classpath">
-        	
+            <fileset dir="${lib.dir}">
+                <include name="*.jar" />
+            </fileset>
         </path>
         <path id="run.classpath">
             <path refid="build.classpath" />
@@ -108,6 +111,7 @@
                 <attribute name="Implementation-Version" value="${version}" />
             </manifest>
             <fileset dir="${build.dir}" />
+        	<zipgroupfileset dir="${lib.dir}" includes="*.jar" />
         </jar>
         <basename property="jar.filename" file="${dist.jar}" />
         <echo file="${dist.dir}/run.cmd" append="false">@echo off
@@ -120,8 +124,8 @@
 	</target>
 	
     <target name="runOnly" depends="init">
-        <property name="myclasspath" refid="run.classpath" />
-        <echo message="Running ${run.entrypoint} with classpath: ${myclasspath}" />
+        <property name="echoclasspath" refid="run.classpath" />
+        <echo message="Running ${run.entrypoint} with classpath: ${echoclasspath}" />
         <java classname="${run.entrypoint}" classpathref="run.classpath" fork="true"></java>
     </target>
 	
@@ -129,9 +133,9 @@
 	</target>
 
     <target name="runAndRedirectOutput" depends="compile">
-        <property name="myclasspath" refid="run.classpath" />
+        <property name="echoclasspath" refid="run.classpath" />
         <echo message="Redirecting output to 'output.txt'" />
-        <echo message="Running ${run.entrypoint} with classpath: ${myclasspath}" />
+        <echo message="Running ${run.entrypoint} with classpath: ${echoclasspath}" />
         <java classname="${run.entrypoint}" 
               classpathref="run.classpath" 
               fork="true" 
