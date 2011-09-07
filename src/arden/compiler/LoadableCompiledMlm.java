@@ -73,6 +73,7 @@ public final class LoadableCompiledMlm implements MedicalLogicModule {
 	
 	public LoadableCompiledMlm(File mlmfile, String mlmname) throws IOException {		
 		this((byte[])null, mlmname);
+		// for debugging reasons:
 		//System.err.println("mlm: " + mlmfile.getPath());
 		//System.err.println("mlmname: " + mlmname);
 		loadClassFile(mlmfile);
