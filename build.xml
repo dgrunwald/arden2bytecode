@@ -88,8 +88,10 @@
                debug="${debug}" 
                classpathref="build.classpath" 
                optimize="${optimize}" 
-               source="1.6">
+               source="1.6"
+        	   includeantruntime="false">
             <include name="**/*.java" />
+        	<exclude name="arden/tests/*.java"/>
         </javac>
     </target>
 	
