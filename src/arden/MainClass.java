@@ -45,7 +45,7 @@ import uk.co.flamingpenguin.jewel.cli.CliFactory;
 import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
-import arden.compiler.RawCompiledMlm;
+import arden.compiler.LoadableCompiledMlm;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 import arden.runtime.MedicalLogicModule;
@@ -156,7 +156,7 @@ public class MainClass {
 			if (m.matches()) {
 				String mlmname = m.group(1);				
 				try {
-					mlm = new RawCompiledMlm(fileToRun, mlmname);
+					mlm = new LoadableCompiledMlm(fileToRun, mlmname);
 				} catch (IOException e) {
 					System.err.println("Error loading " +
 							fileToRun.getPath());
