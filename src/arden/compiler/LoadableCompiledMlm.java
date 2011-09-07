@@ -61,18 +61,16 @@ import arden.runtime.MedicalLogicModuleImplementation;
  */
 public final class LoadableCompiledMlm implements MedicalLogicModule {
 	private byte[] data;
-	private final String mlmname;
+	private String mlmname;
 	private Constructor<? extends MedicalLogicModuleImplementation> ctor;
 
-	LoadableCompiledMlm(byte[] data, String mlmname) {
-		if (mlmname == null)
-			throw new NullPointerException();
+	LoadableCompiledMlm(byte[] data) {
 		this.data = data;
-		this.mlmname = mlmname;
+		this.mlmname = null;
 	}
 	
-	public LoadableCompiledMlm(File mlmfile, String mlmname) throws IOException {		
-		this((byte[])null, mlmname);
+	public LoadableCompiledMlm(File mlmfile) throws IOException {		
+		this((byte[])null);
 		// for debugging reasons:
 		//System.err.println("mlm: " + mlmfile.getPath());
 		//System.err.println("mlmname: " + mlmname);
@@ -100,8 +98,9 @@ public final class LoadableCompiledMlm implements MedicalLogicModule {
 		if (ctor == null) {
 			Class<? extends MedicalLogicModuleImplementation> clazz;
 			try {
-				ClassLoader classLoader = new InMemoryClassLoader(mlmname, data);
-				clazz = (Class<? extends MedicalLogicModuleImplementation>) classLoader.loadClass(mlmname);
+				ClassLoader classLoader = new AnonymousInMemoryClassLoader(data);
+				clazz = (Class<? extends MedicalLogicModuleImplementation>) classLoader.loadClass("");				
+				mlmname = clazz.getName();
 			} catch (ClassNotFoundException e) {
 				throw new RuntimeException(e);
 			}
@@ -176,6 +175,6 @@ public final class LoadableCompiledMlm implements MedicalLogicModule {
 
 	@Override
 	public double getPriority() {
-		return -1.0;
+		return Double.NaN;
 	}
 }

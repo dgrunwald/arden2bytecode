@@ -60,7 +60,7 @@ public class MainClass {
 		//Pattern.compile("([A-Za-z$_][A-Za-z0-9$_]*)\\.class");
 	
 	private final static Pattern CLASS_NAME_FROM_MLM_FILENAME = 
-		Pattern.compile("([A-Za-z$_][A-Za-z0-9$_]*)\\.[mM][lL][mM]");
+		Pattern.compile("([A-Za-z$_][A-Za-z0-9$_\\.]*)\\.[mM][lL][mM]");
 	
 	private static List<File> handleInputFileNames(List<String> filenames) {
 		List<File> inputFiles = new LinkedList<File>();
@@ -149,24 +149,13 @@ public class MainClass {
 		MedicalLogicModule mlm = null;
 		if (filename.endsWith(".class")) {
 			// TODO: load class with ClassLoader (does not work yet)
-			
-			// the following pattern matches the class name without packages as group 1
-			// e.g. given the string "java.util.List.class", "List" would be matched as group 1
-			Matcher m = MLM_CLASS_FILE_NAME_MATCHER.matcher(filename);
-			if (m.matches()) {
-				String mlmname = m.group(1);				
-				try {
-					mlm = new LoadableCompiledMlm(fileToRun, mlmname);
-				} catch (IOException e) {
-					System.err.println("Error loading " +
-							fileToRun.getPath());
-					e.printStackTrace();
-					return 1;
-				}
-			} else {
-				System.err.println("File \""
-						+ fileToRun.getName()
-						+ "\" has invalid name.");
+							
+			try {
+				mlm = new LoadableCompiledMlm(fileToRun);
+			} catch (IOException e) {
+				System.err.println("Error loading " +
+						fileToRun.getPath());
+				e.printStackTrace();
 				return 1;
 			}
 		} else if (fileToRun.getName().endsWith(".mlm")) {
