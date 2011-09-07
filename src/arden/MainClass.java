@@ -245,7 +245,15 @@ public class MainClass {
 		try {
 			options = CliFactory.parseArguments(CommandLineOptions.class, args);
 		} catch (ArgumentValidationException e) {
-			System.err.println(e.getMessage());
+			String message = e.getMessage();
+			System.err.println(message);
+			
+			if (message.startsWith("Usage")) { // hack to display additional help.
+				System.err.println("All further command line arguments that are non-options "
+						+ "are regarded as input files.");
+				System.err.println("");
+			}
+			
 			return 1;
 		}
 		
@@ -253,7 +261,7 @@ public class MainClass {
 		if (args.length < 1) {
 			System.out.println("Supply argument -h or -? to display help.");
 			System.out.println("");
-		}
+		}		
 		
 		// check input files to this main method
 		List<String> files = options.getFiles();
@@ -278,16 +286,19 @@ public class MainClass {
 				return 1;
 			}
 			for (File fileToRun : inputFiles) {				
-				return runInputFile(fileToRun, options);
+				int result = runInputFile(fileToRun, options);
+				if (result != 0) {
+					return result;
+				}
 			}
 		} else if (options.getCompile()) {
 			return compileInputFiles(inputFiles, options);
 		} else {
 			// TODO: handle other options
-			System.err.println("");
-			System.err.println("You should specify -r to run the files or -c to compile the files.");
-			System.err.println("");
-			System.err.println("Specifying files without an option is not implemented.");
+			System.err.println("You should specify -r to run the files or "
+					+ "-c to compile the files.");
+			System.err.println("Specifying files without telling what to " 
+					+ "do with them is not implemented.");
 			System.err.println("");
 			System.exit(1);
 		}
