@@ -73,8 +73,8 @@ public final class RawCompiledMlm implements MedicalLogicModule {
 	
 	public RawCompiledMlm(File mlmfile, String mlmname) throws IOException {		
 		this((byte[])null, mlmname);
-		System.err.println("mlm: " + mlmfile.getPath());
-		System.err.println("mlmname: " + mlmname);
+		//System.err.println("mlm: " + mlmfile.getPath());
+		//System.err.println("mlmname: " + mlmname);
 		loadClassFile(mlmfile);
 	}
 

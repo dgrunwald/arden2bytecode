@@ -12,15 +12,23 @@ public interface CommandLineOptions {
 			description = "run MLM file or already compiled MLM class file")
 	boolean getRun();
 	
+	@Option(shortName = "c", 
+			description = "compile input file")
+	boolean getCompile();
+	
+	@Option(shortName = "v", 
+			description = "verbose mode")
+	boolean getVerbose();	
+	
 	@Option(helpRequest = true, 
 			description = "display help", 
 			shortName = {"h", "?"})
 	boolean getHelp();
 	
-	@Option(shortName = "f", 
+	/*@Option(shortName = "f", 
 			description = "input files (MLM files or MLM class files)")
 	List<String> getInputFiles();
-	boolean isInputFiles();
+	boolean isInputFiles();*/
 	
 	@Unparsed
 	List<String> getFiles();

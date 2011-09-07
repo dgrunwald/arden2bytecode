@@ -123,6 +123,9 @@
 	<target name="jar" depends="compile,jarOnly">
 	</target>
 	
+	<target name="jarWithoutSableCC" depends="compileOnly,jarOnly">
+	</target>
+	
     <target name="runOnly" depends="init">
         <property name="echoclasspath" refid="run.classpath" />
         <echo message="Running ${run.entrypoint} with classpath: ${echoclasspath}" />
