@@ -121,7 +121,7 @@
              rem pause
         </echo>
     	<echo file="${dist.dir}/${name}" append="false">#!/bin/sh
-    	     java -jar $( cd -P "$( dirname "$0" )" &amp;&amp; pwd )${jar.filename} $@
+    	     java -jar "$( cd -P "$( dirname "$0" )" &amp;&amp; pwd )/${jar.filename}" $@
     	</echo>
     	<chmod file="${dist.dir}/${name}" perm="ugo+x" />
     </target>
