@@ -51,16 +51,21 @@ import arden.runtime.ExecutionContext;
 import arden.runtime.MedicalLogicModule;
 
 public class MainClass {
+	private final static String MLM_FILE_EXTENSION = ".mlm";
+	private final static String MLM_FILE_EXTENSION_AS_REGEX = "\\.[mM][lL][mM]";
+	
+	private final static String COMPILED_MLM_FILE_EXTENSION = ".class";
+	private final static String COMPILED_MLM_FILE_EXTENSION_AS_REGEX = "\\.class";
 
 	private final static Pattern JAVA_CLASS_NAME = 
 		Pattern.compile("[A-Za-z$_][A-Za-z0-9$_]*(?:\\.[A-Za-z$_][A-Za-z0-9$_]*)*");
 	
 	private final static Pattern MLM_CLASS_FILE_NAME_MATCHER =
-		Pattern.compile("(?:[A-Za-z$_][A-Za-z0-9$_]*\\.)*([A-Za-z$_][A-Za-z0-9$_]*)\\.class");
-		//Pattern.compile("([A-Za-z$_][A-Za-z0-9$_]*)\\.class");
+		Pattern.compile("(?:[A-Za-z$_][A-Za-z0-9$_]*\\.)*([A-Za-z$_][A-Za-z0-9$_]*)" 
+				+ COMPILED_MLM_FILE_EXTENSION_AS_REGEX);
 	
 	private final static Pattern CLASS_NAME_FROM_MLM_FILENAME = 
-		Pattern.compile("([A-Za-z$_][A-Za-z0-9$_\\.]*)\\.[mM][lL][mM]");
+		Pattern.compile("([A-Za-z$_][A-Za-z0-9$_\\.]*)" + MLM_FILE_EXTENSION_AS_REGEX);
 	
 	private static List<File> handleInputFileNames(List<String> filenames) {
 		List<File> inputFiles = new LinkedList<File>();
@@ -78,7 +83,7 @@ public class MainClass {
 				if (m.matches()) {
 					String classFileName = 
 						filePath.replace('.', File.separatorChar) 
-						+ ".class";
+						+ COMPILED_MLM_FILE_EXTENSION;
 					File classFile  = new File(classFileName);
 					if (classFile.exists()) {
 						inputFiles.add(classFile);
@@ -147,9 +152,8 @@ public class MainClass {
 	private static int runInputFile(File fileToRun, CommandLineOptions options) {
 		String filename = fileToRun.getName();
 		MedicalLogicModule mlm = null;
-		if (filename.endsWith(".class")) {
-			// TODO: load class with ClassLoader (does not work yet)
-							
+		if (filename.endsWith(COMPILED_MLM_FILE_EXTENSION)) {
+			// load compiled mlm (.class file)
 			try {
 				mlm = new LoadableCompiledMlm(fileToRun);
 			} catch (IOException e) {
@@ -158,7 +162,8 @@ public class MainClass {
 				e.printStackTrace();
 				return 1;
 			}
-		} else if (fileToRun.getName().endsWith(".mlm")) {
+		} else if (fileToRun.getName().endsWith(MLM_FILE_EXTENSION)) {
+			// compile .mlm file
 			mlm = compileMlm(fileToRun, options); 
 		} else {
 			System.err.println("File \"" + fileToRun.getPath() 
@@ -172,6 +177,7 @@ public class MainClass {
 			System.out.println("");
 		}
 		
+		// run the mlm
 		ArdenValue[] result = runMlm(mlm, options);
 		
 		return 0;
@@ -179,16 +185,17 @@ public class MainClass {
 	
 	private static int compileInputFiles(List<File> inputFiles, CommandLineOptions options) {
 		boolean firstFile = true;
-		for (File fileToCompile : inputFiles) {
-			CompiledMlm mlm = compileMlm(fileToCompile, options);
+		for (File fileToCompile : inputFiles) {			
 			File outputFile = null;
-			if (options.isOutput() && firstFile) {				
+			if (options.isOutput() && firstFile) {
+				// output file name given. write to that file...
 				outputFile = new File(options.getOutput());				
 			} else {
+				// output file name unknown. assume .mlm basename + '.class' extension
 				String filename = fileToCompile.getName();
 				Matcher m = CLASS_NAME_FROM_MLM_FILENAME.matcher(filename);
 				if (m.matches()) {
-					String assumedName = m.group(1) + ".class";
+					String assumedName = m.group(1) + COMPILED_MLM_FILE_EXTENSION;
 					File assumed = new File(fileToCompile.getParentFile(), assumedName);
 					if (firstFile) {
 						System.err.println("warning: File " + fileToCompile.getName() 
@@ -204,13 +211,16 @@ public class MainClass {
 					}
 					outputFile = assumed;
 				} else {
+					// could not match mlm base name
 					System.err.println("File " + fileToCompile.getName() 
 							+ " compiled, but does not seem to name an MLM file."
 							+ " Can't figure out file to write to.");					
 				}
 			}
 
+			// if output file is known, compile mlm and write compiled mlm to that file.
 			if (outputFile != null) {
+				CompiledMlm mlm = compileMlm(fileToCompile, options);
 				try {
 					FileOutputStream fos = new FileOutputStream(outputFile);
 					BufferedOutputStream bos = new BufferedOutputStream(fos);
@@ -229,7 +239,7 @@ public class MainClass {
 	}
 	
 	private static int handleCommandLineArgs(String[] args) {
-		// parse command line using jewelCli
+		// parse command line using jewelCli:
 		CommandLineOptions options = null;
 		try {
 			options = CliFactory.parseArguments(CommandLineOptions.class, args);
@@ -240,19 +250,18 @@ public class MainClass {
 			if (message.startsWith("Usage")) { // hack to display additional help.
 				System.err.println("All further command line arguments that are non-options "
 						+ "are regarded as input files.");
-				System.err.println("");
 			}
 			
 			return 1;
 		}
 		
-		// suggest using help if no options given
+		// suggest using help if no options given:
 		if (args.length < 1) {
 			System.out.println("Supply argument -h or -? to display help.");
 			System.out.println("");
 		}		
 		
-		// check input files to this main method
+		// check input files to this main method:
 		List<String> files = options.getFiles();
 		List<File> inputFiles = handleInputFileNames(files);
 		if (inputFiles == null) {
@@ -260,6 +269,7 @@ public class MainClass {
 			return 1;
 		}
 		
+		// if verbose output is requested, list input files:
 		if (options.getVerbose()) {
 			for (File f : inputFiles) {
 				System.out.println("input file: " + f.getPath());
@@ -267,6 +277,7 @@ public class MainClass {
 			System.out.println("");
 		}
 		
+		// check if option -r (run) or -c (compile) was given:
 		if (options.getRun()) {
 			if (inputFiles.size() < 1) {
 				System.err.println("You should specify at least one " +
@@ -288,8 +299,7 @@ public class MainClass {
 					+ "-c to compile the files.");
 			System.err.println("Specifying files without telling what to " 
 					+ "do with them is not implemented.");
-			System.err.println("");
-			System.exit(1);
+			return 1;
 		}
 		
 		return 0;
