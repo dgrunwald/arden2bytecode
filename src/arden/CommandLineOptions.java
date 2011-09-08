@@ -9,30 +9,25 @@ import uk.co.flamingpenguin.jewel.cli.Unparsed;
 @CommandLineInterface(application="arden2bytecode")
 public interface CommandLineOptions {
 	@Option(shortName = "r", 
-			description = "run MLM file or already compiled MLM class file")
+			description = "Run MLM file or already compiled MLM class file.")
 	boolean getRun();
 	
 	@Option(shortName = "c", 
-			description = "compile input file")
+			description = "Compile input file.")
 	boolean getCompile();
 	
 	@Option(shortName = "v", 
-			description = "verbose mode")
+			description = "Verbose mode.")
 	boolean getVerbose();
 	
 	@Option(shortName = "n", 
-			description = "don't print logo")
+			description = "Don't print logo.")
 	boolean getNologo();
 	
 	@Option(helpRequest = true, 
-			description = "display help", 
+			description = "Display help.", 
 			shortName = {"h", "?"})
 	boolean getHelp();
-	
-	/*@Option(shortName = "f", 
-			description = "input files (MLM files or MLM class files)")
-	List<String> getInputFiles();
-	boolean isInputFiles();*/
 	
 	@Unparsed
 	List<String> getFiles();
@@ -48,14 +43,8 @@ public interface CommandLineOptions {
 	String getArguments();
 	boolean isArguments();
 	
-	/*
-	@Option(shortName = "t",
-			defaultValue = "15",
-			description = "worker thread count (default = 15)")
-	int getThreadCount();
-	
-	@Option(shortName = "l",
-			description = "log file name")
-	String getLogFile();
-	boolean isLogFile();*/	
+	@Option(shortName = "x",
+			description = "Set execution environment if running a MLM.")
+	String getEnvironment();
+	boolean isEnvironment();
 }
