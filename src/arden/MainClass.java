@@ -140,8 +140,12 @@ public class MainClass {
 			result = mlm.run(context, null);
 			if (result != null && result.length == 1) {
 				System.out.println("Return Value: " + result[0].toString());
+			} else if (result != null && result.length > 1) {
+				for (int i = 0; i < result.length; i++) {
+					System.out.println("ReturnValue[" + i + "]: " + result[i].toString());
+				}
 			} else {
-				System.out.println("There was no return value or result length was not equal to 1.");
+				System.out.println("There was no return value.");
 			}
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
@@ -238,12 +242,22 @@ public class MainClass {
 		return 0;
 	}
 	
+	private static void printLogo() {
+		System.out.println("arden2bytecode Compiler");
+		System.out.println("Copyright 2010-2011 Daniel Grunwald, Hannes Flicka");
+		System.out.println("");
+		System.out.println("This program is free software; you can redistribute it and/or modify it");
+		System.out.println("under the terms of the GNU General Public License.");
+		System.out.println("");
+	}
+	
 	private static int handleCommandLineArgs(String[] args) {
 		// parse command line using jewelCli:
 		CommandLineOptions options = null;
 		try {
 			options = CliFactory.parseArguments(CommandLineOptions.class, args);
 		} catch (ArgumentValidationException e) {
+			printLogo();
 			String message = e.getMessage();
 			System.err.println(message);
 			
@@ -253,6 +267,10 @@ public class MainClass {
 			}
 			
 			return 1;
+		}
+		
+		if (!options.getNologo()) {
+			printLogo();
 		}
 		
 		// suggest using help if no options given:
@@ -305,14 +323,7 @@ public class MainClass {
 		return 0;
 	}
 	
-	public static void main(String[] args) {
-		System.out.println("arden2bytecode Compiler");
-		System.out.println("Copyright 2010-2011 Daniel Grunwald, Hannes Flicka");
-		System.out.println("");
-		System.out.println("This program is free software; you can redistribute it and/or modify it");
-		System.out.println("under the terms of the GNU General Public License.");
-		System.out.println("");
-		
+	public static void main(String[] args) {		
 		int returnValue = handleCommandLineArgs(args);
 		
 		System.exit(returnValue);
