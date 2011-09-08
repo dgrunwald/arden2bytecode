@@ -18,7 +18,11 @@ public interface CommandLineOptions {
 	
 	@Option(shortName = "v", 
 			description = "verbose mode")
-	boolean getVerbose();	
+	boolean getVerbose();
+	
+	@Option(shortName = "n", 
+			description = "don't print logo")
+	boolean getNologo();
 	
 	@Option(helpRequest = true, 
 			description = "display help", 
