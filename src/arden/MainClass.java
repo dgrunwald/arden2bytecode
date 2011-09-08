@@ -60,10 +60,6 @@ public class MainClass {
 	private final static Pattern JAVA_CLASS_NAME = 
 		Pattern.compile("[A-Za-z$_][A-Za-z0-9$_]*(?:\\.[A-Za-z$_][A-Za-z0-9$_]*)*");
 	
-	private final static Pattern MLM_CLASS_FILE_NAME_MATCHER =
-		Pattern.compile("(?:[A-Za-z$_][A-Za-z0-9$_]*\\.)*([A-Za-z$_][A-Za-z0-9$_]*)" 
-				+ COMPILED_MLM_FILE_EXTENSION_AS_REGEX);
-	
 	private final static Pattern CLASS_NAME_FROM_MLM_FILENAME = 
 		Pattern.compile("([A-Za-z$_][A-Za-z0-9$_\\.]*)" + MLM_FILE_EXTENSION_AS_REGEX);
 	
@@ -202,12 +198,12 @@ public class MainClass {
 					String assumedName = m.group(1) + COMPILED_MLM_FILE_EXTENSION;
 					File assumed = new File(fileToCompile.getParentFile(), assumedName);
 					if (firstFile) {
-						System.err.println("warning: File " + fileToCompile.getName() 
+						System.err.println("warning: File " + fileToCompile.getPath() 
 								+ " compiled, but no output file given. Assuming "
 								+ assumed.getPath()
 								+ " as output file.");
 					} else {
-						System.err.println("warning: File " + fileToCompile.getName() 
+						System.err.println("warning: File " + fileToCompile.getPath() 
 								+ " compiled, but can't write to same output file again. " 
 								+ "Assuming "
 								+ assumed.getPath()
@@ -243,7 +239,7 @@ public class MainClass {
 	}
 	
 	private static void printLogo() {
-		System.out.println("arden2bytecode Compiler");
+		System.out.println("arden2bytecode Compiler and Runtime Environment");
 		System.out.println("Copyright 2010-2011 Daniel Grunwald, Hannes Flicka");
 		System.out.println("");
 		System.out.println("This program is free software; you can redistribute it and/or modify it");
