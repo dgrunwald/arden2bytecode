@@ -119,7 +119,11 @@
         <echo file="${dist.dir}/${name}.cmd" append="false">@echo off
              java -jar %~dp0${jar.filename} %*
              rem pause
-    </echo>
+        </echo>
+    	<echo file="${dist.dir}/${name}" append="false">#!/bin/sh
+    	     java -jar $( cd -P "$( dirname "$0" )" &amp;&amp; pwd )${jar.filename} $@
+    	</echo>
+    	<chmod file="${dist.dir}/${name}" perm="ugo+x" />
     </target>
 
 	<target name="jar" depends="compile,jarOnly">
