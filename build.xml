@@ -144,7 +144,7 @@
 		    description="alias for 'jar' target">
 	</target>
 	
-	<target name="jarWithoutSableCC" depends="compileOnly,jarOnly"
+	<target name="compileAndJarOnly" depends="compileOnly,jarOnly"
 		    description="compile the sources without starting sableCC, then package a .jar">		
 	</target>
 	
