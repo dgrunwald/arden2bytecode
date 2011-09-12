@@ -44,7 +44,8 @@ public interface CommandLineOptions {
 	boolean isArguments();
 	
 	@Option(shortName = "x",
-			description = "Set execution environment if running a MLM.")
+			description = "Set execution environment if running a MLM.", 
+			defaultValue = "STDOUT")
 	String getEnvironment();
 	boolean isEnvironment();
 }
