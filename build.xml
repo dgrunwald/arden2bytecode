@@ -8,8 +8,8 @@
 <project name="arden2bytecode" default="default" basedir=".">
 	<description>arden2bytecode ant build script.</description>
 	
-    <target name="default" depends="compile" 
-    	    description="default target, depends on 'compile'.">
+    <target name="default" depends="jar" 
+    	    description="default target, depends on 'jar' which means a binary jar file will be built.">
     </target>
 
     <target name="init" 
