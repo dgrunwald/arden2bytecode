@@ -43,12 +43,11 @@ This is explained in detail in the project's wiki at GitHub:
 https://github.com/hflicka/arden2bytecode/wiki/Getting-Started-with-Arden2ByteCode
 
 
-## Notes to the Present Implementeation ##
+## Notes to the Present Implementation ##
 
 I believe this compiler fully implements Arden Syntax 2.5 with the following exceptions:
 
 Languages features not implemented:  
-
 * From Arden Syntax 2.1 specification:
     * 10.2.4.6 Event Call
     * 11.2.2 Event Statement
