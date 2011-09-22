@@ -239,7 +239,7 @@ public class MainClass {
 	}
 	
 	private static void printLogo() {
-		System.out.println("arden2bytecode Compiler and Runtime Environment");
+		System.out.println("Arden2ByteCode Compiler and Runtime Environment");
 		System.out.println("Copyright 2010-2011 Daniel Grunwald, Hannes Flicka");
 		System.out.println("");
 		System.out.println("This program is free software; you can redistribute it and/or modify it");
