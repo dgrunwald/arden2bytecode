@@ -10,7 +10,7 @@ See LICENSE.txt for licensing information.
 To compile the compiler, you first need to generate the parser using
 the SableCC parser generator.  
 To do this, run  
-`java -classpath ../tools/sablecc.jar org.sablecc.sablecc.SableCC arden.scc`
+`java -classpath ../tools/sablecc.jar org.sablecc.sablecc.SableCC arden.scc`  
 in the arden2bytecode/src directory.  
 This will create the directories `analysis`,`lexer`,`node`,`parser` within
 `arden2bytecode/src/arden`.
