@@ -47,7 +47,8 @@ https://github.com/hflicka/arden2bytecode/wiki/Getting-Started-with-Arden2ByteCo
 
 I believe this compiler fully implements Arden Syntax 2.5 with the following exceptions:
 
-Languages features not implemented:  
+Languages features not implemented:
+
 * From Arden Syntax 2.1 specification:
     * 10.2.4.6 Event Call
     * 11.2.2 Event Statement
