@@ -127,7 +127,7 @@
         </jar>
         <basename property="jar.filename" file="${dist.jar}" />
         <echo file="${dist.dir}/${name}.cmd" append="false">@echo off
-             java -jar %~dp0${jar.filename} %*
+             java -jar "%~dp0${jar.filename}" %*
              rem pause
         </echo>
     	<echo file="${dist.dir}/${name}" append="false">#!/bin/sh
