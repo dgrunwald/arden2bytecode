@@ -1,5 +1,5 @@
-// arden2bytecode
-// Copyright (c) 2010, Daniel Grunwald
+// Arden2ByteCode
+// Copyright (c) 2010, Daniel Grunwald, Hannes Flicka
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without modification, are
@@ -34,6 +34,9 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -49,6 +52,8 @@ import arden.compiler.LoadableCompiledMlm;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 import arden.runtime.MedicalLogicModule;
+import arden.runtime.StdIOExecutionContext;
+import arden.runtime.jdbc.JDBCExecutionContext;
 
 public class MainClass {
 	private final static String MLM_FILE_EXTENSION = ".mlm";
@@ -62,6 +67,8 @@ public class MainClass {
 	
 	private final static Pattern CLASS_NAME_FROM_MLM_FILENAME = 
 		Pattern.compile("([A-Za-z$_][A-Za-z0-9$_\\.]*)" + MLM_FILE_EXTENSION_AS_REGEX);
+	
+	private CommandLineOptions options;
 	
 	private static List<File> handleInputFileNames(List<String> filenames) {
 		List<File> inputFiles = new LinkedList<File>();
@@ -97,7 +104,7 @@ public class MainClass {
 		return inputFiles;
 	}
 	
-	private static CompiledMlm compileMlm(File mlmfile, CommandLineOptions options) {
+	private CompiledMlm compileMlm(File mlmfile) {
 		if (options.getVerbose()) {
 			System.out.println("Compiling " + mlmfile.getPath() + " ...");
 		}
@@ -123,13 +130,22 @@ public class MainClass {
 		return mlm;
 	}
 	
-	private static ArdenValue[] runMlm(MedicalLogicModule mlm, CommandLineOptions options) {
-		ExecutionContext context = new ExecutionContext() {
-			@Override
-			public void write(ArdenValue message, String destination) {
-				System.out.println(message.toString());
+	private ExecutionContext createExecutionContext() {
+		if (options.isEnvironment()) {
+			if (options.getEnvironment().startsWith("jdbc")) {
+				return new JDBCExecutionContext(options);
+			} else if ("stdio".equalsIgnoreCase(options.getEnvironment())) {
+				return new StdIOExecutionContext(options);
+			} else {
+				return new StdIOExecutionContext(options);
 			}
-		};
+		} else {
+			return new StdIOExecutionContext(options);
+		}
+	}
+	
+	private ArdenValue[] runMlm(MedicalLogicModule mlm) {
+		ExecutionContext context = createExecutionContext();
 		
 		ArdenValue[] result = null;
 		try {
@@ -149,7 +165,7 @@ public class MainClass {
 		return result;
 	}
 	
-	private static int runInputFile(File fileToRun, CommandLineOptions options) {
+	private int runInputFile(File fileToRun) {
 		String filename = fileToRun.getName();
 		MedicalLogicModule mlm = null;
 		if (filename.endsWith(COMPILED_MLM_FILE_EXTENSION)) {
@@ -164,7 +180,7 @@ public class MainClass {
 			}
 		} else if (fileToRun.getName().endsWith(MLM_FILE_EXTENSION)) {
 			// compile .mlm file
-			mlm = compileMlm(fileToRun, options); 
+			mlm = compileMlm(fileToRun); 
 		} else {
 			System.err.println("File \"" + fileToRun.getPath() 
 					+ "\" is neither .class nor .mlm file.");
@@ -178,12 +194,12 @@ public class MainClass {
 		}
 		
 		// run the mlm
-		ArdenValue[] result = runMlm(mlm, options);
+		ArdenValue[] result = runMlm(mlm);
 		
 		return 0;
 	}
 	
-	private static int compileInputFiles(List<File> inputFiles, CommandLineOptions options) {
+	private int compileInputFiles(List<File> inputFiles) {
 		boolean firstFile = true;
 		for (File fileToCompile : inputFiles) {			
 			File outputFile = null;
@@ -220,7 +236,7 @@ public class MainClass {
 
 			// if output file is known, compile mlm and write compiled mlm to that file.
 			if (outputFile != null) {
-				CompiledMlm mlm = compileMlm(fileToCompile, options);
+				CompiledMlm mlm = compileMlm(fileToCompile);
 				try {
 					FileOutputStream fos = new FileOutputStream(outputFile);
 					BufferedOutputStream bos = new BufferedOutputStream(fos);
@@ -247,9 +263,39 @@ public class MainClass {
 		System.out.println("");
 	}
 	
-	private static int handleCommandLineArgs(String[] args) {
-		// parse command line using jewelCli:
-		CommandLineOptions options = null;
+	private void extendClasspath() {
+		String classpath = options.getClasspath();
+		String[] paths = classpath.split(File.pathSeparator);
+		List<URL> urls = new LinkedList<URL>();
+		for (String path : paths) {
+			File f = new File(path);
+			URL url = null;
+			try {
+				url = f.toURI().toURL();
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			if (options.getVerbose()) {
+				System.out.println("Adding to classpath: " + url);
+			}
+			urls.add(url);
+		}
+		
+		ClassLoader currentClassLoader = 
+				Thread.currentThread().getContextClassLoader();
+		URLClassLoader ulc = new URLClassLoader(
+				urls.toArray(new URL[]{}), 
+				currentClassLoader);
+		Thread.currentThread().setContextClassLoader(ulc);
+		
+		if (options.getVerbose()) {
+			System.out.println();
+		}
+	}
+	
+	private int handleCommandLineArgs(String[] args) {
+		// parse command line using jewelCli:		
 		try {
 			options = CliFactory.parseArguments(CommandLineOptions.class, args);
 		} catch (ArgumentValidationException e) {
@@ -263,10 +309,15 @@ public class MainClass {
 			}
 			
 			return 1;
-		}
+		}		
 		
+		// print logo
 		if (!options.getNologo()) {
 			printLogo();
+		}
+		
+		if (options.isClasspath()) {
+			extendClasspath();
 		}
 		
 		// suggest using help if no options given:
@@ -286,7 +337,7 @@ public class MainClass {
 		// if verbose output is requested, list input files:
 		if (options.getVerbose()) {
 			for (File f : inputFiles) {
-				System.out.println("input file: " + f.getPath());
+				System.out.println("Input file: " + f.getPath());
 			}
 			System.out.println("");
 		}
@@ -300,13 +351,13 @@ public class MainClass {
 				return 1;
 			}
 			for (File fileToRun : inputFiles) {				
-				int result = runInputFile(fileToRun, options);
+				int result = runInputFile(fileToRun);
 				if (result != 0) {
 					return result;
 				}
 			}
 		} else if (options.getCompile()) {
-			return compileInputFiles(inputFiles, options);
+			return compileInputFiles(inputFiles);
 		} else {
 			// TODO: handle other options
 			System.err.println("You should specify -r to run the files or "
@@ -320,7 +371,8 @@ public class MainClass {
 	}
 	
 	public static void main(String[] args) {		
-		int returnValue = handleCommandLineArgs(args);
+		int returnValue = 
+				new MainClass().handleCommandLineArgs(args);
 		
 		System.exit(returnValue);
 	}
