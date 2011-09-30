@@ -5,20 +5,16 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.regex.Pattern;
 
 import arden.CommandLineOptions;
 import arden.runtime.ArdenRunnable;
-import arden.runtime.ArdenString;
 import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.DatabaseQuery;
-import arden.runtime.ExecutionContext;
 import arden.runtime.StdIOExecutionContext;
 
 public class JDBCExecutionContext extends StdIOExecutionContext {
-	private Connection connection = null;
-	private static final Pattern ARDEN_NUMBER_PATTERN = Pattern.compile("[0-9]+(?:\\.[0-9]*)");
+	private Connection connection = null;	
 	
 	public void loadDatabaseDriver(String className) {
 		try {
@@ -63,11 +59,6 @@ public class JDBCExecutionContext extends StdIOExecutionContext {
 	
 	public DatabaseQuery createQuery(String mapping) {		
 		return new JDBCQuery(mapping, connection);
-	}
-	
-	public ArdenValue getMessage(String mapping) {
-		System.out.println("Message, mapping: " + mapping);
-		return new ArdenString(mapping);
 	}
 	
 	public ArdenRunnable findModule(String name, String institution) {
