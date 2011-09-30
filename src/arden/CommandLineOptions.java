@@ -34,7 +34,8 @@ public interface CommandLineOptions {
 	boolean isFiles();
 	
 	@Option(shortName = "o",
-			description = "Output file name to compile .MLM file to. You can also specify a directory e.g. in order to compile multiple MLMs.")
+			description = "Output file name to compile .MLM file to. \n" +
+				"\t  You can also specify a directory in order to compile multiple MLMs.")
 	String getOutput();
 	boolean isOutput();
 	
@@ -43,9 +44,23 @@ public interface CommandLineOptions {
 	String getArguments();
 	boolean isArguments();
 	
-	@Option(shortName = "x",
-			description = "Set execution environment if running a MLM.", 
-			defaultValue = "STDOUT")
+	@Option(shortName = "e",
+			description = "Set arguments to execution environment if \n\t  running a MLM. \n" + 
+					"\t  In case of using JDBC, this may be a connection URL e.g. \n" +
+					"\t   \"jdbc:mysql://host:port/database?options\".", 
+			defaultValue = "stdio")
 	String getEnvironment();
 	boolean isEnvironment();
+	
+	@Option(shortName = "d", 
+			description = "Class name of database driver to load \n" +
+					"\t  (e.g. \"com.mysql.jdbc.Driver\").")
+	String getDbdriver();
+	boolean isDbdriver();
+	
+	@Option(shortName = "p",
+			description = "Additional classpath. \n"
+			+ "\t  E.g. a database driver like \"mysql-connector-java-[version]-bin.jar\".")
+	String getClasspath();
+	boolean isClasspath();
 }
