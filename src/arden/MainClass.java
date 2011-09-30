@@ -57,16 +57,11 @@ import arden.runtime.jdbc.JDBCExecutionContext;
 
 public class MainClass {
 	private final static String MLM_FILE_EXTENSION = ".mlm";
-	private final static String MLM_FILE_EXTENSION_AS_REGEX = "\\.[mM][lL][mM]";
 	
 	private final static String COMPILED_MLM_FILE_EXTENSION = ".class";
-	private final static String COMPILED_MLM_FILE_EXTENSION_AS_REGEX = "\\.class";
 
 	private final static Pattern JAVA_CLASS_NAME = 
 		Pattern.compile("[A-Za-z$_][A-Za-z0-9$_]*(?:\\.[A-Za-z$_][A-Za-z0-9$_]*)*");
-	
-	private final static Pattern CLASS_NAME_FROM_MLM_FILENAME = 
-		Pattern.compile("([A-Za-z$_][A-Za-z0-9$_\\.]*)" + MLM_FILE_EXTENSION_AS_REGEX);
 	
 	private CommandLineOptions options;
 	
@@ -194,49 +189,40 @@ public class MainClass {
 		}
 		
 		// run the mlm
-		ArdenValue[] result = runMlm(mlm);
+		runMlm(mlm);
 		
 		return 0;
 	}
 	
 	private int compileInputFiles(List<File> inputFiles) {
 		boolean firstFile = true;
-		for (File fileToCompile : inputFiles) {			
+		for (File fileToCompile : inputFiles) {
+			CompiledMlm mlm = compileMlm(fileToCompile);
 			File outputFile = null;
 			if (options.isOutput() && firstFile) {
 				// output file name given. write to that file...
 				outputFile = new File(options.getOutput());				
 			} else {
-				// output file name unknown. assume .mlm basename + '.class' extension
-				String filename = fileToCompile.getName();
-				Matcher m = CLASS_NAME_FROM_MLM_FILENAME.matcher(filename);
-				if (m.matches()) {
-					String assumedName = m.group(1) + COMPILED_MLM_FILE_EXTENSION;
-					File assumed = new File(fileToCompile.getParentFile(), assumedName);
-					if (firstFile) {
-						System.err.println("warning: File " + fileToCompile.getPath() 
-								+ " compiled, but no output file given. Assuming "
-								+ assumed.getPath()
-								+ " as output file.");
-					} else {
-						System.err.println("warning: File " + fileToCompile.getPath() 
-								+ " compiled, but can't write to same output file again. " 
-								+ "Assuming "
-								+ assumed.getPath()
-								+ " as output file.");
-					}
-					outputFile = assumed;
+				// output file name unknown. assume mlm name + '.class' extension
+				String assumedName = mlm.getName() + COMPILED_MLM_FILE_EXTENSION;
+				File assumed = new File(fileToCompile.getParentFile(), assumedName);
+				if (firstFile) {
+					System.err.println("warning: File " + fileToCompile.getPath() 
+							+ " compiled, but no output file given. Assuming "
+							+ assumed.getPath()
+							+ " as output file.");
 				} else {
-					// could not match mlm base name
-					System.err.println("File " + fileToCompile.getName() 
-							+ " compiled, but does not seem to name an MLM file."
-							+ " Can't figure out file to write to.");					
+					System.err.println("warning: File " + fileToCompile.getPath() 
+							+ " compiled, but can't write to same output file again. " 
+							+ "Assuming "
+							+ assumed.getPath()
+							+ " as output file.");
 				}
+				outputFile = assumed;				
 			}
 
 			// if output file is known, compile mlm and write compiled mlm to that file.
 			if (outputFile != null) {
-				CompiledMlm mlm = compileMlm(fileToCompile);
 				try {
 					FileOutputStream fos = new FileOutputStream(outputFile);
 					BufferedOutputStream bos = new BufferedOutputStream(fos);
