@@ -35,7 +35,7 @@ import java.util.Date;
  * @author Daniel Grunwald
  * 
  */
-public class ExecutionContext {
+public abstract class ExecutionContext {
 	/**
 	 * Creates a database query using a mapping clause. The DatabaseQuery object
 	 * can be used to limit the number of results produced.
