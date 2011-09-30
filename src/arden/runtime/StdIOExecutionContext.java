@@ -8,33 +8,37 @@ import java.util.regex.Pattern;
 import arden.CommandLineOptions;
 
 public class StdIOExecutionContext extends ExecutionContext {
+	@SuppressWarnings("unused")
 	private CommandLineOptions options;
-	private static final Pattern ARDEN_NUMBER_PATTERN = Pattern.compile("[0-9]+(?:\\.[0-9]*)");	
+	private static final Pattern ARDEN_NUMBER_PATTERN = 
+			Pattern.compile("(?:[0-9]+(?:\\.[0-9]*)?)|(?:\\.[0-9]+)");	
 	
 	public StdIOExecutionContext(CommandLineOptions options) {
 		this.options = options;
 	}
 	
 	public DatabaseQuery createQuery(String mapping) {
-		System.out.println("Query \"" + mapping + "\". Enter result: ");
+		System.out.print("Query \"" + mapping + "\". Enter result: ");
 		Scanner sc = new Scanner(System.in);
 		String line = null;
-        if (sc.hasNext()){
-            line = sc.nextLine();
-        }
-        Matcher m = ARDEN_NUMBER_PATTERN.matcher(line);
-        if (m.matches()) {
-        	ArdenValue[] val = new ArdenValue[1];
-        	val[0] = new ArdenNumber(
-					Double.parseDouble(
-							line.trim()));
-        	return new MemoryQuery(val);
-        } else {
-        	// TODO: implement better parser for values that are non-numbers
-        	ArdenValue[] val = new ArdenValue[1];
-        	val[0] = new ArdenString(line);
-        	return new MemoryQuery(val);
-        }
+		if (sc.hasNext()){
+			line = sc.nextLine();
+		}
+		Matcher m = ARDEN_NUMBER_PATTERN.matcher(line);
+		if (m.matches()) {
+			ArdenValue[] val = new ArdenValue[] {
+					new ArdenNumber(
+							Double.parseDouble(
+									line.trim()))
+			};
+			return new MemoryQuery(val);
+		} else {
+			// TODO: implement better parser for values that are non-numbers
+			ArdenValue[] val = new ArdenValue[]{
+					new ArdenString(line)
+			};
+			return new MemoryQuery(val);
+		}
 	}
 	
 	public ArdenValue getMessage(String mapping) {
