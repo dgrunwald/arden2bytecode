@@ -98,20 +98,20 @@ public class JDBCQueryTests {
 		loadSQLite();
 		Statement stmt = initDb();
 		ResultSet results = stmt.executeQuery("select * from person");
-		ArdenValue[] ardenVals = JDBCQuery.resultSetToArdenValues(results);
+		ArdenValue[] ardenValues = JDBCQuery.resultSetToArdenValues(results);
 		
-		ArdenValue[] valsA = {new ArdenNumber(1), new ArdenNumber(2)};
-		ArdenValue[] valsB = {new ArdenString("A"), new ArdenString("B")};
-		ArdenList[] arrA = {new ArdenList(valsA), new ArdenList(valsB)};
-		Assert.assertArrayEquals(arrA, ardenVals);
+		ArdenValue[] expectedA = {new ArdenNumber(1), new ArdenNumber(2)};
+		ArdenValue[] expectedB = {new ArdenString("A"), new ArdenString("B")};
+		ArdenList[] expectedArrA = {new ArdenList(expectedA), new ArdenList(expectedB)};
+		Assert.assertArrayEquals(expectedArrA, ardenValues);
 		
-		ArdenValue[] valsC = {new ArdenString("A"), new ArdenString("X")};
-		ArdenList[] arrB = {new ArdenList(valsA), new ArdenList(valsC)};
-		assertArrayNotEquals(arrB, ardenVals);		
+		ArdenValue[] expectedC = {new ArdenString("A"), new ArdenString("X")};
+		ArdenList[] expectedArrB = {new ArdenList(expectedA), new ArdenList(expectedC)};
+		assertArrayNotEquals(expectedArrB, ardenValues);		
 		
-		ArdenValue[] valsD = {new ArdenString("1"), new ArdenNumber(2)};
-		ArdenList[] arrC = {new ArdenList(valsD), new ArdenList(valsB)};
-		assertArrayNotEquals(arrC, ardenVals);	
+		ArdenValue[] expectedD = {new ArdenString("1"), new ArdenNumber(2)};
+		ArdenList[] expectedArrC = {new ArdenList(expectedD), new ArdenList(expectedB)};
+		assertArrayNotEquals(expectedArrC, ardenValues);	
 	}
 	
 	@Test
