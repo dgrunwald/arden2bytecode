@@ -15,15 +15,31 @@ import org.junit.Test;
 import org.junit.Assert;
 import org.junit.internal.ArrayComparisonFailure;
 
+import uk.co.flamingpenguin.jewel.cli.CliFactory;
+
+import arden.CommandLineOptions;
 import arden.runtime.ArdenList;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenString;
 import arden.runtime.ArdenValue;
+import arden.runtime.ExecutionContext;
+import arden.runtime.MedicalLogicModule;
 import arden.runtime.jdbc.DriverHelper;
+import arden.runtime.jdbc.JDBCExecutionContext;
 import arden.runtime.jdbc.JDBCQuery;
 
 public class JDBCQueryTests {
-	public Driver loadSQLite() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException, SQLException {
+	private static boolean SQLiteLoaded = false;
+	
+	public Driver loadSQLite() throws 
+			ClassNotFoundException, 
+			MalformedURLException, 
+			InstantiationException, 
+			IllegalAccessException, 
+			SQLException {
+		if (SQLiteLoaded) {
+			return DriverManager.getDriver("jdbc:sqlite:");
+		}
 		URL urlA = 
 			new File(
 					"C:/Dokumente und Einstellungen/Flickar/Eigene Dateien/sqlite-jdbc-3.7.2.jar"
@@ -32,6 +48,7 @@ public class JDBCQueryTests {
 		URLClassLoader ulc = new URLClassLoader(urls);
 		Driver driver = (Driver)Class.forName("org.sqlite.JDBC", true, ulc).newInstance();
 		DriverManager.registerDriver(new DriverHelper(driver));
+		SQLiteLoaded = true;
 		return driver;
 	}
 	
@@ -44,8 +61,8 @@ public class JDBCQueryTests {
 		
 		    statement.executeUpdate("drop table if exists person");
 		    statement.executeUpdate("create table person (id integer, name string)");
-		    statement.executeUpdate("insert into person values(1, 'leo')");
-		    statement.executeUpdate("insert into person values(2, 'yui')");		    
+		    statement.executeUpdate("insert into person values(1, 'A')");
+		    statement.executeUpdate("insert into person values(2, 'B')");		    
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -77,23 +94,49 @@ public class JDBCQueryTests {
 	}
 	
 	@Test
-	public void Execute() throws Exception {
+	public void ResultSetToArdenValues() throws Exception {
 		loadSQLite();
 		Statement stmt = initDb();
 		ResultSet results = stmt.executeQuery("select * from person");
 		ArdenValue[] ardenVals = JDBCQuery.resultSetToArdenValues(results);
 		
 		ArdenValue[] valsA = {new ArdenNumber(1), new ArdenNumber(2)};
-		ArdenValue[] valsB = {new ArdenString("leo"), new ArdenString("yui")};
+		ArdenValue[] valsB = {new ArdenString("A"), new ArdenString("B")};
 		ArdenList[] arrA = {new ArdenList(valsA), new ArdenList(valsB)};
 		Assert.assertArrayEquals(arrA, ardenVals);
 		
-		ArdenValue[] valsC = {new ArdenString("leo"), new ArdenString("X")};
+		ArdenValue[] valsC = {new ArdenString("A"), new ArdenString("X")};
 		ArdenList[] arrB = {new ArdenList(valsA), new ArdenList(valsC)};
 		assertArrayNotEquals(arrB, ardenVals);		
 		
 		ArdenValue[] valsD = {new ArdenString("1"), new ArdenNumber(2)};
 		ArdenList[] arrC = {new ArdenList(valsD), new ArdenList(valsB)};
 		assertArrayNotEquals(arrC, ardenVals);	
+	}
+	
+	@Test
+	public void JDBCExecutionContextRead() throws Exception {
+		loadSQLite();
+		String[] args = new String[]{"-e", "jdbc:sqlite:"};
+		CommandLineOptions options = 
+				CliFactory.parseArguments(CommandLineOptions.class, args);
+		
+		ExecutionContext testContext = new JDBCExecutionContext(options);
+		MedicalLogicModule mlm = ActionTests.parseTemplate(
+				"varA := read {drop table if exists person};\n" +
+				"varB := read {create table person (id integer, name string)};\n" +
+				"varC := read {insert into person values (1, 'A')};\n" +
+				"varD := read {insert into person values (2, 'B')};\n" +
+				"(varE, varF) := read {select * from person};", 
+				"conclude true;", 
+				"return (varE, varF);");
+		ArdenValue[] result = mlm.run(testContext, null);
+		Assert.assertEquals(1, result.length);
+
+		ArdenValue[] expected = {new ArdenNumber(1), new ArdenNumber(2), 
+				new ArdenString("A"), new ArdenString("B")};
+		ArdenValue[] resultList = ((ArdenList)(result[0])).values;
+		
+		Assert.assertArrayEquals(expected, resultList);
 	}
 }
