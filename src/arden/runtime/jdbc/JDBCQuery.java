@@ -86,10 +86,10 @@ public class JDBCQuery extends DatabaseQuery {
 		try {
 			Statement stmt = connection.createStatement();
 			
-			stmt.execute(mapping);
+			boolean resultSetAvailable = stmt.execute(mapping);
 			
 			ResultSet results = null;
-			if (stmt.getMoreResults()) {
+			if (resultSetAvailable) {
 				results = stmt.getResultSet();
 			}
 			
