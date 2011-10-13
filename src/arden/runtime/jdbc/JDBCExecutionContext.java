@@ -8,6 +8,7 @@ import java.util.Date;
 
 import arden.CommandLineOptions;
 import arden.runtime.ArdenRunnable;
+import arden.runtime.ArdenString;
 import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.DatabaseQuery;
@@ -54,6 +55,19 @@ public class JDBCExecutionContext extends StdIOExecutionContext {
 			}
 		} else {
 			throw new RuntimeException("No JDBC URL given. Can't connect.");
+		}
+	}
+	
+	public void write(ArdenValue message, String destination) {
+		if ("database".equalsIgnoreCase(destination) || "query".equalsIgnoreCase(destination)) {
+			String msgString = ArdenString.getStringFromValue(message);
+			
+			// execute query:
+			new JDBCQuery(msgString, connection).execute();
+		} else if ("email".equalsIgnoreCase(destination)) {
+			// TODO: implement email sending
+		} else {
+			super.write(message, destination);
 		}
 	}
 	

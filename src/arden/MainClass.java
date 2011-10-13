@@ -255,6 +255,11 @@ public class MainClass {
 		List<URL> urls = new LinkedList<URL>();
 		for (String path : paths) {
 			File f = new File(path);
+			if (!f.exists()) {
+				System.err.println("error: Classpath File/Directory \"" 
+						+ path + "\" does not exist.");
+				System.exit(1);
+			}
 			URL url = null;
 			try {
 				url = f.toURI().toURL();

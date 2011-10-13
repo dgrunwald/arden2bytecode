@@ -81,12 +81,11 @@ public class JDBCQueryTests {
 	}
 	
 	private static void assertArrayNotEquals(Object[] expecteds, Object[] actuals) throws AssertionError {
-		boolean exceptionThrown = true;
+		boolean exceptionThrown = false;
 		try {
 			Assert.assertArrayEquals(expecteds, actuals);
-			exceptionThrown = false;
 		} catch (ArrayComparisonFailure f) {
-			
+			exceptionThrown = true;
 		}
 		if (!exceptionThrown) {
 			throw new AssertionError("Array is same.");
@@ -127,7 +126,7 @@ public class JDBCQueryTests {
 				"varB := read {create table person (id integer, name string)};\n" +
 				"varC := read {insert into person values (1, 'A')};\n" +
 				"varD := read {insert into person values (2, 'B')};\n" +
-				"(varE, varF) := read {select * from person};", 
+				"(varE, varF) := read {select * from person};\n", 
 				"conclude true;", 
 				"return (varE, varF);");
 		ArdenValue[] result = mlm.run(testContext, null);
