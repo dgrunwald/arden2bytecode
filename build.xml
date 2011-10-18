@@ -22,6 +22,7 @@
         <property name="name" value="${ant.project.name}" />
         <property name="src.dir" value="src" />
         <property name="tools.dir" value="tools" />
+    	<property name="resource.dir" value="resource" />
         <property name="lib.dir" value="lib" />
         <property name="build.dir" value="bin" />
         <property name="dist.dir" value="dist" />
@@ -40,7 +41,6 @@
             <path location="." />
         </path>
         <path id="jar.classpath">
-            <path refid="build.classpath" />
             <path location="." />
         </path>
     </target>
@@ -123,6 +123,7 @@
                 <attribute name="Implementation-Version" value="${version}" />
             </manifest>
             <fileset dir="${build.dir}" />
+        	<fileset file="${resource.dir}/arden2bytecode.config" />
         	<zipgroupfileset dir="${lib.dir}" includes="*.jar" />
         </jar>
         <basename property="jar.filename" file="${dist.jar}" />

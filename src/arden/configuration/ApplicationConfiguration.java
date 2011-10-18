@@ -26,24 +26,32 @@ public class ApplicationConfiguration {
 	
 	private ApplicationConfiguration() {
 		config = new Properties();
+		File configDir = new File(System.getProperty("user.home") 
+				+ File.separator + ".arden2bytecode");
 		configFile = new File(System.getProperty("user.home") 
 				+ File.separator + ".arden2bytecode"
-				+ File.separator + "config");
+				+ File.separator + "config");				
 		
-		InputStream configResource = Thread.currentThread().getContextClassLoader().getResourceAsStream("/arden2bytecode.config");
+		InputStream configResource = this.getClass().getClassLoader().getResourceAsStream(
+						"arden2bytecode.config");		
 		
 		// copy config resource to config file
 		if (configFile.exists() == false && configResource != null) {
 			Properties configResProperties = new Properties();			
 			try {
+				configDir.mkdirs();
 				configResProperties.load(configResource);
 				configResProperties.store(new FileWriter(configFile), 
 								comment);
 			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		
-		// try to load config priorizing a file before a resource
+		// reset input stream
+		configResource = this.getClass().getClassLoader().getResourceAsStream(
+				"arden2bytecode.config");
+		// try to load config priorizing a config file before a resource
 		boolean configLoaded = false;
 		if (configFile.exists()) {
 			try {
