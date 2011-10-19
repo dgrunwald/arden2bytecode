@@ -14,7 +14,9 @@
 
     <target name="init" 
     	    description="initializes used variables, mostly paths and directories">
-        <tstamp />
+        <tstamp>
+        	<format property="release.stamp" pattern="yyyy-MM-dd" locale="en,US" />
+        </tstamp>
         <property name="debug" value="on" />
         <property name="optimize" value="off" />
         <property name="deprecation" value="on" />
@@ -26,7 +28,7 @@
         <property name="lib.dir" value="lib" />
         <property name="build.dir" value="bin" />
         <property name="dist.dir" value="dist" />
-        <property name="dist.jar" value="${dist.dir}/${name}-${version}.jar" />
+        <property name="dist.jar" value="${name}-${version}.jar" />
         <property name="run.entrypoint" value="arden.MainClass" />
         <filter token="log" value="true" />
         <filter token="verbose" value="true" />
@@ -113,7 +115,7 @@
         <manifestclasspath property="manifest.classpath" jarfile="${dist.jar}">
             <classpath refid="jar.classpath" />
         </manifestclasspath>
-        <jar destfile="${dist.jar}">
+        <jar destfile="${dist.dir}/${dist.jar}">
             <manifest>
                 <attribute name="Built-By" value="${user.name}" />
                 <attribute name="Main-Class" value="${run.entrypoint}" />
@@ -141,8 +143,37 @@
 		    description="compile, then package everything into a .jar">
 	</target>
 	
-	<target name="dist" depends="jar"
-		    description="alias for 'jar' target">
+	<target name="distOnly" depends="jarOnly"
+		    description="build distribution .tar and .zip file">
+		<tar destfile="${dist.dir}/${name} - binary release ${release.stamp}.tar.gz"
+			compression="gzip">
+			<tarfileset dir="${dist.dir}">
+				<include name="${dist.jar}"/>
+				<include name="${name}.cmd"/>
+			</tarfileset>
+			<tarfileset dir="${dist.dir}" filemode="755">
+				<include name="${name}"/>
+			</tarfileset>
+			<tarfileset dir="${resource.dir}">
+				<include name="examples/**" />
+			</tarfileset>
+		</tar>
+		<zip destfile="${dist.dir}/${name} - binary release ${release.stamp}.zip">
+			<zipfileset dir="${dist.dir}">
+				<include name="${dist.jar}"/>
+				<include name="${name}.cmd"/>
+			</zipfileset>
+			<zipfileset dir="${dist.dir}" filemode="755">
+				<include name="${name}"/>
+			</zipfileset>
+			<zipfileset dir="${resource.dir}">
+				<include name="examples/**" />
+			</zipfileset>
+		</zip>
+	</target>
+	
+	<target name="dist" depends="jar,distOnly"
+			    description="build distribution .tar and .zip file">
 	</target>
 	
 	<target name="compileAndJarOnly" depends="compileOnly,jarOnly"
