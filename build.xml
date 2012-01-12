@@ -160,11 +160,11 @@
 		</tar>
 		<zip destfile="${dist.dir}/${name} - binary release ${release.stamp}.zip">
 			<zipfileset dir="${dist.dir}">
-				<include name="${dist.jar}"/>
-				<include name="${name}.cmd"/>
+				<include name="${dist.jar}" />
+				<include name="${name}.cmd" />
 			</zipfileset>
 			<zipfileset dir="${dist.dir}" filemode="755">
-				<include name="${name}"/>
+				<include name="${name}" />
 			</zipfileset>
 			<zipfileset dir="${resource.dir}">
 				<include name="examples/**" />

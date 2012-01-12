@@ -296,8 +296,12 @@ public class MainClass {
 			System.err.println(message);
 			
 			if (message.startsWith("Usage")) { // hack to display additional help.
-				System.err.println("All further command line arguments that are non-options "
-						+ "are regarded as input files.");
+				System.err.println("All further command line arguments that "
+						+ "are non-options are regarded as input \n"
+						+ "files.");
+				System.err.println("For a command-line reference, see:\n"
+						+ "http://arden2bytecode.sourceforge.net/docs/"
+						+ "arden2bytecode-command-line-reference");
 			}
 			
 			return 1;
