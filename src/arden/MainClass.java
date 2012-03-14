@@ -48,6 +48,7 @@ import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
 import arden.compiler.LoadableCompiledMlm;
+import arden.runtime.ArdenList;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenString;
 import arden.runtime.ArdenValue;
@@ -156,6 +157,10 @@ public class MainClass {
 				}
 			}
 			arguments = argList.toArray(new ArdenValue[]{});
+			
+			if (arguments.length > 1) {
+				arguments = new ArdenValue[]{new ArdenList(arguments)};
+			}
 		}
 		
 		ExecutionContext context = createExecutionContext();
