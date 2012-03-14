@@ -27,6 +27,8 @@
 
 package arden.runtime.jdbc;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
@@ -69,7 +71,25 @@ public class DriverHelper implements Driver {
 		return driver.jdbcCompliant();
 	}
 
+	/*
+	 * this method is available since Java 1.7. 
+	 * Therefore it is not available on all platforms. 
+	 */
 	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-		return driver.getParentLogger();
+		Method getParentLogger = null;
+		try {
+			getParentLogger = driver.getClass().getMethod("getParentLogger", new Class<?>[]{});
+		} catch (SecurityException e) {
+			return null;
+		} catch (NoSuchMethodException e) {
+			return null;
+		}
+		try {
+			return (Logger) getParentLogger.invoke(driver, new Object[]{});
+		} catch (IllegalArgumentException e) {
+		} catch (IllegalAccessException e) {
+		} catch (InvocationTargetException e) {
+		}
+		return null;
 	}
 }
