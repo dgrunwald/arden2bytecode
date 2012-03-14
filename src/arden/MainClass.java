@@ -44,12 +44,11 @@ import java.util.regex.Pattern;
 
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 import uk.co.flamingpenguin.jewel.cli.CliFactory;
-
 import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
 import arden.compiler.LoadableCompiledMlm;
-import arden.configuration.ApplicationConfiguration;
+import arden.runtime.ArdenString;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 import arden.runtime.MedicalLogicModule;
@@ -141,11 +140,20 @@ public class MainClass {
 	}
 	
 	private ArdenValue[] runMlm(MedicalLogicModule mlm) {
+		ArdenValue[] arguments = null;
+		if (options.isArguments()) {
+			List<ArdenValue> argList = new LinkedList<ArdenValue>();
+			for (String arg : options.getArguments()) {
+				argList.add(new ArdenString(arg));
+			}
+			arguments = argList.toArray(new ArdenValue[]{});
+		}
+		
 		ExecutionContext context = createExecutionContext();
 		
 		ArdenValue[] result = null;
 		try {
-			result = mlm.run(context, null);
+			result = mlm.run(context, arguments);
 			if (result != null && result.length == 1) {
 				System.out.println("Return Value: " + result[0].toString());
 			} else if (result != null && result.length > 1) {

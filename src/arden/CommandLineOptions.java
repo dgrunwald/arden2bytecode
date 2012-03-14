@@ -68,7 +68,7 @@ public interface CommandLineOptions {
 	
 	@Option(shortName = "a",
 			description = "Arguments to MLM if running a MLM.")
-	String getArguments();
+	List<String> getArguments();
 	boolean isArguments();
 	
 	@Option(shortName = "e",
