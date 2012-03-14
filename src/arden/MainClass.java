@@ -48,6 +48,7 @@ import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
 import arden.compiler.LoadableCompiledMlm;
+import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenString;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
@@ -62,6 +63,9 @@ public class MainClass {
 
 	private final static Pattern JAVA_CLASS_NAME = 
 		Pattern.compile("[A-Za-z$_][A-Za-z0-9$_]*(?:\\.[A-Za-z$_][A-Za-z0-9$_]*)*");
+	
+	private final static Pattern ARDEN_SYNTAX_NUMBER = 
+		Pattern.compile("[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?");
 	
 	private CommandLineOptions options;
 	
@@ -144,7 +148,12 @@ public class MainClass {
 		if (options.isArguments()) {
 			List<ArdenValue> argList = new LinkedList<ArdenValue>();
 			for (String arg : options.getArguments()) {
-				argList.add(new ArdenString(arg));
+				Matcher m = ARDEN_SYNTAX_NUMBER.matcher(arg);
+				if (m.matches()) {
+					argList.add(new ArdenNumber(Double.parseDouble(arg)));
+				} else {
+					argList.add(new ArdenString(arg));
+				}
 			}
 			arguments = argList.toArray(new ArdenValue[]{});
 		}
