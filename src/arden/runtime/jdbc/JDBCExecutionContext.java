@@ -27,6 +27,7 @@
 
 package arden.runtime.jdbc;
 
+import java.net.MalformedURLException;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;

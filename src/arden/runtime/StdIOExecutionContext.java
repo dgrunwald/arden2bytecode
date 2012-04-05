@@ -1,20 +1,36 @@
 package arden.runtime;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import arden.CommandLineOptions;
 import arden.constants.ConstantParser;
 import arden.constants.ConstantParser.ConstantParserException;
 
-public class StdIOExecutionContext extends ExecutionContext {
+public class StdIOExecutionContext extends BaseExecutionContext {
 	@SuppressWarnings("unused")
 	private CommandLineOptions options;
 	
 	public StdIOExecutionContext(CommandLineOptions options) {
-		this.options = options;
+		super(new URL[]{});
+		this.options = options;	
+		try {
+			addURL(new File(".").toURI().toURL());
+			if (options.isClasspath()) {
+				String[] paths = options.getClasspath().split(File.pathSeparator);
+				for (String path : paths) {
+					File f = new File(path);
+					URL url = null;
+					url = f.toURI().toURL();
+					addURL(url);
+				}
+			}
+		} catch (MalformedURLException e) {
+			e.printStackTrace();	
+		}
 	}
 	
 	public DatabaseQuery createQuery(String mapping) {
@@ -62,18 +78,6 @@ public class StdIOExecutionContext extends ExecutionContext {
 				System.out.println(message);
 			}
 		}
-	}
-	
-	public ArdenRunnable findModule(String name, String institution) {
-		throw new RuntimeException("findModule not implemented");
-	}
-	
-	public ArdenRunnable findInterface(String mapping) {
-		throw new RuntimeException("findInterface not implemented");
-	}
-	
-	public void callWithDelay(ArdenRunnable mlm, ArdenValue[] arguments, ArdenValue delay) {
-		throw new RuntimeException("callWithDelay not implemented");
 	}
 	
 	private ArdenTime eventtime = new ArdenTime(new Date());
