@@ -81,7 +81,7 @@
 	        </classpath>
 	    </taskdef> 
 		
-		<sablecc src="${src.dir}" includes="arden.scc"
+		<sablecc src="${src.dir}" includes="*.scc"
 			outputdirectory="${src.dir}"></sablecc>
 	</target>
 	

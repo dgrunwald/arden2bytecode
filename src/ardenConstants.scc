@@ -1,0 +1,73 @@
+
+Package arden.constants;
+
+Helpers
+    ascii = [0..0x007f];
+
+    space = ' ';
+    tab = 0x0009;
+    lf = 0x000a;
+    cr = 0x000d;
+    wschar = space | tab | lf | cr;
+    
+    input = [ascii - [cr + lf]]; 
+    
+    digit = ['0'..'9'];
+    exp = ('e' | 'E') ('+' | '-')? digit+;
+    
+    string_char = [input - '"'];
+	
+	n = 'n' | 'N';
+	u = 'u' | 'U';
+	l = 'l' | 'L';
+	t = 't' | 'T';
+	r = 'r' | 'R';
+	e = 'e' | 'E';
+	f = 'f' | 'F';
+	a = 'a' | 'A';
+	s = 's' | 'S';	
+    
+Tokens
+
+    comma = ',';
+    l_par = '(';
+    r_par = ')';
+    null = n u l l;
+	true = t r u e;
+	false = f a l s e;
+    
+    arden_number =  
+          (digit+ ('.' digit*)? exp?) 
+        | ('.' digit+ exp?);
+
+    arden_string = 
+        '"' (
+            string_char* ('"' '"' string_char*)* 
+        ) '"';
+    
+    ws = wschar+;
+    
+
+Ignored Tokens
+    ws;
+
+Productions
+
+    arden_constant = expr;
+    
+    arden_boolean = 
+		  {true} true 
+		| {false} false;
+	
+    expr = 
+          {atom} atom
+        | {listatom} comma atom
+        | {list} expr comma atom;
+    
+    atom = 
+          {number} arden_number 
+        | {string} arden_string 
+        | {boolean} arden_boolean
+        | {null} null
+        | {expr} l_par expr r_par
+        | {par} l_par r_par;

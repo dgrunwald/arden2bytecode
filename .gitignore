@@ -3,4 +3,8 @@
 /src/arden/compiler/lexer
 /src/arden/compiler/node
 /src/arden/compiler/parser
+/src/arden/constants/analysis
+/src/arden/constants/lexer
+/src/arden/constants/node
+/src/arden/constants/parser
 /dist/
