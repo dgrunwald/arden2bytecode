@@ -3,17 +3,12 @@ package arden.constants;
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.StringReader;
-import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Stack;
 
-import arden.constants.analysis.AnalysisAdapter;
 import arden.constants.analysis.DepthFirstAdapter;
 import arden.constants.lexer.Lexer;
 import arden.constants.lexer.LexerException;
-import arden.constants.node.AArdenConstant;
-import arden.constants.node.ABooleanAtom;
 import arden.constants.node.AFalseArdenBoolean;
 import arden.constants.node.AListExpr;
 import arden.constants.node.AListatomExpr;
@@ -22,10 +17,8 @@ import arden.constants.node.ANumberAtom;
 import arden.constants.node.AParAtom;
 import arden.constants.node.AStringAtom;
 import arden.constants.node.ATrueArdenBoolean;
-import arden.constants.node.EOF;
 import arden.constants.node.Start;
 import arden.constants.node.TArdenString;
-import arden.constants.node.TNull;
 import arden.constants.node.Token;
 import arden.constants.parser.Parser;
 import arden.constants.parser.ParserException;
@@ -40,6 +33,7 @@ import arden.runtime.ExpressionHelpers;
 public class ConstantParser {
 	
 	public class ConstantParserException extends Exception {
+		private static final long serialVersionUID = 1L;
 		int line;
 		int pos;
 

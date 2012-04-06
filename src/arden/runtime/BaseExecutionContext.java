@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import arden.MainClass;
 import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
 import arden.compiler.LoadableCompiledMlm;
@@ -55,7 +56,7 @@ public class BaseExecutionContext extends ExecutionContext {
 				throw new RuntimeException(e);
 			}
 		}
-		in = loader.getResourceAsStream(name + ".mlm");
+		in = loader.getResourceAsStream(name + MainClass.MLM_FILE_EXTENSION);
 		Compiler compiler = new Compiler();
 		MedicalLogicModule mlm = null;
 		try {

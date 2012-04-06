@@ -48,25 +48,22 @@ import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
 import arden.compiler.LoadableCompiledMlm;
-import arden.runtime.ArdenList;
-import arden.runtime.ArdenNumber;
-import arden.runtime.ArdenString;
+import arden.constants.ConstantParser;
+import arden.constants.ConstantParser.ConstantParserException;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
+import arden.runtime.ExpressionHelpers;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.StdIOExecutionContext;
 import arden.runtime.jdbc.JDBCExecutionContext;
 
 public class MainClass {
-	private final static String MLM_FILE_EXTENSION = ".mlm";
+	public final static String MLM_FILE_EXTENSION = ".mlm";
 	
 	private final static String COMPILED_MLM_FILE_EXTENSION = ".class";
 
 	private final static Pattern JAVA_CLASS_NAME = 
 		Pattern.compile("[A-Za-z$_][A-Za-z0-9$_]*(?:\\.[A-Za-z$_][A-Za-z0-9$_]*)*");
-	
-	private final static Pattern ARDEN_SYNTAX_NUMBER = 
-		Pattern.compile("[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?");
 	
 	private CommandLineOptions options;
 	
@@ -147,20 +144,21 @@ public class MainClass {
 	private ArdenValue[] runMlm(MedicalLogicModule mlm) {
 		ArdenValue[] arguments = null;
 		if (options.isArguments()) {
-			List<ArdenValue> argList = new LinkedList<ArdenValue>();
+			ArdenValue ardenArg = null;
 			for (String arg : options.getArguments()) {
-				Matcher m = ARDEN_SYNTAX_NUMBER.matcher(arg);
-				if (m.matches()) {
-					argList.add(new ArdenNumber(Double.parseDouble(arg)));
+				ArdenValue parsedArg = null;
+				try {
+					parsedArg = ConstantParser.parse(arg);
+				} catch (ConstantParserException e) {
+					e.printStackTrace();
+				}
+				if (ardenArg == null) {
+					ardenArg = parsedArg;
 				} else {
-					argList.add(new ArdenString(arg));
+					ardenArg = ExpressionHelpers.binaryComma(ardenArg, parsedArg);
 				}
 			}
-			arguments = argList.toArray(new ArdenValue[]{});
-			
-			if (arguments.length > 1) {
-				arguments = new ArdenValue[]{new ArdenList(arguments)};
-			}
+			arguments = new ArdenValue[]{ardenArg};
 		}
 		
 		ExecutionContext context = createExecutionContext();
