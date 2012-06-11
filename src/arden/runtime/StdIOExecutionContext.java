@@ -21,7 +21,7 @@ public class StdIOExecutionContext extends ExecutionContext {
 		System.out.print("Query \"" + mapping + "\". Enter result: ");
 		Scanner sc = new Scanner(System.in);
 		String line = null;
-		if (sc.hasNext()){
+		if (sc.hasNext()) {
 			line = sc.nextLine();
 		}
 		Matcher m = ARDEN_NUMBER_PATTERN.matcher(line);
