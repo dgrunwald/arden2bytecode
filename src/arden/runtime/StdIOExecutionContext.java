@@ -1,44 +1,57 @@
 package arden.runtime;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import arden.CommandLineOptions;
+import arden.constants.ConstantParser;
+import arden.constants.ConstantParser.ConstantParserException;
 
-public class StdIOExecutionContext extends ExecutionContext {
+public class StdIOExecutionContext extends BaseExecutionContext {
 	@SuppressWarnings("unused")
 	private CommandLineOptions options;
-	private static final Pattern ARDEN_NUMBER_PATTERN = 
-			Pattern.compile("(?:[0-9]+(?:\\.[0-9]*)?)|(?:\\.[0-9]+)");	
 	
 	public StdIOExecutionContext(CommandLineOptions options) {
-		this.options = options;
+		super(new URL[]{});
+		this.options = options;	
+		try {
+			addURL(new File(".").toURI().toURL());
+			if (options.isClasspath()) {
+				String[] paths = options.getClasspath().split(File.pathSeparator);
+				for (String path : paths) {
+					File f = new File(path);
+					URL url = null;
+					url = f.toURI().toURL();
+					addURL(url);
+				}
+			}
+		} catch (MalformedURLException e) {
+			e.printStackTrace();	
+		}
 	}
 	
 	public DatabaseQuery createQuery(String mapping) {
-		System.out.print("Query \"" + mapping + "\". Enter result: ");
+		System.out.println("Query mapping: \"" + mapping + "\". Enter result as " +
+				"constant Arden Syntax expression (Strings in quotes)");
+		System.out.print(" >");
 		Scanner sc = new Scanner(System.in);
 		String line = null;
 		if (sc.hasNext()) {
 			line = sc.nextLine();
 		}
-		Matcher m = ARDEN_NUMBER_PATTERN.matcher(line);
-		if (m.matches()) {
-			ArdenValue[] val = new ArdenValue[] {
-					new ArdenNumber(
-							Double.parseDouble(
-									line.trim()))
+		ArdenValue[] val = null;
+		try {
+			val = new ArdenValue[] {
+				ConstantParser.parse(line)
 			};
-			return new MemoryQuery(val);
-		} else {
-			// TODO: implement better parser for values that are non-numbers
-			ArdenValue[] val = new ArdenValue[]{
-					new ArdenString(line)
-			};
-			return new MemoryQuery(val);
+		} catch (ConstantParserException e) {
+			System.out.println("Error parsing at char: " + e.getPos());
+			System.out.println("Message: " + e.getMessage());
 		}
+		return new MemoryQuery(val);
 	}
 	
 	public ArdenValue getMessage(String mapping) {
@@ -56,27 +69,15 @@ public class StdIOExecutionContext extends ExecutionContext {
 			}
 		} else {
 			// prepend destination to printed string
-			System.out.print("[");
+			System.out.print("Destination: \"");
 			System.out.print(destination);
-			System.out.print("]: ");
+			System.out.print("\" Message: ");
 			if (message instanceof ArdenString) {
 				System.out.println(ArdenString.getStringFromValue(message));
 			} else {
 				System.out.println(message);
 			}
 		}
-	}
-	
-	public ArdenRunnable findModule(String name, String institution) {
-		throw new RuntimeException("findModule not implemented");
-	}
-	
-	public ArdenRunnable findInterface(String mapping) {
-		throw new RuntimeException("findInterface not implemented");
-	}
-	
-	public void callWithDelay(ArdenRunnable mlm, ArdenValue[] arguments, ArdenValue delay) {
-		throw new RuntimeException("callWithDelay not implemented");
 	}
 	
 	private ArdenTime eventtime = new ArdenTime(new Date());
