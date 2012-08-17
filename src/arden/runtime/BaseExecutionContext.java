@@ -8,8 +8,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import arden.MainClass;
 import arden.compiler.Compiler;
@@ -18,9 +20,11 @@ import arden.compiler.LoadableCompiledMlm;
 
 public class BaseExecutionContext extends ExecutionContext {
 	List<URL> mlmSearchPath;
+	Map<String,ArdenRunnable> moduleList;
 	
-	public BaseExecutionContext(URL[] mlmSearchPath) {
+	public BaseExecutionContext(URL[] mlmSearchPath) {		
 		setURLs(mlmSearchPath);
+		moduleList = new HashMap<String,ArdenRunnable>();
 	}
 	
 	public void addURL(URL url) {
@@ -29,7 +33,9 @@ public class BaseExecutionContext extends ExecutionContext {
 	
 	public void setURLs(URL[] urls) {
 		mlmSearchPath = new LinkedList<URL>();
-		mlmSearchPath.addAll(Arrays.asList(urls));
+		if (urls != null) {
+			mlmSearchPath.addAll(Arrays.asList(urls));
+		}
 	}
 	
 	@Override
@@ -47,11 +53,17 @@ public class BaseExecutionContext extends ExecutionContext {
 		if (!name.matches("[a-zA-Z0-9\\-_]+")) {
 			throw new RuntimeException("Malformed module name: " + name);
 		}
+		ArdenRunnable fromlist = moduleList.get(name.toLowerCase());
+		if (fromlist != null) {
+			return fromlist;
+		}
 		ClassLoader loader = new URLClassLoader(mlmSearchPath.toArray(new URL[]{}));
 		InputStream in = loader.getResourceAsStream(name + ".class");
 		if (in != null) {
 			try {
-				return new LoadableCompiledMlm(in);
+				ArdenRunnable module = new LoadableCompiledMlm(in); 
+				moduleList.put(name.toLowerCase(), module);
+				return module;
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -68,6 +80,7 @@ public class BaseExecutionContext extends ExecutionContext {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+		moduleList.put(name.toLowerCase(), mlm);
 		return mlm;
 	}
 }
