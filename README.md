@@ -1,13 +1,14 @@
-# Arden2ByteCode - Compiler for Arden Syntax with Java Bytecode output. ####
+Arden2ByteCode - Compiler for Arden Syntax with Java Bytecode output
+====================================================================
 
-Copyright 2009-2010, Daniel Grunwald  
+Copyright 2009-2010, Daniel Grunwald , 2011-2012, Hannes Flicka
 Portions (arden.scc) Copyright 2004, University of British Columbia  
 See LICENSE.txt for licensing information.
 
+Building Notes
+--------------
 
-## Building Notes ##
-
-To compile the compiler, you first need to generate the parser using
+To compile Arden2ByteCode, you first need to generate the parser using
 the SableCC parser generator.  
 To do this, run  
 `java -classpath ../tools/sablecc.jar org.sablecc.sablecc.SableCC arden.scc`  
@@ -19,11 +20,11 @@ When the input grammar is changed, you will need to re-generate the parser.
 Before regenerating the parser, you should delete the old `analysis`,`lexer`,
 `node`,`parser` directories to ensure there aren't any old files left behind. 
 
-If you use Eclipse to build, compiling the compiler is done automatically.
+If you use Eclipse to build, compiling the parser is done automatically.
 The Eclipse project has a SableCC builder in Project -> Properties -> Builders.  
 The SableCC builder of the project basically starts the Ant task `sableCC` 
 contained in build.xml.  
-As building the compiler has only to be done initially and after changes of 
+As building the parser has only to be done initially and after changes of 
 the grammar, you can disable the SableCC builder if you want to save time.
 
 If you use Ant to build, SableCC is started automatically. Again, if you want
@@ -31,7 +32,8 @@ to save time, you can disable the `sableCC` target by removing the `sableCC`
 dependency from the `compile` target.
 
 
-## Building Howto ##
+Building Howto
+--------------
 
 To build with Eclipse, import the project and choose  
 Project -> Build project... from the menu.
@@ -43,8 +45,10 @@ This is explained in detail in the project's wiki at GitHub:
 https://github.com/hflicka/arden2bytecode/wiki/Getting-Started-with-Arden2ByteCode
 
 
-## Notes to the Present Implementation ##
+Notes to the Present Implementation
+-----------------------------------
 
+Daniel:  
 I believe this compiler fully implements Arden Syntax 2.5 with the following exceptions:
 
 Languages features not implemented:
