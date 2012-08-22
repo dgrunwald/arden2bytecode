@@ -32,7 +32,7 @@ public class JDBCQueryTests {
 	private static boolean SQLiteLoaded = false;
 	
 	public Driver loadSQLite() throws 
-			ClassNotFoundException, 
+			ClassNotFoundException,
 			MalformedURLException, 
 			InstantiationException, 
 			IllegalAccessException, 

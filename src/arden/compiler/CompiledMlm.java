@@ -58,9 +58,10 @@ public final class CompiledMlm implements MedicalLogicModule {
 	private final LibraryMetadata library;
 	private final String mlmname;
 	private final double priority;
+	private final double urgency;
 	private Constructor<? extends MedicalLogicModuleImplementation> ctor;
 
-	CompiledMlm(byte[] data, MaintenanceMetadata maintenance, LibraryMetadata library, double priority) {
+	CompiledMlm(byte[] data, MaintenanceMetadata maintenance, LibraryMetadata library, double priority, double urgency) {
 		if (data == null || maintenance == null || library == null)
 			throw new NullPointerException();
 		this.data = data;
@@ -68,6 +69,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 		this.library = library;
 		this.mlmname = maintenance.getMlmName();
 		this.priority = priority;
+		this.urgency = urgency;
 	}
 
 	public void saveClassFile(OutputStream os) throws IOException {
@@ -156,5 +158,10 @@ public final class CompiledMlm implements MedicalLogicModule {
 	@Override
 	public double getPriority() {
 		return priority;
+	}
+	
+	@Override
+	public double getUrgency() {
+		return urgency;
 	}
 }

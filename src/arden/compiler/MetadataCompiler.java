@@ -33,6 +33,7 @@ import arden.compiler.analysis.DepthFirstAdapter;
 import arden.compiler.node.*;
 import arden.runtime.LibraryMetadata;
 import arden.runtime.MaintenanceMetadata;
+import arden.runtime.RuntimeHelpers;
 
 /**
  * Collects metadata from the source tree.
@@ -43,7 +44,7 @@ import arden.runtime.MaintenanceMetadata;
 final class MetadataCompiler extends DepthFirstAdapter {
 	final MaintenanceMetadata maintenance = new MaintenanceMetadata();
 	final LibraryMetadata library = new LibraryMetadata();
-	double priority = 50;
+	double priority = RuntimeHelpers.DEFAULT_PRIORITY;
 	private boolean usedFileNameForMlmName;
 
 	// maintenance_body =

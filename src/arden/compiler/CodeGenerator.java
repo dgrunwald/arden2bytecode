@@ -45,6 +45,8 @@ import arden.runtime.ArdenString;
 import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
+import arden.runtime.LibraryMetadata;
+import arden.runtime.MaintenanceMetadata;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.MedicalLogicModuleImplementation;
 
@@ -166,6 +168,7 @@ final class CodeGenerator {
 	public CodeGenerator(String mlmName, int lineNumberForStaticInitializationSequencePoint) {
 		this.classFileWriter = new ClassFileWriter(mlmName, MedicalLogicModuleImplementation.class);
 		this.lineNumberForStaticInitializationSequencePoint = lineNumberForStaticInitializationSequencePoint;
+		createParameterLessConstructor();
 	}
 
 	private boolean isDebuggingEnabled = false;
@@ -176,11 +179,13 @@ final class CodeGenerator {
 		classFileWriter.setSourceFileName(sourceFileName);
 	}
 
-	private MethodWriter ctor;
+	private MethodWriter ctor;	
 	private final Label ctorUserCodeLabel = new Label();
 	private final Label ctorInitCodeLabel = new Label();
 	private int lineNumberForInitializationSequencePoint;
 
+	private MethodWriter parameterLessCtor;
+	
 	public CompilerContext createConstructor(int lineNumberForInitializationSequencePoint) {
 		ctor = classFileWriter.createConstructor(Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class,
 				MedicalLogicModule.class, ArdenValue[].class });
@@ -199,6 +204,19 @@ final class CodeGenerator {
 		}
 		ctor.jump(ctorInitCodeLabel);
 		ctor.mark(ctorUserCodeLabel);
+		return new CompilerContext(this, ctor, 3);
+	}
+	
+	public CompilerContext createParameterLessConstructor() {
+		parameterLessCtor = classFileWriter.createConstructor(Modifier.PUBLIC, new Class<?>[] {});
+		parameterLessCtor.loadThis();
+		try {
+			parameterLessCtor.invokeConstructor(MedicalLogicModuleImplementation.class.getConstructor());
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
 		return new CompilerContext(this, ctor, 3);
 	}
 
@@ -220,6 +238,27 @@ final class CodeGenerator {
 
 	public CompilerContext createUrgency() {
 		MethodWriter w = classFileWriter.createMethod("getUrgency", Modifier.PUBLIC, new Class<?>[] {}, Double.TYPE);
+		if (isDebuggingEnabled)
+			w.enableLineNumberTable();
+		return new CompilerContext(this, w, 0);
+	}
+	
+	public CompilerContext createPriority() {
+		MethodWriter w = classFileWriter.createMethod("getPriority", Modifier.PUBLIC, new Class<?>[] {}, Double.TYPE);
+		if (isDebuggingEnabled)
+			w.enableLineNumberTable();
+		return new CompilerContext(this, w, 0);
+	}
+	
+	public CompilerContext createMaintenance() {
+		MethodWriter w = classFileWriter.createMethod("getMaintenanceMetadata", Modifier.PUBLIC, new Class<?>[] {}, MaintenanceMetadata.class);
+		if (isDebuggingEnabled)
+			w.enableLineNumberTable();
+		return new CompilerContext(this, w, 0);
+	}
+	
+	public CompilerContext createLibrary() {
+		MethodWriter w = classFileWriter.createMethod("getLibraryMetadata", Modifier.PUBLIC, new Class<?>[] {}, LibraryMetadata.class);
 		if (isDebuggingEnabled)
 			w.enableLineNumberTable();
 		return new CompilerContext(this, w, 0);
@@ -288,6 +327,10 @@ final class CodeGenerator {
 	/** Saves the class file */
 	public void save(DataOutput output) throws IOException {
 		if (!isFinished) {
+			if (parameterLessCtor != null) {
+				parameterLessCtor.returnFromProcedure();
+			}
+			
 			if (staticInitializer != null)
 				staticInitializer.returnFromProcedure();
 

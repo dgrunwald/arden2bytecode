@@ -62,11 +62,12 @@ import arden.runtime.MedicalLogicModuleImplementation;
 public final class LoadableCompiledMlm implements MedicalLogicModule {
 	private byte[] data;
 	private String mlmname;
-	private Constructor<? extends MedicalLogicModuleImplementation> ctor;
+	Class<? extends MedicalLogicModuleImplementation> clazz;
 
 	LoadableCompiledMlm(byte[] data) {
 		this.data = data;
 		this.mlmname = null;
+		this.clazz = null;
 	}
 	
 	public LoadableCompiledMlm(InputStream in) throws IOException {
@@ -98,10 +99,8 @@ public final class LoadableCompiledMlm implements MedicalLogicModule {
 		in.read(data, 0, len);
 	}
 
-	@SuppressWarnings("unchecked")
-	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getConstructor() {
-		if (ctor == null) {
-			Class<? extends MedicalLogicModuleImplementation> clazz;
+	private void loadClazz() {
+		if (clazz == null) {
 			try {
 				ClassLoader classLoader = new AnonymousInMemoryClassLoader(data);
 				clazz = (Class<? extends MedicalLogicModuleImplementation>) classLoader.loadClass("");				
@@ -109,16 +108,40 @@ public final class LoadableCompiledMlm implements MedicalLogicModule {
 			} catch (ClassNotFoundException e) {
 				throw new RuntimeException(e);
 			}
-			// We know the class has an appropriate constructor because we
-			// compiled it, so wrap all the checked exceptions that should never
-			// occur.
-			try {
-				ctor = clazz.getConstructor(ExecutionContext.class, MedicalLogicModule.class, ArdenValue[].class);
-			} catch (SecurityException e) {
-				throw new RuntimeException(e);
-			} catch (NoSuchMethodException e) {
-				throw new RuntimeException(e);
-			}
+		}
+	}
+		
+	
+	@SuppressWarnings("unchecked")
+	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getConstructor() {
+		Constructor<? extends MedicalLogicModuleImplementation> ctor = null;
+		loadClazz();
+		// We know the class has an appropriate constructor because we
+		// compiled it, so wrap all the checked exceptions that should never
+		// occur.
+		try {
+			ctor = clazz.getConstructor(ExecutionContext.class, MedicalLogicModule.class, ArdenValue[].class);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+		return ctor;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getParameterLessConstructor() {
+		Constructor<? extends MedicalLogicModuleImplementation> ctor = null;
+		loadClazz();
+		// We know the class has an appropriate constructor because we
+		// compiled it, so wrap all the checked exceptions that should never
+		// occur.
+		try {
+			ctor = clazz.getConstructor();
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
 		}
 		return ctor;
 	}
@@ -162,15 +185,40 @@ public final class LoadableCompiledMlm implements MedicalLogicModule {
 			throw new InvocationTargetException(ex);
 		}
 	}
-
+	
+	private MedicalLogicModuleImplementation nonInitializedInstance;
+	
+	/** use this method only to access static fields in the MLM implementation */
+	private MedicalLogicModuleImplementation getNonInitializedInstance() {
+		if (nonInitializedInstance == null) {
+			try {
+				nonInitializedInstance = getParameterLessConstructor().newInstance();
+			} catch (InstantiationException e) {
+				throw new RuntimeException(e);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
+			} catch (IllegalArgumentException e) {
+				throw new RuntimeException(e);
+			} catch (InvocationTargetException e) {
+				throw new RuntimeException(e);
+			} 
+		}
+		return nonInitializedInstance;
+	}
+	
 	@Override
 	public MaintenanceMetadata getMaintenance() {
-		return null;
+		return getNonInitializedInstance().getMaintenanceMetadata();
 	}
 
 	@Override
 	public LibraryMetadata getLibrary() {
-		return null;
+		return getNonInitializedInstance().getLibraryMetadata();
+	}
+	
+	@Override
+	public double getUrgency() {
+		return getNonInitializedInstance().getUrgency();
 	}
 
 	@Override
@@ -180,6 +228,6 @@ public final class LoadableCompiledMlm implements MedicalLogicModule {
 
 	@Override
 	public double getPriority() {
-		return Double.NaN;
+		return getNonInitializedInstance().getPriority();
 	}
 }

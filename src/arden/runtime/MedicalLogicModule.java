@@ -50,4 +50,7 @@ public interface MedicalLogicModule extends ArdenRunnable {
 
 	/** Gets the priority of this module. */
 	double getPriority();
+
+	/** Gets the urgency value of this module. */
+	double getUrgency();
 }

@@ -57,6 +57,8 @@ public final class RuntimeHelpers {
 	}
 
 	public static final double DEFAULT_URGENCY = 50;
+	
+	public static final double DEFAULT_PRIORITY = 50; 
 
 	public static double urgencyGetPrimitiveValue(ArdenValue val) {
 		if (val instanceof ArdenNumber)

@@ -54,4 +54,24 @@ public abstract class MedicalLogicModuleImplementation {
 	public double getUrgency() {
 		return RuntimeHelpers.DEFAULT_URGENCY;
 	}
+	
+	/** Gets the maintenance metadata 
+	 * (not declared abstract to stay downwards compatible with exiting MLMs) */
+	public MaintenanceMetadata getMaintenanceMetadata() {
+		return null;
+	}
+	
+	/**
+	 * Gets the library metadata
+	 */
+	public LibraryMetadata getLibraryMetadata() {
+		return null;
+	}
+	
+	/**
+	 * Gets the priority
+	 */
+	public double getPriority() {
+		return RuntimeHelpers.DEFAULT_PRIORITY;
+	}
 }

@@ -141,7 +141,7 @@ public class MainClass {
 		}
 	}
 	
-	private ArdenValue[] runMlm(MedicalLogicModule mlm) {
+	private ArdenValue[] runMlm(MedicalLogicModule mlm, ExecutionContext context) {
 		ArdenValue[] arguments = null;
 		if (options.isArguments()) {
 			ArdenValue ardenArg = null;
@@ -159,9 +159,7 @@ public class MainClass {
 				}
 			}
 			arguments = new ArdenValue[]{ardenArg};
-		}
-		
-		ExecutionContext context = createExecutionContext();
+		}		
 		
 		ArdenValue[] result = null;
 		try {
@@ -182,6 +180,7 @@ public class MainClass {
 	}
 	
 	private int runInputFile(File fileToRun) {
+		ExecutionContext context = createExecutionContext();
 		String filename = fileToRun.getName();
 		MedicalLogicModule mlm = null;
 		if (filename.endsWith(COMPILED_MLM_FILE_EXTENSION)) {
@@ -210,7 +209,7 @@ public class MainClass {
 		}
 		
 		// run the mlm
-		runMlm(mlm);
+		runMlm(mlm, context);
 		
 		return 0;
 	}

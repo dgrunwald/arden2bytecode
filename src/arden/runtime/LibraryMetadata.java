@@ -28,6 +28,7 @@
 package arden.runtime;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class LibraryMetadata {
@@ -36,6 +37,19 @@ public class LibraryMetadata {
 	private final ArrayList<String> keywords = new ArrayList<String>();
 	private String citations;
 	private String links;
+	
+	public LibraryMetadata() {
+		
+	}
+
+	public LibraryMetadata(String purpose, String explanation, String[] keywords, String citations, String links) {
+		super();
+		this.purpose = purpose;
+		this.explanation = explanation;
+		this.citations = citations;
+		this.links = links;
+		this.keywords.addAll(Arrays.asList(keywords));
+	}
 
 	public void setPurpose(String purpose) {
 		this.purpose = purpose;
