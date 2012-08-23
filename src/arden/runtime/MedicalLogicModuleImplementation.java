@@ -27,6 +27,9 @@
 
 package arden.runtime;
 
+import arden.runtime.events.EvokeEvent;
+import arden.runtime.events.UndefinedEvokeEvent;
+
 /**
  * Base class for compiled logic etc. The compiler creates derived classes. An
  * instance of the derived class will be created whenever the MLM is executed.
@@ -73,5 +76,9 @@ public abstract class MedicalLogicModuleImplementation {
 	 */
 	public double getPriority() {
 		return RuntimeHelpers.DEFAULT_PRIORITY;
+	}
+	
+	public EvokeEvent getEvokeEvent() {
+		return new UndefinedEvokeEvent();
 	}
 }

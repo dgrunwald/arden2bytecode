@@ -49,6 +49,7 @@ import arden.runtime.LibraryMetadata;
 import arden.runtime.MaintenanceMetadata;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.MedicalLogicModuleImplementation;
+import arden.runtime.events.EvokeEvent;
 
 /**
  * This class is responsible for generating the
@@ -179,7 +180,7 @@ final class CodeGenerator {
 		classFileWriter.setSourceFileName(sourceFileName);
 	}
 
-	private MethodWriter ctor;	
+	private MethodWriter ctor;
 	private final Label ctorUserCodeLabel = new Label();
 	private final Label ctorInitCodeLabel = new Label();
 	private int lineNumberForInitializationSequencePoint;
@@ -259,6 +260,13 @@ final class CodeGenerator {
 	
 	public CompilerContext createLibrary() {
 		MethodWriter w = classFileWriter.createMethod("getLibraryMetadata", Modifier.PUBLIC, new Class<?>[] {}, LibraryMetadata.class);
+		if (isDebuggingEnabled)
+			w.enableLineNumberTable();
+		return new CompilerContext(this, w, 0);
+	}
+	
+	public CompilerContext createEvokeEvent() {
+		MethodWriter w = classFileWriter.createMethod("getEvokeEvent", Modifier.PUBLIC, new Class<?>[] {}, EvokeEvent.class);
 		if (isDebuggingEnabled)
 			w.enableLineNumberTable();
 		return new CompilerContext(this, w, 0);

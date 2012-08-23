@@ -27,7 +27,11 @@
 
 package arden.compiler;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -39,63 +43,104 @@ import arden.runtime.LibraryMetadata;
 import arden.runtime.MaintenanceMetadata;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.MedicalLogicModuleImplementation;
+import arden.runtime.events.EvokeEvent;
 
 /**
- * Represents a compiled MedicalLogicModule.
+ * Represents a compiled MedicalLogicModule with minimal Metadata (as loaded from a .class File)
  * 
  * Allows saving the compiled bytecode into a .class file by calling the
  * saveClassFile() method.
  * 
+ * Allows loading of MedicalLogicModuleImplementation .class file by 
+ * calling loadClassFile().
+ * 
  * When createInstance() or run() is called, the compiled bytecode is loaded
  * using the InMemoryClassLoader for execution.
  * 
- * @author Daniel Grunwald
+ * @author Daniel Grunwald, Hannes Flicka
  * 
  */
 public final class CompiledMlm implements MedicalLogicModule {
-	private final byte[] data;
-	private final MaintenanceMetadata maintenance;
-	private final LibraryMetadata library;
-	private final String mlmname;
-	private final double priority;
-	private final double urgency;
-	private Constructor<? extends MedicalLogicModuleImplementation> ctor;
+	private byte[] data;
+	Class<? extends MedicalLogicModuleImplementation> clazz = null;
+	private MedicalLogicModuleImplementation uninitializedInstance = null;
+	private MedicalLogicModuleImplementation instance = null;
+	private EvokeEvent evokeEvent = null;
 
-	CompiledMlm(byte[] data, MaintenanceMetadata maintenance, LibraryMetadata library, double priority, double urgency) {
-		if (data == null || maintenance == null || library == null)
-			throw new NullPointerException();
+	public CompiledMlm(byte[] data) {
 		this.data = data;
-		this.maintenance = maintenance;
-		this.library = library;
-		this.mlmname = maintenance.getMlmName();
-		this.priority = priority;
-		this.urgency = urgency;
+	}
+	
+	public CompiledMlm(InputStream in) throws IOException {
+		this((byte[]) null);
+		loadClassData(in, in.available());
+	}
+	
+	public CompiledMlm(File mlmfile) throws IOException {		
+		this((byte[]) null);
+		// for debugging reasons:
+		//System.err.println("mlm: " + mlmfile.getPath());
+		//System.err.println("mlmname: " + mlmname);
+		loadClassFile(mlmfile);
 	}
 
 	public void saveClassFile(OutputStream os) throws IOException {
 		os.write(data);
 	}
+	
+	private void loadClassFile(File file) throws IOException {
+		loadClassData(
+				new BufferedInputStream(
+						new FileInputStream(file)),
+				(int)(file.length()));
+	}
+	
+	private void loadClassData(InputStream in, int len) throws IOException {
+		data = new byte[len];
+		in.read(data, 0, len);
+	}
 
-	@SuppressWarnings("unchecked")
-	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getConstructor() {
-		if (ctor == null) {
-			Class<? extends MedicalLogicModuleImplementation> clazz;
+	private void loadClazz() {
+		if (clazz == null) {
 			try {
-				ClassLoader classLoader = new InMemoryClassLoader(mlmname, data);
-				clazz = (Class<? extends MedicalLogicModuleImplementation>) classLoader.loadClass(mlmname);
+				ClassLoader classLoader = new AnonymousInMemoryClassLoader(data);
+				clazz = (Class<? extends MedicalLogicModuleImplementation>) classLoader.loadClass("");
 			} catch (ClassNotFoundException e) {
 				throw new RuntimeException(e);
 			}
-			// We know the class has an appropriate constructor because we
-			// compiled it, so wrap all the checked exceptions that should never
-			// occur.
-			try {
-				ctor = clazz.getConstructor(ExecutionContext.class, MedicalLogicModule.class, ArdenValue[].class);
-			} catch (SecurityException e) {
-				throw new RuntimeException(e);
-			} catch (NoSuchMethodException e) {
-				throw new RuntimeException(e);
-			}
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getConstructor() {
+		Constructor<? extends MedicalLogicModuleImplementation> ctor = null;
+		loadClazz();
+		// We know the class has an appropriate constructor because we
+		// compiled it, so wrap all the checked exceptions that should never
+		// occur.
+		try {
+			ctor = clazz.getConstructor(ExecutionContext.class, MedicalLogicModule.class, ArdenValue[].class);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+		return ctor;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getParameterLessConstructor() {
+		Constructor<? extends MedicalLogicModuleImplementation> ctor = null;
+		loadClazz();
+		// We know the class has an appropriate constructor because we
+		// compiled it, so wrap all the checked exceptions that should never
+		// occur.
+		try {
+			ctor = clazz.getConstructor();
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
 		}
 		return ctor;
 	}
@@ -129,39 +174,69 @@ public final class CompiledMlm implements MedicalLogicModule {
 	 */
 	@Override
 	public ArdenValue[] run(ExecutionContext context, ArdenValue[] arguments) throws InvocationTargetException {
-		MedicalLogicModuleImplementation impl = createInstance(context, arguments);
+		instance = createInstance(context, arguments);
 		try {
-			if (impl.logic(context))
-				return impl.action(context);
+			if (instance.logic(context))
+				return instance.action(context);
 			else
 				return null;
 		} catch (Exception ex) {
 			throw new InvocationTargetException(ex);
 		}
+	}	
+	
+	/** use this method only to access static fields in the MLM implementation */
+	private MedicalLogicModuleImplementation getNonInitializedInstance() {
+		if (uninitializedInstance == null) {
+			try {
+				uninitializedInstance = getParameterLessConstructor().newInstance();
+			} catch (InstantiationException e) {
+				throw new RuntimeException(e);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
+			} catch (IllegalArgumentException e) {
+				throw new RuntimeException(e);
+			} catch (InvocationTargetException e) {
+				throw new RuntimeException(e);
+			} 
+		}
+		return uninitializedInstance;
 	}
-
+	
 	@Override
 	public MaintenanceMetadata getMaintenance() {
-		return maintenance;
+		return getNonInitializedInstance().getMaintenanceMetadata();
 	}
 
 	@Override
 	public LibraryMetadata getLibrary() {
-		return library;
-	}
-
-	@Override
-	public String getName() {
-		return mlmname;
-	}
-
-	@Override
-	public double getPriority() {
-		return priority;
+		return getNonInitializedInstance().getLibraryMetadata();
 	}
 	
 	@Override
 	public double getUrgency() {
-		return urgency;
+		return getNonInitializedInstance().getUrgency();
 	}
+
+	@Override
+	public String getName() {
+		return getMaintenance().getMlmName();
+	}
+
+	@Override
+	public double getPriority() {
+		return getNonInitializedInstance().getPriority();
+	}
+
+	@Override
+	public EvokeEvent getEvoke(ExecutionContext context, ArdenValue[] arguments) throws InvocationTargetException {
+		if (evokeEvent == null) {
+			if (instance == null) {
+				instance = createInstance(context, arguments);
+			}
+			evokeEvent = instance.getEvokeEvent();
+		}
+		return evokeEvent; 
+	}
+
 }

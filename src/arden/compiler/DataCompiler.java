@@ -227,10 +227,10 @@ final class DataCompiler extends VisitorBase {
 			@Override
 			public void caseAEmapDataAssignPhrase(AEmapDataAssignPhrase node) {
 				// {emap} event mapping_factor
-				if (!(lhs instanceof LeftHandSideIdentifier))
-					throw new RuntimeCompilerException(lhs.getPosition(), "EVENT variables must be simple identifiers");
-				TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
-				context.codeGenerator.addVariable(new EventVariable(ident, node.getMappingFactor()));
+				EventVariable e = EventVariable.getEventVariable(context.codeGenerator, lhs);
+				context.writer.loadThis();
+				context.writer.loadStringConstant(ParseHelpers.getStringForMapping(node.getMappingFactor()));
+				context.writer.storeInstanceField(e.field);
 			}
 
 			@Override

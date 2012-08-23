@@ -16,7 +16,7 @@ import java.util.Map;
 import arden.MainClass;
 import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
-import arden.compiler.LoadableCompiledMlm;
+import arden.compiler.CompiledMlm;
 
 public class BaseExecutionContext extends ExecutionContext {
 	List<URL> mlmSearchPath;
@@ -61,7 +61,7 @@ public class BaseExecutionContext extends ExecutionContext {
 		InputStream in = loader.getResourceAsStream(name + ".class");
 		if (in != null) {
 			try {
-				ArdenRunnable module = new LoadableCompiledMlm(in); 
+				ArdenRunnable module = new CompiledMlm(in); 
 				moduleList.put(name.toLowerCase(), module);
 				return module;
 			} catch (IOException e) {

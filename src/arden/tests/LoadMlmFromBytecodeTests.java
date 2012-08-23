@@ -8,9 +8,8 @@ import java.io.InputStreamReader;
 import org.junit.Assert;
 import org.junit.Test;
 
-import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
-import arden.compiler.LoadableCompiledMlm;
+import arden.compiler.CompiledMlm;
 import arden.runtime.ArdenList;
 import arden.runtime.ArdenNull;
 import arden.runtime.ArdenString;
@@ -33,7 +32,7 @@ public class LoadMlmFromBytecodeTests {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		mlm.saveClassFile(bos);
 		bos.close();		
-		return new LoadableCompiledMlm(new ByteArrayInputStream(bos.toByteArray()));
+		return new CompiledMlm(new ByteArrayInputStream(bos.toByteArray()));
 	}
 	
 

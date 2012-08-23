@@ -48,7 +48,7 @@ final class CallableVariable extends Variable {
 	// instance field of type ArdenRunnable
 	final FieldReference mlmField;
 
-	public CallableVariable(TIdentifier varName, FieldReference mlmField) {
+	private CallableVariable(TIdentifier varName, FieldReference mlmField) {
 		super(varName);
 		this.mlmField = mlmField;
 	}

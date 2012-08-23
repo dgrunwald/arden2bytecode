@@ -33,12 +33,13 @@ import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.lang.reflect.Method;
-import java.text.DecimalFormat;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import arden.codegenerator.FieldReference;
+import arden.codegenerator.Label;
 import arden.codegenerator.MethodWriter;
 import arden.compiler.analysis.DepthFirstAdapter;
 import arden.compiler.lexer.Lexer;
@@ -52,6 +53,7 @@ import arden.compiler.node.ANumUrgencyVal;
 import arden.compiler.node.AUrgUrgencySlot;
 import arden.compiler.node.PActionSlot;
 import arden.compiler.node.PDataSlot;
+import arden.compiler.node.PEvokeSlot;
 import arden.compiler.node.PLogicSlot;
 import arden.compiler.node.PUrgencySlot;
 import arden.compiler.node.PUrgencyVal;
@@ -64,6 +66,7 @@ import arden.runtime.LibraryMetadata;
 import arden.runtime.MaintenanceMetadata;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.RuntimeHelpers;
+import arden.runtime.events.EvokeEvent;
 
 /**
  * The main class of the compiler.
@@ -149,6 +152,7 @@ public final class Compiler {
 		compileData(codeGen, knowledge.getDataSlot());
 		compileLogic(codeGen, knowledge.getLogicSlot());
 		compileAction(codeGen, knowledge.getActionSlot());
+		compileEvoke(codeGen, knowledge.getEvokeSlot());
 		double urgency = compileUrgency(codeGen, knowledge.getUrgencySlot());
 		try {
 			compileMaintenance(codeGen, metadata.maintenance);
@@ -170,7 +174,7 @@ public final class Compiler {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		return new CompiledMlm(data, metadata.maintenance, metadata.library, metadata.priority, urgency);
+		return new CompiledMlm(data);
 	}
 
 	private void compileMaintenance(CodeGenerator codeGen, MaintenanceMetadata maintenance) throws NoSuchMethodException, SecurityException {		
@@ -233,6 +237,30 @@ public final class Compiler {
 		CompilerContext context = codeGen.createPriority();
 		context.writer.loadDoubleConstant(priority);
 		context.writer.returnDoubleFromFunction();
+	}
+	
+	private void compileEvoke(CodeGenerator codeGen, PEvokeSlot evokeSlot) {
+		CompilerContext context = codeGen.createEvokeEvent();
+
+		FieldReference eventField = context.codeGenerator.createField("event", EvokeEvent.class, Modifier.PRIVATE);
+		
+		Label isNull = new Label();
+		
+		context.writer.loadThis();
+		context.writer.loadInstanceField(eventField);
+		context.writer.jumpIfNull(isNull);
+		context.writer.loadThis();
+		context.writer.loadInstanceField(eventField);
+		context.writer.returnObjectFromFunction();
+		
+		context.writer.mark(isNull);		
+		evokeSlot.apply(new EvokeCompiler(context));
+		
+		context.writer.dup();
+		context.writer.loadThis();
+		context.writer.swap();
+		context.writer.storeInstanceField(eventField);
+		context.writer.returnObjectFromFunction();
 	}
 	
 	private void compileData(CodeGenerator codeGen, PDataSlot dataSlot) {

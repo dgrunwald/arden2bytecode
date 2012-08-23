@@ -42,7 +42,7 @@ import arden.compiler.node.TIdentifier;
 final class DestinationVariable extends Variable {
 	final FieldReference field;
 
-	public DestinationVariable(TIdentifier name, FieldReference field) {
+	private DestinationVariable(TIdentifier name, FieldReference field) {
 		super(name);
 		this.field = field;
 	}

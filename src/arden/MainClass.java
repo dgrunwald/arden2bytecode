@@ -44,10 +44,9 @@ import java.util.regex.Pattern;
 
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 import uk.co.flamingpenguin.jewel.cli.CliFactory;
-import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
-import arden.compiler.LoadableCompiledMlm;
+import arden.compiler.CompiledMlm;
 import arden.constants.ConstantParser;
 import arden.constants.ConstantParser.ConstantParserException;
 import arden.runtime.ArdenValue;
@@ -186,7 +185,7 @@ public class MainClass {
 		if (filename.endsWith(COMPILED_MLM_FILE_EXTENSION)) {
 			// load compiled mlm (.class file)
 			try {
-				mlm = new LoadableCompiledMlm(fileToRun);
+				mlm = new CompiledMlm(fileToRun);
 			} catch (IOException e) {
 				System.err.println("Error loading " +
 						fileToRun.getPath());

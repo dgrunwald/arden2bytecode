@@ -32,8 +32,8 @@ import java.io.InputStreamReader;
 import org.junit.Assert;
 import org.junit.Test;
 
-import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
+import arden.compiler.CompiledMlm;
 import arden.runtime.ExecutionContext;
 import arden.runtime.LibraryMetadata;
 import arden.runtime.MaintenanceMetadata;
