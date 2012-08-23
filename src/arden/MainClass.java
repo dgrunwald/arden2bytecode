@@ -178,8 +178,16 @@ public class MainClass {
 		return result;
 	}
 	
-	private static String getFilenameBase(String filename) {
-		return filename.split("\\.(?=[^\\.]+$)")[0];
+	public static String getFilenameBase(String filename) {
+		int sepindex = Math.max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
+		int fnindex = filename.lastIndexOf('.');
+		if (fnindex < sepindex) {
+			fnindex = -1;
+		}
+		if (fnindex < 0) {
+			return filename.substring(sepindex + 1);
+		}
+		return filename.substring(sepindex + 1, fnindex);	
 	}
 	
 	private int runInputFile(File fileToRun) {
