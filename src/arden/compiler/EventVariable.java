@@ -27,32 +27,14 @@
 
 package arden.compiler;
 
-import java.lang.reflect.Modifier;
-
-import arden.codegenerator.FieldReference;
 import arden.compiler.node.PMappingFactor;
 import arden.compiler.node.TIdentifier;
 
 final class EventVariable extends Variable {
-	final FieldReference field;
+	final PMappingFactor mapping;
 
-	public EventVariable(TIdentifier name, FieldReference field) {
+	public EventVariable(TIdentifier name, PMappingFactor mapping) {
 		super(name);
-		this.field = field;
-	}
-	
-	public static EventVariable getEventVariable(CodeGenerator codeGen, LeftHandSideResult lhs) {
-		if (!(lhs instanceof LeftHandSideIdentifier))
-			throw new RuntimeCompilerException(lhs.getPosition(), "DESTINATION variables must be simple identifiers");
-		TIdentifier ident = ((LeftHandSideIdentifier) lhs).identifier;
-		Variable variable = codeGen.getVariable(ident.getText());
-		if (variable instanceof EventVariable) {
-			return (EventVariable) variable;
-		} else {
-			FieldReference mlmField = codeGen.createField(ident.getText(), String.class, Modifier.PRIVATE);
-			EventVariable ev = new EventVariable(ident, mlmField);
-			codeGen.addVariable(ev);
-			return ev;
-		}
+		this.mapping = mapping;
 	}
 }
