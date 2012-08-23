@@ -174,7 +174,7 @@ public final class Compiler {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		return new CompiledMlm(data);
+		return new CompiledMlm(data, metadata.maintenance.getMlmName());
 	}
 
 	private void compileMaintenance(CodeGenerator codeGen, MaintenanceMetadata maintenance) throws NoSuchMethodException, SecurityException {		

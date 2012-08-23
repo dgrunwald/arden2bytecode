@@ -66,22 +66,26 @@ public final class CompiledMlm implements MedicalLogicModule {
 	private MedicalLogicModuleImplementation uninitializedInstance = null;
 	private MedicalLogicModuleImplementation instance = null;
 	private EvokeEvent evokeEvent = null;
+	private String mlmname;
 
-	public CompiledMlm(byte[] data) {
+	public CompiledMlm(byte[] data, String mlmname) {
 		this.data = data;
+		this.mlmname = mlmname;
 	}
 	
-	public CompiledMlm(InputStream in) throws IOException {
-		this((byte[]) null);
+	public CompiledMlm(InputStream in, String mlmname) throws IOException {
+		this((byte[]) null, mlmname);
 		loadClassData(in, in.available());
+		this.mlmname = getName();
 	}
 	
-	public CompiledMlm(File mlmfile) throws IOException {		
-		this((byte[]) null);
+	public CompiledMlm(File mlmfile, String mlmname) throws IOException {		
+		this((byte[]) null, mlmname);
 		// for debugging reasons:
 		//System.err.println("mlm: " + mlmfile.getPath());
 		//System.err.println("mlmname: " + mlmname);
 		loadClassFile(mlmfile);
+		this.mlmname = getName();
 	}
 
 	public void saveClassFile(OutputStream os) throws IOException {
@@ -103,8 +107,8 @@ public final class CompiledMlm implements MedicalLogicModule {
 	private void loadClazz() {
 		if (clazz == null) {
 			try {
-				ClassLoader classLoader = new AnonymousInMemoryClassLoader(data);
-				clazz = (Class<? extends MedicalLogicModuleImplementation>) classLoader.loadClass("");
+				ClassLoader classLoader = new InMemoryClassLoader(mlmname, data);
+				clazz = (Class<? extends MedicalLogicModuleImplementation>) classLoader.loadClass(mlmname);
 			} catch (ClassNotFoundException e) {
 				throw new RuntimeException(e);
 			}
@@ -129,7 +133,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getParameterLessConstructor() {
+	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getParameterlessConstructor() {
 		Constructor<? extends MedicalLogicModuleImplementation> ctor = null;
 		loadClazz();
 		// We know the class has an appropriate constructor because we
@@ -189,7 +193,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 	private MedicalLogicModuleImplementation getNonInitializedInstance() {
 		if (uninitializedInstance == null) {
 			try {
-				uninitializedInstance = getParameterLessConstructor().newInstance();
+				uninitializedInstance = getParameterlessConstructor().newInstance();
 			} catch (InstantiationException e) {
 				throw new RuntimeException(e);
 			} catch (IllegalAccessException e) {

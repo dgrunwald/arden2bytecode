@@ -178,6 +178,10 @@ public class MainClass {
 		return result;
 	}
 	
+	private static String getFilenameBase(String filename) {
+		return filename.split("\\.(?=[^\\.]+$)")[0];
+	}
+	
 	private int runInputFile(File fileToRun) {
 		ExecutionContext context = createExecutionContext();
 		String filename = fileToRun.getName();
@@ -185,7 +189,7 @@ public class MainClass {
 		if (filename.endsWith(COMPILED_MLM_FILE_EXTENSION)) {
 			// load compiled mlm (.class file)
 			try {
-				mlm = new CompiledMlm(fileToRun);
+				mlm = new CompiledMlm(fileToRun, getFilenameBase(filename));
 			} catch (IOException e) {
 				System.err.println("Error loading " +
 						fileToRun.getPath());

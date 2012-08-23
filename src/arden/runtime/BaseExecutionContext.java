@@ -61,7 +61,7 @@ public class BaseExecutionContext extends ExecutionContext {
 		InputStream in = loader.getResourceAsStream(name + ".class");
 		if (in != null) {
 			try {
-				ArdenRunnable module = new CompiledMlm(in); 
+				ArdenRunnable module = new CompiledMlm(in, name); 
 				moduleList.put(name.toLowerCase(), module);
 				return module;
 			} catch (IOException e) {

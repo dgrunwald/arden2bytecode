@@ -27,11 +27,14 @@
 
 package arden.tests;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.lang.reflect.InvocationTargetException;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import arden.compiler.CompiledMlm;
 import arden.runtime.ArdenList;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenObject;
@@ -186,7 +189,7 @@ public class LogicTests {
 
 	@Test
 	public void RecursiveMlm() throws Exception {
-		MedicalLogicModule mlm = ActionTests.parseTemplate(
+		CompiledMlm mlm = ActionTests.parseTemplate(
 				"this := MLM mlm_self; arg := ARGUMENT;",
 				"If arg > 1 THEN"
 				+ "  result := CALL this WITH (arg-1);"
@@ -194,6 +197,7 @@ public class LogicTests {
 				+ "  result := 1;"
 				+ "ENDIF; conclude true;",
 				"return result * arg;");
+		mlm.saveClassFile(new FileOutputStream(new File("out.class")));
 		ArdenValue[] result = mlm.run(new TestContext(), new ArdenValue[] { new ArdenNumber(10) });
 		Assert.assertEquals(1, result.length);
 		Assert.assertEquals("3628800", result[0].toString());

@@ -34,6 +34,7 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 
+import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
 import arden.runtime.ArdenRunnable;
@@ -60,7 +61,7 @@ public class ActionTests {
 		return stringBuilder.toString();
 	}
 
-	public static MedicalLogicModule parseTemplate(String dataCode, String logicCode, String actionCode)
+	public static CompiledMlm parseTemplate(String dataCode, String logicCode, String actionCode)
 			throws CompilerException {
 		try {
 			InputStream s = ActionTests.class.getResourceAsStream("ActionTemplate.mlm");

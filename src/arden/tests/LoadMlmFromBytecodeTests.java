@@ -32,7 +32,7 @@ public class LoadMlmFromBytecodeTests {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		mlm.saveClassFile(bos);
 		bos.close();		
-		return new CompiledMlm(new ByteArrayInputStream(bos.toByteArray()));
+		return new CompiledMlm(new ByteArrayInputStream(bos.toByteArray()), mlm.getName());
 	}
 	
 
