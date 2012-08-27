@@ -35,6 +35,11 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
+import arden.runtime.events.CyclicEvokeEvent;
+import arden.runtime.events.EvokeEvent;
+import arden.runtime.events.NamedEvokeEvent;
+import arden.runtime.events.UndefinedEvokeEvent;
+
 /**
  * Static helper methods for ExpressionCompiler (mostly operators with special
  * list handling).
@@ -667,6 +672,16 @@ public final class ExpressionHelpers {
 			return ArdenNull.create(primaryTime);
 	}
 
+	/** implements the AFTER duration operator */
+	public static ArdenValue after(ArdenValue duration, ArdenValue time) {
+		if (duration instanceof ArdenDuration && time instanceof ArdenTime) {
+			long primaryTime = getCommonTime(new ArdenValue[]{duration, time});
+			ArdenTime t = (ArdenTime) time;
+			return new ArdenTime(t.add((ArdenDuration) duration), primaryTime);
+		}
+		throw new RuntimeException("AFTER operator only implemented for ArdenDuration AFTER ArdenTime");
+	}
+	
 	public static ArdenValue createDuration(ArdenValue val, double multiplier, boolean isMonths) {
 		if (val instanceof ArdenList) {
 			ArdenValue[] inputs = ((ArdenList) val).values;
@@ -679,6 +694,16 @@ public final class ExpressionHelpers {
 		} else {
 			return ArdenNull.create(val.primaryTime);
 		}
+	}
+	
+	public static EvokeEvent createEvokeCycle(ArdenValue interval, ArdenValue length, ArdenValue starting) {
+		if (interval instanceof ArdenDuration && length instanceof ArdenDuration && starting instanceof ArdenTime) {
+			return new CyclicEvokeEvent((ArdenDuration) interval, (ArdenDuration) length, (ArdenTime) starting);
+		}
+		throw new RuntimeException("cannot create evoke cycle with these types: " + 
+						interval.getClass().getSimpleName() + ", " +
+						length.getClass().getSimpleName() + ", " +
+						starting.getClass().getSimpleName());
 	}
 
 	public static ArdenValue extractTimeComponent(ArdenValue time, int component) {
@@ -972,5 +997,12 @@ public final class ExpressionHelpers {
 		} else {
 			return ArdenBoolean.create(false, input.primaryTime);
 		}
+	}
+
+	public static EvokeEvent mlmVariableToEvokeEvent(Object member) {
+		if (member instanceof String) {
+			return new NamedEvokeEvent((String)member);
+		}
+		return new UndefinedEvokeEvent();
 	}
 }

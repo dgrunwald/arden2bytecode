@@ -99,7 +99,7 @@ public final class ArdenTime extends ArdenValue {
 		return c.getTimeInMillis() + (long) ((months - wholeMonths) * 1000 * ArdenDuration.SECONDS_PER_MONTH);
 	}
 
-	long add(ArdenDuration dur) {
+	public long add(ArdenDuration dur) {
 		if (dur.isMonths) {
 			return addMonths(dur.value);
 		} else {
@@ -108,7 +108,7 @@ public final class ArdenTime extends ArdenValue {
 		}
 	}
 
-	long subtract(ArdenDuration dur) {
+	public long subtract(ArdenDuration dur) {
 		if (dur.isMonths) {
 			return addMonths(-dur.value);
 		} else {

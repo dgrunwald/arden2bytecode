@@ -42,13 +42,14 @@ import arden.runtime.ArdenValue;
 import arden.runtime.DatabaseQuery;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.MemoryQuery;
+import arden.runtime.events.EvokeEvent;
 
-public class ExampleTests {
+public class ExampleEvokeTests {
 	private MedicalLogicModule compile(String filename) throws Exception {
 		Compiler c = new Compiler();
 		c.enableDebugging(filename + ".mlm");
 		CompiledMlm mlm = c
-				.compileMlm(new InputStreamReader(ExampleTests.class.getResourceAsStream(filename + ".mlm")));
+				.compileMlm(new InputStreamReader(ExampleEvokeTests.class.getResourceAsStream(filename + ".mlm")));
 		FileOutputStream fos = new FileOutputStream(mlm.getName() + ".class");
 		mlm.saveClassFile(fos);
 		fos.close();
@@ -60,9 +61,9 @@ public class ExampleTests {
 		MedicalLogicModule mlm = compile("x2.1");
 
 		TestContext context = new TestContext();
-		mlm.run(context, null);
+		EvokeEvent e = mlm.getEvoke(context, null);
 
-		Assert.assertEquals("", context.getOutputText());
+		Assert.assertEquals("", context.getOutputText());		
 	}
 
 	@Test
@@ -70,7 +71,7 @@ public class ExampleTests {
 		MedicalLogicModule mlm = compile("x2.2");
 
 		TestContext context = new TestContext();
-		mlm.run(context, null);
+		EvokeEvent e = mlm.getEvoke(context, null);
 
 		Assert.assertEquals("", context.getOutputText());
 	}
@@ -79,7 +80,7 @@ public class ExampleTests {
 	public void X23noAllergies() throws Exception {
 		MedicalLogicModule mlm = compile("x2.3");
 		TestContext context = new TestContext();
-		mlm.run(context, null);
+		EvokeEvent e = mlm.getEvoke(context, null);
 		Assert.assertEquals("", context.getOutputText());
 	}
 
@@ -94,8 +95,8 @@ public class ExampleTests {
 				return new MemoryQuery(new ArdenValue[] { list });
 			}
 		};
-		mlm.run(context, null);
-		Assert.assertEquals("Caution, the patient has the following allergy to penicillin documented: all2\n", context
+		EvokeEvent e = mlm.getEvoke(context, null);
+		Assert.assertEquals("", context
 				.getOutputText());
 	}
 
@@ -110,7 +111,7 @@ public class ExampleTests {
 				return new MemoryQuery(new ArdenValue[] { list });
 			}
 		};
-		mlm.run(context, null);
+		EvokeEvent e = mlm.getEvoke(context, null);
 		Assert.assertEquals("", context.getOutputText());
 	}
 
@@ -125,7 +126,7 @@ public class ExampleTests {
 		MedicalLogicModule mlm = compile("x2.4");
 
 		TestContext context = new TestContext();
-		mlm.run(context, null);
+		EvokeEvent e = mlm.getEvoke(context, null);
 
 		Assert.assertEquals("", context.getOutputText());
 	}
@@ -135,7 +136,7 @@ public class ExampleTests {
 		MedicalLogicModule mlm = compile("x2.5");
 
 		TestContext context = new TestContext();
-		mlm.run(context, null);
+		EvokeEvent e = mlm.getEvoke(context, null);
 
 		Assert.assertEquals(
 				"Suggest obtaining a serum creatinine to follow up on renal function in the setting of gentamicin.\n",
@@ -147,7 +148,7 @@ public class ExampleTests {
 		MedicalLogicModule mlm = compile("x2.6");
 
 		TestContext context = new TestContext();
-		mlm.run(context, null);
+		EvokeEvent e = mlm.getEvoke(context, null);
 
 		Assert.assertEquals("", context.getOutputText());
 	}
@@ -157,7 +158,7 @@ public class ExampleTests {
 		MedicalLogicModule mlm = compile("x2.7");
 
 		TestContext context = new TestContext();
-		mlm.run(context, null);
+		EvokeEvent e = mlm.getEvoke(context, null);
 
 		Assert.assertEquals("", context.getOutputText());
 	}
@@ -175,13 +176,9 @@ public class ExampleTests {
 				new ArdenString("a1") });
 		ArdenList patientReactions = new ArdenList(new ArdenValue[] { new ArdenString("r1"), new ArdenString("r2"),
 				new ArdenString("r3") });
-		ArdenValue[] result = mlm.run(context, new ArdenValue[] { medOrders, medAllergens, patientAllergies,
-				patientReactions });
-		Assert.assertEquals(3, result.length);
 
-		Assert.assertEquals("(\"order1\",\"order2\")", result[0].toString());
-		Assert.assertEquals("(\"a1\",\"a2\")", result[1].toString());
-		Assert.assertEquals("(\"r3\",\"r1\",\"r2\")", result[2].toString());
+		EvokeEvent e = mlm.getEvoke(context, new ArdenValue[] { medOrders, medAllergens, patientAllergies,
+				patientReactions });
 
 		Assert.assertEquals("", context.getOutputText());
 	}

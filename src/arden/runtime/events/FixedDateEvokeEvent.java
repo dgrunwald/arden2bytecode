@@ -13,6 +13,9 @@ public class FixedDateEvokeEvent extends EvokeEvent {
 	
 	@Override
 	public ArdenTime getNextRunTime(ExecutionContext context) {
+		if (context.getCurrentTime().compareTo(date) > 0) {
+			return null;
+		}
 		return date;
 	}
 

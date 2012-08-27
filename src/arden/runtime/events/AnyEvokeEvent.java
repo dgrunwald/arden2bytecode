@@ -18,9 +18,12 @@ public class AnyEvokeEvent extends EvokeEvent {
 		ArdenTime min = null;
 		for (EvokeEvent e : events) {
 			ArdenTime nextRunTime = e.getNextRunTime(context); 
-			if (nextRunTime.compareTo(min) < 0) {
+			if (min == null || min.compareTo(nextRunTime) > 0) {
 				min = nextRunTime;
 			}
+		}
+		if (context.getCurrentTime().compareTo(min) > 0) {
+			return null; // event is in the past
 		}
 		return min;
 	}

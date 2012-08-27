@@ -33,12 +33,9 @@ import arden.codegenerator.FieldReference;
 import arden.compiler.node.PMappingFactor;
 import arden.compiler.node.TIdentifier;
 
-final class EventVariable extends Variable {
-	final FieldReference field;
-
-	public EventVariable(TIdentifier name, FieldReference field) {
-		super(name);
-		this.field = field;
+final class EventVariable extends DataVariable {
+	private EventVariable(TIdentifier name, FieldReference field) {
+		super(name, field);
 	}
 	
 	public static EventVariable getEventVariable(CodeGenerator codeGen, LeftHandSideResult lhs) {

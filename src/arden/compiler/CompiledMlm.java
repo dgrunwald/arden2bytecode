@@ -63,8 +63,7 @@ import arden.runtime.events.EvokeEvent;
 public final class CompiledMlm implements MedicalLogicModule {
 	private byte[] data;
 	Class<? extends MedicalLogicModuleImplementation> clazz = null;
-	private MedicalLogicModuleImplementation uninitializedInstance = null;
-	private MedicalLogicModuleImplementation instance = null;
+	private MedicalLogicModuleImplementation uninitializedInstance = null;	
 	private EvokeEvent evokeEvent = null;
 	private String mlmname;
 
@@ -104,7 +103,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 		in.read(data, 0, len);
 	}
 
-	private void loadClazz() {
+	private Class<? extends MedicalLogicModuleImplementation> loadClazz() {
 		if (clazz == null) {
 			try {
 				ClassLoader classLoader = new InMemoryClassLoader(mlmname, data);
@@ -113,6 +112,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 				throw new RuntimeException(e);
 			}
 		}
+		return clazz;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -133,9 +133,10 @@ public final class CompiledMlm implements MedicalLogicModule {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getParameterlessConstructor() {
+	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getParameterlessConstructor() {		
 		Constructor<? extends MedicalLogicModuleImplementation> ctor = null;
 		loadClazz();
+		//loadClazz();
 		// We know the class has an appropriate constructor because we
 		// compiled it, so wrap all the checked exceptions that should never
 		// occur.
@@ -178,7 +179,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 	 */
 	@Override
 	public ArdenValue[] run(ExecutionContext context, ArdenValue[] arguments) throws InvocationTargetException {
-		instance = createInstance(context, arguments);
+		MedicalLogicModuleImplementation instance = createInstance(context, arguments);
 		try {
 			if (instance.logic(context))
 				return instance.action(context);
@@ -232,15 +233,16 @@ public final class CompiledMlm implements MedicalLogicModule {
 		return getNonInitializedInstance().getPriority();
 	}
 
+	/** Gets an evoke event telling when to run the MLM. 
+	 * As that evoke event may depend on data set in the 
+	 * constructor, the data section of the MLM is run */
 	@Override
 	public EvokeEvent getEvoke(ExecutionContext context, ArdenValue[] arguments) throws InvocationTargetException {
 		if (evokeEvent == null) {
-			if (instance == null) {
-				instance = createInstance(context, arguments);
-			}
+			MedicalLogicModuleImplementation instance = createInstance(context, arguments);
 			evokeEvent = instance.getEvokeEvent();
 		}
-		return evokeEvent; 
+		return evokeEvent;
 	}
 
 }

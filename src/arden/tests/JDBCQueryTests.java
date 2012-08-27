@@ -30,9 +30,9 @@ import arden.runtime.jdbc.JDBCQuery;
 
 public class JDBCQueryTests {
 	private static boolean SQLiteLoaded = false;
+	private static final String SQLITE_PATH = "./sqlite-jdbc-3.7.2.jar";
 	
 	public Driver loadSQLite() throws 
-			ClassNotFoundException,
 			MalformedURLException, 
 			InstantiationException, 
 			IllegalAccessException, 
@@ -42,11 +42,17 @@ public class JDBCQueryTests {
 		}
 		URL urlA = 
 			new File(
-					"C:/Dokumente und Einstellungen/Flickar/Eigene Dateien/sqlite-jdbc-3.7.2.jar"
+					SQLITE_PATH
 					).toURI().toURL();
 		URL[] urls = { urlA };
 		URLClassLoader ulc = new URLClassLoader(urls);
-		Driver driver = (Driver)Class.forName("org.sqlite.JDBC", true, ulc).newInstance();
+		Driver driver;
+		try {
+			driver = (Driver)Class.forName("org.sqlite.JDBC", true, ulc).newInstance();
+		} catch (ClassNotFoundException e) {
+			System.err.println("SQLite JDBC driver not found. Skipping associated test.");
+			return null;
+		}
 		DriverManager.registerDriver(new DriverHelper(driver));
 		SQLiteLoaded = true;
 		return driver;
@@ -94,7 +100,9 @@ public class JDBCQueryTests {
 	
 	@Test
 	public void ResultSetToArdenValues() throws Exception {
-		loadSQLite();
+		if (loadSQLite() == null) {
+			return;
+		}
 		Statement stmt = initDb();
 		ResultSet results = stmt.executeQuery("select * from person");
 		ArdenValue[] ardenValues = JDBCQuery.resultSetToArdenValues(results);
@@ -115,7 +123,9 @@ public class JDBCQueryTests {
 	
 	@Test
 	public void JDBCExecutionContextRead() throws Exception {
-		loadSQLite();
+		if (loadSQLite() == null) {
+			return;
+		}
 		String[] args = new String[]{"-e", "jdbc:sqlite:"};
 		CommandLineOptions options = 
 				CliFactory.parseArguments(CommandLineOptions.class, args);

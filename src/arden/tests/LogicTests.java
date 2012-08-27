@@ -197,7 +197,7 @@ public class LogicTests {
 				+ "  result := 1;"
 				+ "ENDIF; conclude true;",
 				"return result * arg;");
-		mlm.saveClassFile(new FileOutputStream(new File("out.class")));
+		mlm.saveClassFile(new FileOutputStream(new File("test_mlm.class")));
 		ArdenValue[] result = mlm.run(new TestContext(), new ArdenValue[] { new ArdenNumber(10) });
 		Assert.assertEquals(1, result.length);
 		Assert.assertEquals("3628800", result[0].toString());

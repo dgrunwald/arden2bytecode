@@ -242,6 +242,7 @@ public final class Compiler {
 	private void compileEvoke(CodeGenerator codeGen, PEvokeSlot evokeSlot) {
 		CompilerContext context = codeGen.createEvokeEvent();
 
+		// event is a keyword, thus there cannot be another field named 'event'
 		FieldReference eventField = context.codeGenerator.createField("event", EvokeEvent.class, Modifier.PRIVATE);
 		
 		Label isNull = new Label();
