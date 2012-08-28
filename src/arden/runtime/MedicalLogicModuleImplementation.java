@@ -78,7 +78,7 @@ public abstract class MedicalLogicModuleImplementation {
 		return RuntimeHelpers.DEFAULT_PRIORITY;
 	}
 	
-	public EvokeEvent getEvokeEvent() {
+	public EvokeEvent getEvokeEvent(ExecutionContext context) {
 		return new UndefinedEvokeEvent();
 	}
 }

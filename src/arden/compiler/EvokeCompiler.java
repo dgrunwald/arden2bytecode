@@ -23,8 +23,10 @@ import arden.compiler.node.ASuntQualifiedEvokeCycle;
 import arden.compiler.node.ATofEvokeTime;
 import arden.compiler.node.PEvokeBlock;
 import arden.compiler.node.PEvokeStatement;
+import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
-import arden.runtime.events.EmptyEvokeEvent;
+import arden.runtime.ExecutionContext;
+import arden.runtime.events.NeverEvokeEvent;
 import arden.runtime.events.EvokeEvent;
 
 public class EvokeCompiler extends VisitorBase {
@@ -66,10 +68,10 @@ public class EvokeCompiler extends VisitorBase {
 	
 	@Override
 	public void caseAEmptyEvokeStatement(AEmptyEvokeStatement stmt) {
-		context.writer.newObject(EmptyEvokeEvent.class);
+		context.writer.newObject(NeverEvokeEvent.class);
 		context.writer.dup();
 		try {
-			context.writer.invokeConstructor(EmptyEvokeEvent.class.getConstructor());
+			context.writer.invokeConstructor(NeverEvokeEvent.class.getConstructor());
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		} catch (SecurityException e) {
@@ -99,7 +101,7 @@ public class EvokeCompiler extends VisitorBase {
 		if (var == null)
 			throw new RuntimeCompilerException(id.getIdentifier(), "Unknown event variable: " + name);
 		var.loadValue(context, id.getIdentifier());
-		context.writer.invokeStatic(ExpressionCompiler.getMethod("mlmVariableToEvokeEvent", Object.class));
+		//context.writer.invokeStatic(ExpressionCompiler.getMethod("mlmVariableToEvokeEvent", Object.class));
 	}
 	
 	@Override
@@ -107,12 +109,15 @@ public class EvokeCompiler extends VisitorBase {
 		stmt.getQualifiedEvokeCycle().apply(this);
 	}
 	
+	/** leaves EvokeEvent on stack */
 	@Override
 	public void caseASuntQualifiedEvokeCycle(ASuntQualifiedEvokeCycle qualifiedcycle) {
 		qualifiedcycle.getSimpleEvokeCycle().apply(this);
 		qualifiedcycle.getExpr().apply(new ExpressionCompiler(context));
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("until", EvokeEvent.class, ArdenValue.class));
 	}
 	
+	/** leaves EvokeEvent on stack */
 	@Override
 	public void caseASimpleEvokeCycle(ASimpleEvokeCycle simplecycle) {
 		simplecycle.getDurL().apply(this); // interval
@@ -121,6 +126,7 @@ public class EvokeCompiler extends VisitorBase {
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("createEvokeCycle", ArdenValue.class, ArdenValue.class, ArdenValue.class));
 	}
 	
+	/** leaves ArdenDuration on stack */
 	@Override
 	public void caseAEvokeDuration(AEvokeDuration duration) {
 		double durValue = ParseHelpers.getLiteralDoubleValue(duration.getNumberLiteral());
@@ -129,6 +135,7 @@ public class EvokeCompiler extends VisitorBase {
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("createDuration", ArdenValue.class, double.class, boolean.class));
 	}
 	
+	/** leaves ArdenValue on stack */
 	@Override
 	public void caseAEdurEvokeTime(AEdurEvokeTime duration) {
 		duration.getEvokeDuration().apply(this);
@@ -136,8 +143,11 @@ public class EvokeCompiler extends VisitorBase {
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("after", ArdenValue.class, ArdenValue.class));
 	}
 	
+	/** converts EvokeEvent to ArdenTime or ArdenNull */
 	@Override
 	public void caseATofEvokeTime(ATofEvokeTime node) {
 		node.getEventAny().apply(this);
+		context.writer.loadVariable(context.executionContextVariable);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("timeOf", EvokeEvent.class, ExecutionContext.class));
 	}
 }

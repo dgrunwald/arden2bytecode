@@ -240,7 +240,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 	public EvokeEvent getEvoke(ExecutionContext context, ArdenValue[] arguments) throws InvocationTargetException {
 		if (evokeEvent == null) {
 			MedicalLogicModuleImplementation instance = createInstance(context, arguments);
-			evokeEvent = instance.getEvokeEvent();
+			evokeEvent = instance.getEvokeEvent(context);
 		}
 		return evokeEvent;
 	}
