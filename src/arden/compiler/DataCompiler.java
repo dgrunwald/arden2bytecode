@@ -228,8 +228,11 @@ final class DataCompiler extends VisitorBase {
 			public void caseAEmapDataAssignPhrase(AEmapDataAssignPhrase node) {
 				// {emap} event mapping_factor
 				EventVariable e = EventVariable.getEventVariable(context.codeGenerator, lhs);
+				context.writer.sequencePoint(lhs.getPosition().getLine());
 				context.writer.loadThis();
+				context.writer.loadVariable(context.executionContextVariable);
 				context.writer.loadStringConstant(ParseHelpers.getStringForMapping(node.getMappingFactor()));
+				context.writer.invokeInstance(ExecutionContextMethods.getEvent);
 				context.writer.storeInstanceField(e.field);
 			}
 

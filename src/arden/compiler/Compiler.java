@@ -255,8 +255,9 @@ public final class Compiler {
 		context.writer.returnObjectFromFunction();
 		
 		context.writer.mark(isNull);		
-		evokeSlot.apply(new EvokeCompiler(context));
+		evokeSlot.apply(new EvokeCompiler(context)); 
 		
+		// the evoke compiler is supposed to leave an EvokeEvent subclass instance on the stack		
 		context.writer.dup();
 		context.writer.loadThis();
 		context.writer.swap();

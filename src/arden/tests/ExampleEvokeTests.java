@@ -29,20 +29,24 @@ package arden.tests;
 
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+import java.util.Date;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
+import arden.runtime.ArdenDuration;
 import arden.runtime.ArdenList;
 import arden.runtime.ArdenNull;
 import arden.runtime.ArdenString;
+import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.DatabaseQuery;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.MemoryQuery;
 import arden.runtime.events.EvokeEvent;
+import arden.runtime.events.FixedDateEvokeEvent;
 
 public class ExampleEvokeTests {
 	private MedicalLogicModule compile(String filename) throws Exception {
@@ -134,13 +138,23 @@ public class ExampleEvokeTests {
 	@Test
 	public void X25() throws Exception {
 		MedicalLogicModule mlm = compile("x2.5");
+		Date defaultTime = new Date(1980 - 1900, 0, 1, 0, 0, 0); // this is the default myExecutionContext.getCurrentTime()
+		Date defaultEventDate = new Date(2000 - 1900, 0, 1, 0, 0, 0); // this is the default myExecutionContext.getEvent()
+		EvokeEvent defaultEvokeEvent = new FixedDateEvokeEvent(new ArdenTime(defaultEventDate));
 
-		TestContext context = new TestContext();
+		TestContext context = new TestContext(defaultEvokeEvent, new ArdenTime(defaultTime));
 		EvokeEvent e = mlm.getEvoke(context, null);
 
 		Assert.assertEquals(
-				"Suggest obtaining a serum creatinine to follow up on renal function in the setting of gentamicin.\n",
-				context.getOutputText());
+				"", context.getOutputText());
+		Assert.assertEquals(
+				new ArdenTime(
+						defaultEvokeEvent.getNextRunTime(context).add( // add 5 days as in x2.5.mlm
+								(ArdenDuration)ArdenDuration.create(
+										60.0 * 60 * 24 * 5, 
+										false, 
+										context.getCurrentTime().value))), 
+				e.getNextRunTime(context));
 	}
 
 	@Test

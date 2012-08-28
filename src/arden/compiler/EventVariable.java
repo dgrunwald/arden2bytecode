@@ -32,6 +32,7 @@ import java.lang.reflect.Modifier;
 import arden.codegenerator.FieldReference;
 import arden.compiler.node.PMappingFactor;
 import arden.compiler.node.TIdentifier;
+import arden.runtime.events.EvokeEvent;
 
 final class EventVariable extends DataVariable {
 	private EventVariable(TIdentifier name, FieldReference field) {
@@ -46,7 +47,7 @@ final class EventVariable extends DataVariable {
 		if (variable instanceof EventVariable) {
 			return (EventVariable) variable;
 		} else {
-			FieldReference mlmField = codeGen.createField(ident.getText(), String.class, Modifier.PRIVATE);
+			FieldReference mlmField = codeGen.createField(ident.getText(), EvokeEvent.class, Modifier.PRIVATE);
 			EventVariable ev = new EventVariable(ident, mlmField);
 			codeGen.addVariable(ev);
 			return ev;

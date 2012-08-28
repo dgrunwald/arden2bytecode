@@ -28,13 +28,32 @@
 package arden.tests;
 
 import arden.runtime.ArdenString;
+import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.DatabaseQuery;
 import arden.runtime.ExecutionContext;
+import arden.runtime.events.EvokeEvent;
+import arden.runtime.events.NamedEvokeEvent;
+import arden.runtime.events.NeverEvokeEvent;
 
 public class TestContext extends ExecutionContext {
 	StringBuilder b = new StringBuilder();
-
+	EvokeEvent defaultEvent = null;
+	ArdenTime defaultTime = null;
+	
+	public TestContext() {
+		
+	}
+	
+	public TestContext(EvokeEvent defaultEvent) {
+		this.defaultEvent = defaultEvent;
+	}
+	
+	public TestContext(EvokeEvent defaultEvent, ArdenTime defaultTime) {
+		this(defaultEvent);
+		this.defaultTime = defaultTime;
+	}
+	
 	@Override
 	public DatabaseQuery createQuery(String mapping) {
 		return DatabaseQuery.NULL;
@@ -48,5 +67,18 @@ public class TestContext extends ExecutionContext {
 
 	public String getOutputText() {
 		return b.toString();
+	}
+	
+	@Override
+	public EvokeEvent getEvent(String mapping) {
+		if (defaultEvent != null) {
+			return defaultEvent;
+		}
+		return new NamedEvokeEvent(mapping);
+	}
+	
+	@Override
+	public ArdenTime getCurrentTime() {
+		return defaultTime;
 	}
 }

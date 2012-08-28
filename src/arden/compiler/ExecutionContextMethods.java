@@ -40,6 +40,7 @@ final class ExecutionContextMethods {
 	public static final Method findModule, findInterface;
 	public static final Method callWithDelay;
 	public static final Method getEventTime, getTriggerTime, getCurrentTime;
+	public static final Method getEvent;
 
 	static {
 		try {
@@ -53,6 +54,7 @@ final class ExecutionContextMethods {
 			getEventTime = ExecutionContext.class.getMethod("getEventTime");
 			getTriggerTime = ExecutionContext.class.getMethod("getTriggerTime");
 			getCurrentTime = ExecutionContext.class.getMethod("getCurrentTime");
+			getEvent = ExecutionContext.class.getMethod("getEvent", String.class);
 		} catch (SecurityException e) {
 			throw new RuntimeException(e);
 		} catch (NoSuchMethodException e) {

@@ -49,9 +49,9 @@ public class ExampleTests {
 		c.enableDebugging(filename + ".mlm");
 		CompiledMlm mlm = c
 				.compileMlm(new InputStreamReader(ExampleTests.class.getResourceAsStream(filename + ".mlm")));
-		FileOutputStream fos = new FileOutputStream(mlm.getName() + ".class");
+		/*FileOutputStream fos = new FileOutputStream(filename + ".class");
 		mlm.saveClassFile(fos);
-		fos.close();
+		fos.close();*/
 		return mlm;
 	}
 

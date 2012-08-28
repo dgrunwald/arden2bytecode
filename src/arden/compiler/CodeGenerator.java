@@ -266,10 +266,14 @@ final class CodeGenerator {
 	}
 	
 	public CompilerContext createEvokeEvent() {
-		MethodWriter w = classFileWriter.createMethod("getEvokeEvent", Modifier.PUBLIC, new Class<?>[] {}, EvokeEvent.class);
+		MethodWriter w = classFileWriter.createMethod(
+				"getEvokeEvent", 
+				Modifier.PUBLIC, 
+				new Class<?>[] { ExecutionContext.class }, 
+				EvokeEvent.class);
 		if (isDebuggingEnabled)
 			w.enableLineNumberTable();
-		return new CompilerContext(this, w, 0);
+		return new CompilerContext(this, w, 1);
 	}
 
 	public FieldReference getNowField() {
