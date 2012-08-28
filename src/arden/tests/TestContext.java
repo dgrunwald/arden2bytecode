@@ -74,11 +74,14 @@ public class TestContext extends ExecutionContext {
 		if (defaultEvent != null) {
 			return defaultEvent;
 		}
-		return new NamedEvokeEvent(mapping);
+		return super.getEvent(mapping);
 	}
 	
 	@Override
 	public ArdenTime getCurrentTime() {
-		return defaultTime;
+		if (defaultTime != null) {
+			return defaultTime;
+		}
+		return super.getCurrentTime();
 	}
 }
