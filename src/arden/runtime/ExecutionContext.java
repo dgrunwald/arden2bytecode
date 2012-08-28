@@ -30,7 +30,7 @@ package arden.runtime;
 import java.util.Date;
 
 import arden.runtime.events.EvokeEvent;
-import arden.runtime.events.NamedEvokeEvent;
+import arden.runtime.events.MappedEvokeEvent;
 import arden.runtime.events.NeverEvokeEvent;
 
 /**
@@ -65,7 +65,7 @@ public abstract class ExecutionContext {
 	
 	/** Gets an event defined with the EVENT{mapping} statement */
 	public EvokeEvent getEvent(String mapping) {
-		return new NamedEvokeEvent(mapping);
+		return new MappedEvokeEvent(mapping);
 	}
 
 	/**

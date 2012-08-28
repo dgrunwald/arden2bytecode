@@ -33,7 +33,7 @@ import arden.runtime.ArdenValue;
 import arden.runtime.DatabaseQuery;
 import arden.runtime.ExecutionContext;
 import arden.runtime.events.EvokeEvent;
-import arden.runtime.events.NamedEvokeEvent;
+import arden.runtime.events.MappedEvokeEvent;
 import arden.runtime.events.NeverEvokeEvent;
 
 public class TestContext extends ExecutionContext {
