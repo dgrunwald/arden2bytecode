@@ -1,12 +1,8 @@
 package arden.compiler;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
-import arden.codegenerator.FieldReference;
-import arden.codegenerator.Label;
-import arden.codegenerator.MethodWriter;
 import arden.compiler.node.AAnyEventOr;
 import arden.compiler.node.AEblkEvokeBlock;
 import arden.compiler.node.AEcycEvokeStatement;
@@ -23,7 +19,6 @@ import arden.compiler.node.ASuntQualifiedEvokeCycle;
 import arden.compiler.node.ATofEvokeTime;
 import arden.compiler.node.PEvokeBlock;
 import arden.compiler.node.PEvokeStatement;
-import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 import arden.runtime.events.NeverEvokeEvent;

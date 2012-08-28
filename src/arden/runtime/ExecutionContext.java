@@ -31,7 +31,6 @@ import java.util.Date;
 
 import arden.runtime.events.EvokeEvent;
 import arden.runtime.events.MappedEvokeEvent;
-import arden.runtime.events.NeverEvokeEvent;
 
 /**
  * Describes the environment in which a Medical Logic Module is executed.

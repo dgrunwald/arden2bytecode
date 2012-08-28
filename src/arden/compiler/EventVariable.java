@@ -30,7 +30,6 @@ package arden.compiler;
 import java.lang.reflect.Modifier;
 
 import arden.codegenerator.FieldReference;
-import arden.compiler.node.PMappingFactor;
 import arden.compiler.node.TIdentifier;
 import arden.runtime.events.EvokeEvent;
 

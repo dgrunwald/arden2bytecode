@@ -2,7 +2,6 @@ package arden.tests;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 
 import org.junit.Assert;
@@ -15,11 +14,9 @@ import arden.runtime.ArdenNull;
 import arden.runtime.ArdenString;
 import arden.runtime.ArdenValue;
 import arden.runtime.DatabaseQuery;
-import arden.runtime.ExecutionContext;
 import arden.runtime.LibraryMetadata;
 import arden.runtime.MaintenanceMetadata;
 import arden.runtime.MedicalLogicModule;
-import arden.runtime.MedicalLogicModuleImplementation;
 import arden.runtime.MemoryQuery;
 import arden.runtime.RuntimeHelpers;
 

@@ -27,7 +27,6 @@
 
 package arden.tests;
 
-import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 
 import org.junit.Assert;
