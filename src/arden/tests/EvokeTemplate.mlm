@@ -1,0 +1,30 @@
+maintenance:
+    title: Test;;
+    mlmname: test_mlm;;
+    arden: Version 2;;
+    version: 1.00;;
+    institution: TU Braunschweig;;
+    author: Daniel Grunwald;;
+    specialist: ;;
+    date: 2009-12-23;;
+    validation: testing;;
+library:
+    purpose:
+        Template for unit tests;;
+    explanation:
+        This MLM is used for several unit tests.;;
+    keywords:
+        Test Purpose;;
+    citations:
+		;;
+knowledge:
+    type: data-driven;;
+    data: $DATA ;;
+evoke: $EVOKE;;
+logic:
+        $LOGIC
+        ;;
+action:
+    $ACTION
+    ;;
+end:

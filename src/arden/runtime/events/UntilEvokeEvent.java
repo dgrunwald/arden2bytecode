@@ -1,15 +1,21 @@
 package arden.runtime.events;
 
 import arden.runtime.ArdenTime;
+import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 
 public class UntilEvokeEvent extends EvokeEvent {
 	private EvokeEvent cycle;
 	private ArdenTime until;
 	
-	public UntilEvokeEvent(EvokeEvent cycle, ArdenTime until) {
+	public UntilEvokeEvent(EvokeEvent cycle, ArdenTime until, long primaryTime) {
+		super(primaryTime);
 		this.cycle = cycle;
 		this.until = until;
+	}
+	
+	public UntilEvokeEvent(EvokeEvent cycle, ArdenTime until) {
+		this(cycle, until, NOPRIMARYTIME);
 	}
 
 	@Override
@@ -24,5 +30,10 @@ public class UntilEvokeEvent extends EvokeEvent {
 	@Override
 	public boolean runOnEvent(String event) {
 		return cycle.runOnEvent(event);
+	}
+
+	@Override
+	public ArdenValue setTime(long newPrimaryTime) {
+		return new UntilEvokeEvent(cycle, until);
 	}
 }

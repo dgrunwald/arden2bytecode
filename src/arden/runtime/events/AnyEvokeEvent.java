@@ -4,13 +4,23 @@ import java.util.Arrays;
 import java.util.List;
 
 import arden.runtime.ArdenTime;
+import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 
 public class AnyEvokeEvent extends EvokeEvent {
 	List<EvokeEvent> events;
 	
-	public AnyEvokeEvent(EvokeEvent[] events) {
+	public AnyEvokeEvent(EvokeEvent[] events, long primaryTime) {
 		this.events = Arrays.asList(events);
+	}
+	
+	public AnyEvokeEvent(EvokeEvent[] events) {
+		this(events, NOPRIMARYTIME);
+	}
+	
+	public AnyEvokeEvent(List<EvokeEvent> events, long primaryTime) {
+		super(primaryTime);
+		this.events = events;
 	}
 
 	@Override
@@ -35,6 +45,11 @@ public class AnyEvokeEvent extends EvokeEvent {
 			any = any || e.runOnEvent(event);
 		}
 		return any;
+	}
+
+	@Override
+	public ArdenValue setTime(long newPrimaryTime) {
+		return new AnyEvokeEvent(events, newPrimaryTime);
 	}
 
 }
