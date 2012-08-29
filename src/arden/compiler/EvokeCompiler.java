@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import arden.compiler.node.AAnyEventOr;
+import arden.compiler.node.ACallEvokeStatement;
 import arden.compiler.node.AEblkEvokeBlock;
 import arden.compiler.node.AEcycEvokeStatement;
 import arden.compiler.node.AEdurEvokeTime;
@@ -11,16 +12,21 @@ import arden.compiler.node.AEfctEventAny;
 import arden.compiler.node.AEmptyEvokeStatement;
 import arden.compiler.node.AEorEvokeStatement;
 import arden.compiler.node.AEstmtEvokeBlock;
+import arden.compiler.node.AEtimEvokeStatement;
 import arden.compiler.node.AEvokeDuration;
 import arden.compiler.node.AEvokeSlot;
 import arden.compiler.node.AIdEventFactor;
+import arden.compiler.node.AIdateEvokeTime;
+import arden.compiler.node.AIdtEvokeTime;
 import arden.compiler.node.ASimpleEvokeCycle;
 import arden.compiler.node.ASuntQualifiedEvokeCycle;
 import arden.compiler.node.ATofEvokeTime;
 import arden.compiler.node.PEvokeBlock;
 import arden.compiler.node.PEvokeStatement;
+import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
+import arden.runtime.events.FixedDateEvokeEvent;
 import arden.runtime.events.NeverEvokeEvent;
 import arden.runtime.events.EvokeEvent;
 
@@ -58,6 +64,8 @@ public class EvokeCompiler extends VisitorBase {
 			throw new RuntimeException("not implemented yet");
 		} else if (statements.size() == 1) {
 			statements.get(0).apply(this);
+		} else {
+			throw new RuntimeException("no evoke event given");
 		}
 	}
 	
@@ -72,6 +80,35 @@ public class EvokeCompiler extends VisitorBase {
 		} catch (SecurityException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	@Override
+	public void caseAEtimEvokeStatement(AEtimEvokeStatement node) {
+		node.getEvokeTime().apply(this);
+	}
+	
+	public void createFixedDateEvokeEvent(long datetime) {
+		context.writer.newObject(FixedDateEvokeEvent.class);
+		context.writer.dup();
+		
+		context.writer.loadStaticField(context.codeGenerator.getTimeLiteral(datetime));
+		try {
+			context.writer.invokeConstructor(FixedDateEvokeEvent.class.getConstructor(ArdenTime.class));
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	@Override
+	public void caseAIdateEvokeTime(AIdateEvokeTime node) {
+		createFixedDateEvokeEvent(ParseHelpers.parseIsoDate(node.getIsoDate()));
+	}
+	
+	@Override
+	public void caseAIdtEvokeTime(AIdtEvokeTime node) {
+		createFixedDateEvokeEvent(ParseHelpers.parseIsoDateTime(node.getIsoDateTime()));
 	}
 	
 	@Override
@@ -118,7 +155,8 @@ public class EvokeCompiler extends VisitorBase {
 		simplecycle.getDurL().apply(this); // interval
 		simplecycle.getDurR().apply(this); // for
 		simplecycle.getEvokeTime().apply(this); // starting
-		context.writer.invokeStatic(ExpressionCompiler.getMethod("createEvokeCycle", ArdenValue.class, ArdenValue.class, ArdenValue.class));
+		context.writer.loadVariable(context.executionContextVariable);
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("createEvokeCycle", ArdenValue.class, ArdenValue.class, EvokeEvent.class, ExecutionContext.class));
 	}
 	
 	/** leaves ArdenDuration on stack */
@@ -130,19 +168,24 @@ public class EvokeCompiler extends VisitorBase {
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("createDuration", ArdenValue.class, double.class, boolean.class));
 	}
 	
-	/** leaves ArdenValue on stack */
+	/** leaves EvokeEvent on stack */
 	@Override
 	public void caseAEdurEvokeTime(AEdurEvokeTime duration) {
 		duration.getEvokeDuration().apply(this);
 		duration.getEvokeTime().apply(this);
-		context.writer.invokeStatic(ExpressionCompiler.getMethod("after", ArdenValue.class, ArdenValue.class));
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("after", ArdenValue.class, EvokeEvent.class));
 	}
 	
-	/** converts EvokeEvent to ArdenTime or ArdenNull */
+	/** takes and leaves EvokeEvent on the stack */
 	@Override
 	public void caseATofEvokeTime(ATofEvokeTime node) {
 		node.getEventAny().apply(this);
 		context.writer.loadVariable(context.executionContextVariable);
 		context.writer.invokeStatic(ExpressionCompiler.getMethod("timeOf", EvokeEvent.class, ExecutionContext.class));
+	}
+	
+	@Override
+	public void caseACallEvokeStatement(ACallEvokeStatement node) {
+		context.writer.invokeStatic(ExpressionCompiler.getMethod("evokeSlotCall"));
 	}
 }

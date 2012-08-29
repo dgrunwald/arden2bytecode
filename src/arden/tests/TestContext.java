@@ -52,6 +52,10 @@ public class TestContext extends ExecutionContext {
 		this.defaultTime = defaultTime;
 	}
 	
+	public TestContext(ArdenTime defaultTime) {
+		this.defaultTime = defaultTime;
+	}
+	
 	@Override
 	public DatabaseQuery createQuery(String mapping) {
 		return DatabaseQuery.NULL;
