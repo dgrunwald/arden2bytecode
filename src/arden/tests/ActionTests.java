@@ -47,7 +47,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class ActionTests {
-	private static String inputStreamToString(InputStream in) throws IOException {
+	public static String inputStreamToString(InputStream in) throws IOException {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
 		StringBuilder stringBuilder = new StringBuilder();
 

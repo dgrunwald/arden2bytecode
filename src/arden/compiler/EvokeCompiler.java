@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import arden.compiler.node.AAnyEventOr;
+import arden.compiler.node.AAolstEventAny;
 import arden.compiler.node.ACallEvokeStatement;
 import arden.compiler.node.AEblkEvokeBlock;
 import arden.compiler.node.AEcycEvokeStatement;
 import arden.compiler.node.AEdurEvokeTime;
 import arden.compiler.node.AEfctEventAny;
+import arden.compiler.node.AElstEventList;
 import arden.compiler.node.AEmptyEvokeStatement;
+import arden.compiler.node.AEorEventList;
 import arden.compiler.node.AEorEvokeStatement;
 import arden.compiler.node.AEstmtEvokeBlock;
 import arden.compiler.node.AEtimEvokeStatement;
@@ -18,14 +21,19 @@ import arden.compiler.node.AEvokeSlot;
 import arden.compiler.node.AIdEventFactor;
 import arden.compiler.node.AIdateEvokeTime;
 import arden.compiler.node.AIdtEvokeTime;
+import arden.compiler.node.AOrEventOr;
 import arden.compiler.node.ASimpleEvokeCycle;
 import arden.compiler.node.ASuntQualifiedEvokeCycle;
 import arden.compiler.node.ATofEvokeTime;
+import arden.compiler.node.PEventAny;
+import arden.compiler.node.PEventList;
+import arden.compiler.node.PEventOr;
 import arden.compiler.node.PEvokeBlock;
 import arden.compiler.node.PEvokeStatement;
 import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
+import arden.runtime.events.AnyEvokeEvent;
 import arden.runtime.events.FixedDateEvokeEvent;
 import arden.runtime.events.NeverEvokeEvent;
 import arden.runtime.events.EvokeEvent;
@@ -45,13 +53,49 @@ public class EvokeCompiler extends VisitorBase {
 		 * */
 		final ArrayList<PEvokeStatement> result = new ArrayList<PEvokeStatement>();
 		first.apply(new VisitorBase() {
+			@Override
 			public void caseAEblkEvokeBlock(AEblkEvokeBlock evokeBlock) {
 				evokeBlock.getEvokeBlock().apply(this);
 				result.add(evokeBlock.getEvokeStatement());
 			}
 			
+			@Override
 			public void caseAEstmtEvokeBlock(AEstmtEvokeBlock node) {
 				result.add(node.getEvokeStatement());				
+			}
+		});
+		return result;
+	}
+	
+	public List<PEventAny> listAnyBlocks(PEventOr first) {
+		final ArrayList<PEventAny> result = new ArrayList<PEventAny>();
+		first.apply(new VisitorBase() {
+			@Override
+			public void caseAOrEventOr(AOrEventOr node) {
+				node.getEventOr().apply(this);
+				result.add(node.getEventAny());
+			}
+			
+			@Override
+			public void caseAAnyEventOr(AAnyEventOr node) {
+				result.add(node.getEventAny());
+			}
+		});
+		return result;
+	}
+	
+	public List<PEventOr> listOrBlocks(PEventList first) {
+		final ArrayList<PEventOr> result = new ArrayList<PEventOr>();
+		first.apply(new VisitorBase() {
+			@Override
+			public void caseAElstEventList(AElstEventList node) {
+				node.getEventList().apply(this);
+				result.add(node.getEventOr());
+			}
+			
+			@Override
+			public void caseAEorEventList(AEorEventList node) {
+				result.add(node.getEventOr());
 			}
 		});
 		return result;
@@ -61,11 +105,11 @@ public class EvokeCompiler extends VisitorBase {
 	public void caseAEvokeSlot(AEvokeSlot evokeSlot) {
 		List<PEvokeStatement> statements = listEvokeBlocks(evokeSlot.getEvokeBlock());
 		if (statements.size() > 1) {
-			throw new RuntimeException("not implemented yet");
+			throw new RuntimeCompilerException(evokeSlot.getEvoke(), "not implemented yet");
 		} else if (statements.size() == 1) {
 			statements.get(0).apply(this);
 		} else {
-			throw new RuntimeException("no evoke event given");
+			throw new RuntimeCompilerException(evokeSlot.getEvoke(), "no evoke event given");
 		}
 	}
 	
@@ -117,9 +161,73 @@ public class EvokeCompiler extends VisitorBase {
 	}
 	
 	@Override
+	public void caseAElstEventList(AElstEventList node) {
+		List<PEventOr> orBlocks = listOrBlocks(node);
+		
+		if (orBlocks.size() > 1) {
+			context.writer.newObject(AnyEvokeEvent.class);
+			context.writer.dup();
+			context.writer.loadIntegerConstant(orBlocks.size());
+			context.writer.newArray(EvokeEvent.class);
+			for (int i = 0; i < orBlocks.size(); i++) {
+				context.writer.dup();
+				context.writer.loadIntegerConstant(i);
+				orBlocks.get(i).apply(this);
+				context.writer.storeObjectToArray();
+			}
+			try {
+				context.writer.invokeConstructor(AnyEvokeEvent.class.getConstructor(EvokeEvent[].class));
+			} catch (NoSuchMethodException e) {
+				throw new RuntimeException(e);
+			} catch (SecurityException e) {
+				throw new RuntimeException(e);
+			}
+		} else if (orBlocks.size() == 1) {
+			orBlocks.get(0).apply(this);
+		} else {
+			throw new RuntimeCompilerException("error parsing event list");
+		}
+	}
+	
+	@Override
+	public void caseAOrEventOr(AOrEventOr node) {
+		List<PEventAny> anyBlocks = listAnyBlocks(node);
+
+		if (anyBlocks.size() > 1) {
+			context.writer.newObject(AnyEvokeEvent.class);
+			context.writer.dup();
+			context.writer.loadIntegerConstant(anyBlocks.size());
+			context.writer.newArray(EvokeEvent.class);
+			for (int i = 0; i < anyBlocks.size(); i++) {
+				context.writer.dup();
+				context.writer.loadIntegerConstant(i);
+				anyBlocks.get(i).apply(this);
+				context.writer.storeObjectToArray();
+			}
+			try {
+				context.writer.invokeConstructor(AnyEvokeEvent.class.getConstructor(EvokeEvent[].class));
+			} catch (NoSuchMethodException e) {
+				throw new RuntimeException(e);
+			} catch (SecurityException e) {
+				throw new RuntimeException(e);
+			}
+		} else if (anyBlocks.size() == 1) {
+			anyBlocks.get(0).apply(this);
+		} else {
+			throw new RuntimeCompilerException(node.getOr(), "error parsing ");
+		}
+			
+	}
+	
+	@Override
 	public void caseAAnyEventOr(AAnyEventOr anyevent) {
 		anyevent.getEventAny().apply(this);
 	}
+	
+	@Override
+	public void caseAAolstEventAny(AAolstEventAny node) {
+		node.getEventList().apply(this);
+	}	
 	
 	@Override
 	public void caseAEfctEventAny(AEfctEventAny factor) {
