@@ -39,10 +39,10 @@ public class AnyEvokeEvent extends EvokeEvent {
 	}
 
 	@Override
-	public boolean runOnEvent(String event) {
+	public boolean runOnEvent(String event, ExecutionContext context) {
 		boolean any = false;
 		for (EvokeEvent e : events) {
-			any = any || e.runOnEvent(event);
+			any = any || e.runOnEvent(event, context);
 		}
 		return any;
 	}

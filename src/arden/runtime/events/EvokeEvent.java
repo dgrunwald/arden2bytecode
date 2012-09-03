@@ -18,5 +18,5 @@ public abstract class EvokeEvent extends ArdenValue {
 	public abstract ArdenTime getNextRunTime(ExecutionContext context);
 	
 	/** an event such as 'penicillin_storage' occurred */
-	public abstract boolean runOnEvent(String event);
+	public abstract boolean runOnEvent(String event, ExecutionContext context);
 }

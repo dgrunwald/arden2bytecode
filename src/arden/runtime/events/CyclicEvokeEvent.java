@@ -36,7 +36,7 @@ public class CyclicEvokeEvent extends EvokeEvent {
 	}
 
 	@Override
-	public boolean runOnEvent(String event) {
+	public boolean runOnEvent(String event, ExecutionContext context) {
 		return false;
 	}
 

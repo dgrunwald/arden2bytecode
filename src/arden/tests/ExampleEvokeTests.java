@@ -29,7 +29,6 @@ package arden.tests;
 
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
-import java.util.Date;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -45,8 +44,11 @@ import arden.runtime.ArdenValue;
 import arden.runtime.DatabaseQuery;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.MemoryQuery;
+import arden.runtime.events.CyclicEvokeEvent;
 import arden.runtime.events.EvokeEvent;
 import arden.runtime.events.FixedDateEvokeEvent;
+import arden.runtime.events.MappedEvokeEvent;
+import arden.runtime.events.NeverEvokeEvent;
 
 public class ExampleEvokeTests {
 	private MedicalLogicModule compile(String filename) throws Exception {
@@ -67,7 +69,8 @@ public class ExampleEvokeTests {
 		TestContext context = new TestContext();
 		EvokeEvent e = mlm.getEvoke(context, null);
 
-		Assert.assertEquals("", context.getOutputText());		
+		Assert.assertTrue(e instanceof MappedEvokeEvent);
+		Assert.assertTrue(e.runOnEvent("storage of urine electrolytes", context));
 	}
 
 	@Test
@@ -77,7 +80,8 @@ public class ExampleEvokeTests {
 		TestContext context = new TestContext();
 		EvokeEvent e = mlm.getEvoke(context, null);
 
-		Assert.assertEquals("", context.getOutputText());
+		Assert.assertTrue(e instanceof MappedEvokeEvent);
+		Assert.assertTrue(e.runOnEvent("'06210519','06210669'", context));
 	}
 
 	@Test
@@ -85,7 +89,9 @@ public class ExampleEvokeTests {
 		MedicalLogicModule mlm = compile("x2.3");
 		TestContext context = new TestContext();
 		EvokeEvent e = mlm.getEvoke(context, null);
-		Assert.assertEquals("", context.getOutputText());
+		
+		Assert.assertTrue(e instanceof MappedEvokeEvent);
+		Assert.assertTrue(e.runOnEvent("medication_order where class = penicillin", context));
 	}
 
 	@Test
@@ -100,8 +106,9 @@ public class ExampleEvokeTests {
 			}
 		};
 		EvokeEvent e = mlm.getEvoke(context, null);
-		Assert.assertEquals("", context
-				.getOutputText());
+		
+		Assert.assertTrue(e instanceof MappedEvokeEvent);
+		Assert.assertTrue(e.runOnEvent("medication_order where class = penicillin", context));
 	}
 
 	@Test
@@ -116,13 +123,9 @@ public class ExampleEvokeTests {
 			}
 		};
 		EvokeEvent e = mlm.getEvoke(context, null);
-		Assert.assertEquals("", context.getOutputText());
-	}
-
-	@Test
-	public void X23urgency() throws Exception {
-		MedicalLogicModule mlm = compile("x2.3");
-		Assert.assertEquals(51.0, mlm.createInstance(new TestContext(), null).getUrgency(), 0);
+		
+		Assert.assertTrue(e instanceof MappedEvokeEvent);
+		Assert.assertTrue(e.runOnEvent("medication_order where class = penicillin", context));
 	}
 
 	@Test
@@ -132,29 +135,41 @@ public class ExampleEvokeTests {
 		TestContext context = new TestContext();
 		EvokeEvent e = mlm.getEvoke(context, null);
 
-		Assert.assertEquals("", context.getOutputText());
+		Assert.assertTrue(e instanceof MappedEvokeEvent);
+		Assert.assertTrue(e.runOnEvent("medication_order where class = gentamicin", context));
 	}
 
 	@Test
 	public void X25() throws Exception {
 		MedicalLogicModule mlm = compile("x2.5");
-		Date defaultTime = new Date(1980 - 1900, 0, 1, 0, 0, 0); // this is the default myExecutionContext.getCurrentTime()
-		Date defaultEventDate = new Date(2000 - 1900, 0, 1, 0, 0, 0); // this is the default myExecutionContext.getEvent()
-		EvokeEvent defaultEvokeEvent = new FixedDateEvokeEvent(new ArdenTime(defaultEventDate));
+		ArdenTime defaultTime = EvokeTests.createDateTime(1980, 0, 1, 0, 0, 0); // this is the default myExecutionContext.getCurrentTime()
+		ArdenTime defaultEventDate = EvokeTests.createDateTime(2000, 0, 1, 0, 0, 0); // this is the default myExecutionContext.getEvent()
+		EvokeEvent defaultEvokeEvent = new FixedDateEvokeEvent(defaultEventDate);
 
-		TestContext context = new TestContext(defaultEvokeEvent, new ArdenTime(defaultTime));
+		TestContext context = new TestContext(defaultEvokeEvent, defaultTime);
 		EvokeEvent e = mlm.getEvoke(context, null);
 
+		Assert.assertTrue(e instanceof CyclicEvokeEvent);
+		
+		ArdenDuration fiveDays = (ArdenDuration)ArdenDuration.create(
+				60.0 * 60 * 24 * 5, 
+				false, 
+				context.getCurrentTime().value); 
+		ArdenTime fiveDaysLater = new ArdenTime(
+				defaultEventDate.add(fiveDays)); // add 5 days as in x2.5.mlm
+		// default runtime should be 5 days after the event as declared in the MLM:
 		Assert.assertEquals(
-				"", context.getOutputText());
-		Assert.assertEquals(
-				new ArdenTime(
-						defaultEvokeEvent.getNextRunTime(context).add( // add 5 days as in x2.5.mlm
-								(ArdenDuration)ArdenDuration.create(
-										60.0 * 60 * 24 * 5, 
-										false, 
-										context.getCurrentTime().value))), 
+				fiveDaysLater, 
 				e.getNextRunTime(context));
+
+		ArdenTime tenDaysLater = new ArdenTime(fiveDaysLater.add(fiveDays));
+		ArdenDuration oneSecond = (ArdenDuration)ArdenDuration.create(1, false, context.getCurrentTime().value);
+		
+		context.setCurrentTime(new ArdenTime(fiveDaysLater.add(oneSecond)));
+		// after the first runtime has been passed, the mlm should be re-run another 5 days later:
+		Assert.assertEquals(
+				tenDaysLater,
+				e.getNextRunTime(context)); 
 	}
 
 	@Test
@@ -164,7 +179,8 @@ public class ExampleEvokeTests {
 		TestContext context = new TestContext();
 		EvokeEvent e = mlm.getEvoke(context, null);
 
-		Assert.assertEquals("", context.getOutputText());
+		Assert.assertTrue(e instanceof MappedEvokeEvent);
+		Assert.assertTrue(e.runOnEvent("STORAGE OF ABSOLUTE_NEUTROPHILE_COUNT", context));
 	}
 
 	@Test
@@ -174,7 +190,7 @@ public class ExampleEvokeTests {
 		TestContext context = new TestContext();
 		EvokeEvent e = mlm.getEvoke(context, null);
 
-		Assert.assertEquals("", context.getOutputText());
+		Assert.assertTrue(e instanceof NeverEvokeEvent);		
 	}
 
 	@Test
@@ -194,6 +210,6 @@ public class ExampleEvokeTests {
 		EvokeEvent e = mlm.getEvoke(context, new ArdenValue[] { medOrders, medAllergens, patientAllergies,
 				patientReactions });
 
-		Assert.assertEquals("", context.getOutputText());
+		Assert.assertTrue(e instanceof NeverEvokeEvent);	
 	}
 }

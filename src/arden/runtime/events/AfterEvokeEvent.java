@@ -26,8 +26,8 @@ public class AfterEvokeEvent extends EvokeEvent {
 	}
 
 	@Override
-	public boolean runOnEvent(String event) {
-		return target.runOnEvent(event);
+	public boolean runOnEvent(String event, ExecutionContext context) {
+		return target.runOnEvent(event, context);
 	}
 
 	@Override

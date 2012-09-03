@@ -153,7 +153,7 @@ public final class Compiler {
 		compileLogic(codeGen, knowledge.getLogicSlot());
 		compileAction(codeGen, knowledge.getActionSlot());
 		compileEvoke(codeGen, knowledge.getEvokeSlot());
-		double urgency = compileUrgency(codeGen, knowledge.getUrgencySlot());
+		compileUrgency(codeGen, knowledge.getUrgencySlot());
 		try {
 			compileMaintenance(codeGen, metadata.maintenance);
 			compileLibrary(codeGen, metadata.library);

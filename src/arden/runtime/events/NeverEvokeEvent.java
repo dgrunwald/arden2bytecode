@@ -13,14 +13,14 @@ public class NeverEvokeEvent extends EvokeEvent {
 	public NeverEvokeEvent() {
 		this(NOPRIMARYTIME);
 	}
-
+	
 	@Override
 	public ArdenTime getNextRunTime(ExecutionContext context) {
 		return null;
 	}
 
 	@Override
-	public boolean runOnEvent(String event) {
+	public boolean runOnEvent(String event, ExecutionContext context) {
 		return false;
 	}
 

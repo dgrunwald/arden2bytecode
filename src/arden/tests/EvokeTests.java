@@ -27,32 +27,44 @@
 
 package arden.tests;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Date;
-
-import arden.compiler.CompiledMlm;
-import arden.compiler.Compiler;
-import arden.compiler.CompilerException;
-import arden.runtime.ArdenRunnable;
-import arden.runtime.ArdenString;
-import arden.runtime.ArdenTime;
-import arden.runtime.ArdenValue;
-import arden.runtime.ExecutionContext;
-import arden.runtime.MedicalLogicModule;
-import arden.runtime.events.EvokeEvent;
-import arden.runtime.events.FixedDateEvokeEvent;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import arden.compiler.CompiledMlm;
+import arden.compiler.Compiler;
+import arden.compiler.CompilerException;
+import arden.runtime.ArdenTime;
+import arden.runtime.MedicalLogicModule;
+import arden.runtime.events.EvokeEvent;
+import arden.runtime.events.FixedDateEvokeEvent;
+
 public class EvokeTests {
+	private static Calendar calendar = null;
+	
+	public static ArdenTime createDate(int year, int month, int day) {
+		if (calendar == null) {
+			calendar = new GregorianCalendar();
+		}
+		calendar.clear();
+		calendar.set(year, month, day);
+		return new ArdenTime(calendar.getTimeInMillis());
+	}
+	
+	public static ArdenTime createDateTime(int year, int month, int day, int hour, int minutes, int seconds) {
+		if (calendar == null) {
+			calendar = new GregorianCalendar();
+		}
+		calendar.clear();
+		calendar.set(year, month, day, hour, minutes, seconds);
+		return new ArdenTime(calendar.getTimeInMillis());
+	}
+	
 	public static CompiledMlm parseTemplate(String dataCode, String evokeCode, String logicCode, String actionCode)
 			throws CompilerException {
 		try {
@@ -82,15 +94,15 @@ public class EvokeTests {
 	}
 	
 	public static TestContext createTestContext() {
-		return new TestContext(new ArdenTime(new Date(1990 - 1900, 0, 1))) {
+		return new TestContext(createDate(1990, 0, 1)) {
 			@Override
 			public EvokeEvent getEvent(String mapping) {
 				if (mapping.equals("penicillin storage")) {
-					return new FixedDateEvokeEvent(new ArdenTime(new Date(1992 - 1900, 0, 1)));
+					return new FixedDateEvokeEvent(createDate(1992, 0, 1));
 				} else if (mapping.equals("cephalosporin storage")) {
-					return new FixedDateEvokeEvent(new ArdenTime(new Date(1993 - 1900, 0, 1)));
+					return new FixedDateEvokeEvent(createDate(1993, 0, 1));
 				} else if (mapping.equals("aminoglycoside storage")) {
-					return new FixedDateEvokeEvent(new ArdenTime(new Date(1994 - 1900, 0, 1)));
+					return new FixedDateEvokeEvent(createDate(1994, 0, 1));
 				}
 				return super.getEvent(mapping);
 			}
@@ -104,7 +116,7 @@ public class EvokeTests {
 		MedicalLogicModule mlm = parseEvoke("3 days after 1992-01-01T00:00:00");
 		
 		EvokeEvent e = mlm.getEvoke(context, null);
-		Assert.assertEquals(new ArdenTime(new Date(1992 - 1900, 0, 4)), e.getNextRunTime(context));
+		Assert.assertEquals(createDate(1992, 0, 4), e.getNextRunTime(context));
 	}
 
 	@Test
@@ -114,7 +126,7 @@ public class EvokeTests {
 		MedicalLogicModule mlm = parseEvoke("penicillin_storage := EVENT{penicillin storage}", "penicillin_storage");
 		EvokeEvent e = mlm.getEvoke(context, null);
 		
-		Assert.assertEquals(new ArdenTime(new Date(1992 - 1900, 0, 1)), e.getNextRunTime(context));
+		Assert.assertEquals(createDate(1992, 0, 1), e.getNextRunTime(context));
 	}
 	
 	@Test
@@ -124,7 +136,7 @@ public class EvokeTests {
 		CompiledMlm mlm = parseEvoke("event1 := EVENT{penicillin storage}", "3 days after time of event1");
 		EvokeEvent e = mlm.getEvoke(context, null);
 		
-		Assert.assertEquals(new ArdenTime(new Date(1992 - 1900, 0, 4)), e.getNextRunTime(context));
+		Assert.assertEquals(createDate(1992, 0, 4), e.getNextRunTime(context));
 	}
 
 	@Test
@@ -134,7 +146,7 @@ public class EvokeTests {
 		MedicalLogicModule mlm = parseEvoke("1992-03-04");
 		EvokeEvent e = mlm.getEvoke(context, null);
 		
-		Assert.assertEquals(new ArdenTime(new Date(1992 - 1900, 2, 4)), e.getNextRunTime(context));
+		Assert.assertEquals(createDate(1992, 2, 4), e.getNextRunTime(context));
 	}
 	
 	@Test
@@ -144,7 +156,7 @@ public class EvokeTests {
 		MedicalLogicModule mlm = parseEvoke("1992-01-03T14:23:17.0");
 		EvokeEvent e = mlm.getEvoke(context, null);
 		
-		Assert.assertEquals(new ArdenTime(new Date(1992 - 1900, 0, 3, 14, 23, 17)), e.getNextRunTime(context));
+		Assert.assertEquals(createDateTime(1992, 0, 3, 14, 23, 17), e.getNextRunTime(context));
 	}	
 	
 	@Test
@@ -157,7 +169,7 @@ public class EvokeTests {
 				"aminoglycoside_storage := EVENT{aminoglycoside storage};", "penicillin_storage OR cephalosporin_storage OR aminoglycoside_storage");
 		EvokeEvent e = mlm.getEvoke(context, null);
 		
-		Assert.assertEquals(new ArdenTime(new Date(1992 - 1900, 0, 1)), e.getNextRunTime(context));
+		Assert.assertEquals(createDate(1992, 0, 1), e.getNextRunTime(context));
 	}
 	
 	@Test
@@ -169,7 +181,7 @@ public class EvokeTests {
 				"aminoglycoside_storage := EVENT{aminoglycoside storage};", "cephalosporin_storage OR aminoglycoside_storage");
 		EvokeEvent e = mlm.getEvoke(context, null);
 		
-		Assert.assertEquals(new ArdenTime(new Date(1993 - 1900, 0, 1)), e.getNextRunTime(context));
+		Assert.assertEquals(createDate(1993, 0, 1), e.getNextRunTime(context));
 	}
 	
 	@Test
@@ -182,7 +194,7 @@ public class EvokeTests {
 				"aminoglycoside_storage := EVENT{aminoglycoside storage};", "ANY OF (penicillin_storage, cephalosporin_storage, aminoglycoside_storage)");
 		EvokeEvent e = mlm.getEvoke(context, null);
 		
-		Assert.assertEquals(new ArdenTime(new Date(1992 - 1900, 0, 1)), e.getNextRunTime(context));
+		Assert.assertEquals(createDate(1992, 0, 1), e.getNextRunTime(context));
 	}
 	
 	@Test
@@ -194,6 +206,6 @@ public class EvokeTests {
 				"aminoglycoside_storage := EVENT{aminoglycoside storage};", "ANY OF (cephalosporin_storage, aminoglycoside_storage)");
 		EvokeEvent e = mlm.getEvoke(context, null);
 		
-		Assert.assertEquals(new ArdenTime(new Date(1993 - 1900, 0, 1)), e.getNextRunTime(context));
+		Assert.assertEquals(createDate(1993, 0, 1), e.getNextRunTime(context));
 	}
 }

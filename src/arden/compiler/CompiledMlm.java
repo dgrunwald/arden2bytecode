@@ -103,6 +103,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 		in.read(data, 0, len);
 	}
 
+	@SuppressWarnings("unchecked")
 	private Class<? extends MedicalLogicModuleImplementation> loadClazz() {
 		if (clazz == null) {
 			try {
@@ -115,7 +116,6 @@ public final class CompiledMlm implements MedicalLogicModule {
 		return clazz;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getConstructor() {
 		Constructor<? extends MedicalLogicModuleImplementation> ctor = null;
 		loadClazz();
@@ -132,7 +132,6 @@ public final class CompiledMlm implements MedicalLogicModule {
 		return ctor;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private synchronized Constructor<? extends MedicalLogicModuleImplementation> getParameterlessConstructor() {		
 		Constructor<? extends MedicalLogicModuleImplementation> ctor = null;
 		loadClazz();

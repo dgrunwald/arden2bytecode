@@ -86,4 +86,8 @@ public class TestContext extends ExecutionContext {
 		}
 		return super.getCurrentTime();
 	}
+	
+	public void setCurrentTime(ArdenTime currentTime) {
+		defaultTime = currentTime;
+	}
 }

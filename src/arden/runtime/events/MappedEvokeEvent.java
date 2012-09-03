@@ -25,7 +25,7 @@ public class MappedEvokeEvent extends EvokeEvent {
 	}
 
 	@Override
-	public boolean runOnEvent(String event) {
+	public boolean runOnEvent(String event, ExecutionContext context) {
 		if (mapping.equalsIgnoreCase(event)) {
 			return true;
 		}

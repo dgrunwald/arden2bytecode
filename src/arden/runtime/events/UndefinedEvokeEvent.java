@@ -15,7 +15,7 @@ public class UndefinedEvokeEvent extends EvokeEvent {
 	}
 	
 	@Override
-	public boolean runOnEvent(String event) {
+	public boolean runOnEvent(String event, ExecutionContext context) {
 		return false;
 	}
 
@@ -26,7 +26,6 @@ public class UndefinedEvokeEvent extends EvokeEvent {
 
 	@Override
 	public ArdenValue setTime(long newPrimaryTime) {
-		// TODO Auto-generated method stub
-		return null;
+		return new UndefinedEvokeEvent(newPrimaryTime);
 	}
 }

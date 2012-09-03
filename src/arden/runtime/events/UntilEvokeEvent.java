@@ -28,12 +28,12 @@ public class UntilEvokeEvent extends EvokeEvent {
 	}
 
 	@Override
-	public boolean runOnEvent(String event) {
-		return cycle.runOnEvent(event);
+	public boolean runOnEvent(String event, ExecutionContext context) {
+		return cycle.runOnEvent(event, context);
 	}
 
 	@Override
 	public ArdenValue setTime(long newPrimaryTime) {
-		return new UntilEvokeEvent(cycle, until);
+		return new UntilEvokeEvent(cycle, until, newPrimaryTime);
 	}
 }
