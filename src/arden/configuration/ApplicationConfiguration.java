@@ -19,47 +19,54 @@ public class ApplicationConfiguration {
 	}
 	
 	private Properties config = null;
-	private File configFile = null;
-	private final static String comment = "Arden2ByteCode config file";
+	private final static String DEFAULT_COMMENT = "Arden2ByteCode config file";
+	private final static File CONFIGDIR = new File(System.getProperty("user.home") + File.separator + ".arden2bytecode");
+	private final static File CONFIGFILE = new File(System.getProperty("user.home") + File.separator + ".arden2bytecode" + File.separator + "config");
 	
 	private ApplicationConfiguration() {
 		config = new Properties();
-		File configDir = new File(System.getProperty("user.home") 
-				+ File.separator + ".arden2bytecode");
-		configFile = new File(System.getProperty("user.home") 
-				+ File.separator + ".arden2bytecode"
-				+ File.separator + "config");				
 		
+		tryCreatingConfigFile();
+		if (!tryLoadingConfigFile()) {
+			tryLoadingConfigResource();
+		}
+	}
+	
+	private void tryCreatingConfigFile() {
 		InputStream configResource = this.getClass().getClassLoader().getResourceAsStream(
-						"arden2bytecode.config");		
-		
+				"arden2bytecode.config");		
+
 		// copy config resource to config file
-		if (configFile.exists() == false && configResource != null) {
+		if (CONFIGFILE.exists() == false && configResource != null) {
 			Properties configResProperties = new Properties();			
 			try {
-				configDir.mkdirs();
+				CONFIGDIR.mkdirs();
 				configResProperties.load(configResource);
-				configResProperties.store(new FileWriter(configFile), 
-								comment);
+				configResProperties.store(new FileWriter(CONFIGFILE), 
+								DEFAULT_COMMENT);
 			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		}
-		
-		// reset input stream
-		configResource = this.getClass().getClassLoader().getResourceAsStream(
-				"arden2bytecode.config");
+	}
+	
+	private boolean tryLoadingConfigFile() {
 		// try to load config priorizing a config file before a resource
 		boolean configLoaded = false;
-		if (configFile.exists()) {
+		if (CONFIGFILE.exists()) {
 			try {
-				config.load(new FileReader(configFile));
+				config.load(new FileReader(CONFIGFILE));
 				configLoaded = true;
 			} catch (FileNotFoundException e) {
 			} catch (IOException e) {
 			}
 		}
-		if (!configLoaded && configResource != null) {
+		return configLoaded;
+	}
+	
+	private void tryLoadingConfigResource() {
+		InputStream configResource = this.getClass().getClassLoader().getResourceAsStream(
+				"arden2bytecode.config");	
+		if (configResource != null) {
 			try {
 				config.load(configResource);
 			} catch (IOException e) {
@@ -70,7 +77,7 @@ public class ApplicationConfiguration {
 	
 	public void finalize() {
 		try {
-			config.store(new FileWriter(configFile), comment);
+			config.store(new FileWriter(CONFIGFILE), DEFAULT_COMMENT);
 		} catch (IOException e) {
 		}
 	}	

@@ -239,7 +239,7 @@ public class MainClass {
 				File assumed = new File(fileToCompile.getParentFile(), assumedName);
 				if (firstFile) {
 					System.err.println("warning: File " + fileToCompile.getPath() 
-							+ " compiled, but no output file given. Assuming "
+							+ " compiled, but no output filename given. Assuming "
 							+ assumed.getPath()
 							+ " as output file.");
 				} else {

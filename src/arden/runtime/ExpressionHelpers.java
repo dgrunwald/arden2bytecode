@@ -38,9 +38,7 @@ import java.util.regex.Pattern;
 import arden.runtime.events.AfterEvokeEvent;
 import arden.runtime.events.CyclicEvokeEvent;
 import arden.runtime.events.EvokeEvent;
-import arden.runtime.events.MappedEvokeEvent;
 import arden.runtime.events.NeverEvokeEvent;
-import arden.runtime.events.UndefinedEvokeEvent;
 import arden.runtime.events.UntilEvokeEvent;
 
 /**
@@ -1033,12 +1031,5 @@ public final class ExpressionHelpers {
 		} else {
 			return ArdenBoolean.create(false, input.primaryTime);
 		}
-	}
-
-	public static EvokeEvent mlmVariableToEvokeEvent(Object member) {
-		if (member instanceof String) {
-			return new MappedEvokeEvent((String)member);
-		}
-		return new UndefinedEvokeEvent();
 	}
 }

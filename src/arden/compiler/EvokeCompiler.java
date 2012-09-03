@@ -239,9 +239,8 @@ public class EvokeCompiler extends VisitorBase {
 		String name = id.getIdentifier().getText();
 		Variable var = context.codeGenerator.getVariable(name);
 		if (var == null)
-			throw new RuntimeCompilerException(id.getIdentifier(), "Unknown event variable: " + name);
+			throw new RuntimeCompilerException(id.getIdentifier(), "Unknown event variable identifier: \"" + name + "\"");
 		var.loadValue(context, id.getIdentifier());
-		//context.writer.invokeStatic(ExpressionCompiler.getMethod("mlmVariableToEvokeEvent", Object.class));
 	}
 	
 	@Override
