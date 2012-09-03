@@ -24,7 +24,12 @@ public class ComparableArdenTime extends ArdenValue implements Comparable<Compar
 
 	@Override
 	public int compareTo(ComparableArdenTime o) {
-		return Long.compare(value, o.value);
+		if (value < o.value) {
+			return -1;
+		} else if (value > o.value) {
+			return 1;
+		}
+		return 0;
 	}
 	
 	@Override
