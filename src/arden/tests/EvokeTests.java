@@ -41,6 +41,7 @@ import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
 import arden.runtime.ArdenTime;
 import arden.runtime.MedicalLogicModule;
+import arden.runtime.events.AfterEvokeEvent;
 import arden.runtime.events.EvokeEvent;
 import arden.runtime.events.FixedDateEvokeEvent;
 
@@ -207,5 +208,18 @@ public class EvokeTests {
 		EvokeEvent e = mlm.getEvoke(context, null);
 		
 		Assert.assertEquals(createDate(1993, 0, 1), e.getNextRunTime(context));
+	}
+
+	@Test
+	public void AfterTimeOfEventOperator2() throws Exception {
+		TestContext context = createTestContext();
+		
+		CompiledMlm mlm = parseEvoke("event1 := EVENT{test}", "3 days after time of event1");
+		EvokeEvent e = mlm.getEvoke(context, null);
+		
+		Assert.assertTrue(e instanceof AfterEvokeEvent);
+		Assert.assertEquals(null, e.getNextRunTime(context));
+		e.runOnEvent("test", context);
+		Assert.assertEquals(createDate(1990, 0, 4), e.getNextRunTime(context));
 	}
 }

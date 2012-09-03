@@ -10,11 +10,13 @@ public class CyclicEvokeEvent extends EvokeEvent {
 	private ArdenDuration interval;
 	private ArdenDuration length;
 	private ArdenTime starting;
+	private ArdenTime next;
 	
 	public CyclicEvokeEvent(ArdenDuration interval, ArdenDuration length, ArdenTime starting, long primaryTime) {
 		this.interval = interval;
 		this.length = length;
 		this.starting = starting;
+		this.next = this.starting;
 	}
 	
 	public CyclicEvokeEvent(ArdenDuration interval, ArdenDuration length, ArdenTime starting) {
@@ -24,7 +26,6 @@ public class CyclicEvokeEvent extends EvokeEvent {
 	@Override
 	public ArdenTime getNextRunTime(ExecutionContext context) {
 		ArdenTime current = context.getCurrentTime();
-		ArdenTime next = starting;
 		ArdenTime limit = new ArdenTime(starting.add(interval)); 
 		while (current.compareTo(next) > 0) {
 			next = new ArdenTime(next.add(interval));
