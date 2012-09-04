@@ -42,6 +42,7 @@ import arden.compiler.CompilerException;
 import arden.runtime.ArdenTime;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.events.AfterEvokeEvent;
+import arden.runtime.events.CyclicEvokeEvent;
 import arden.runtime.events.EvokeEvent;
 import arden.runtime.events.FixedDateEvokeEvent;
 
@@ -209,7 +210,7 @@ public class EvokeTests {
 		
 		Assert.assertEquals(createDate(1993, 0, 1), e.getNextRunTime(context));
 	}
-
+	
 	@Test
 	public void AfterTimeOfEventOperator2() throws Exception {
 		TestContext context = createTestContext();
@@ -219,7 +220,34 @@ public class EvokeTests {
 		
 		Assert.assertTrue(e instanceof AfterEvokeEvent);
 		Assert.assertEquals(null, e.getNextRunTime(context));
+		Assert.assertEquals(createDate(1990, 0, 1), context.getCurrentTime());
 		e.runOnEvent("test", context);
 		Assert.assertEquals(createDate(1990, 0, 4), e.getNextRunTime(context));
+	}
+	
+	@Test
+	public void CyclicEvent() throws Exception {
+		TestContext context = createTestContext();
+		
+		CompiledMlm mlm = parseEvoke("every 5 days for 10 years starting 5 days after 1992-03-04");
+		EvokeEvent e = mlm.getEvoke(context, null);
+		
+		Assert.assertTrue(e instanceof CyclicEvokeEvent);
+		Assert.assertEquals(createDate(1992, 2, 9), e.getNextRunTime(context));
+		context.setCurrentTime(createDate(1992, 2, 10));
+		Assert.assertEquals(createDate(1992, 2, 14), e.getNextRunTime(context));
+	}
+	
+	@Test
+	public void CyclicEventBeginningInThePast() throws Exception {
+		TestContext context = createTestContext();
+		
+		CompiledMlm mlm = parseEvoke("every 5 days for 10 years starting 5 days after 1989-03-04");
+		EvokeEvent e = mlm.getEvoke(context, null);
+		
+		Assert.assertTrue(e instanceof CyclicEvokeEvent);
+		Assert.assertEquals(createDate(1990, 0, 3), e.getNextRunTime(context));
+		context.setCurrentTime(createDate(1990, 0, 4));
+		Assert.assertEquals(createDate(1990, 0, 8), e.getNextRunTime(context));
 	}
 }

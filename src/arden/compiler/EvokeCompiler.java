@@ -22,6 +22,7 @@ import arden.compiler.node.AIdEventFactor;
 import arden.compiler.node.AIdateEvokeTime;
 import arden.compiler.node.AIdtEvokeTime;
 import arden.compiler.node.AOrEventOr;
+import arden.compiler.node.ASimpQualifiedEvokeCycle;
 import arden.compiler.node.ASimpleEvokeCycle;
 import arden.compiler.node.ASuntQualifiedEvokeCycle;
 import arden.compiler.node.ATofEvokeTime;
@@ -34,9 +35,9 @@ import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 import arden.runtime.events.AnyEvokeEvent;
-import arden.runtime.events.FixedDateEvokeEvent;
-import arden.runtime.events.NeverEvokeEvent;
+import arden.runtime.events.EmptyEvokeSlot;
 import arden.runtime.events.EvokeEvent;
+import arden.runtime.events.FixedDateEvokeEvent;
 
 public class EvokeCompiler extends VisitorBase {
 	private final CompilerContext context;
@@ -115,10 +116,10 @@ public class EvokeCompiler extends VisitorBase {
 	
 	@Override
 	public void caseAEmptyEvokeStatement(AEmptyEvokeStatement stmt) {
-		context.writer.newObject(NeverEvokeEvent.class);
+		context.writer.newObject(EmptyEvokeSlot.class);
 		context.writer.dup();
 		try {
-			context.writer.invokeConstructor(NeverEvokeEvent.class.getConstructor());
+			context.writer.invokeConstructor(EmptyEvokeSlot.class.getConstructor());
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		} catch (SecurityException e) {
@@ -240,12 +241,20 @@ public class EvokeCompiler extends VisitorBase {
 		Variable var = context.codeGenerator.getVariable(name);
 		if (var == null)
 			throw new RuntimeCompilerException(id.getIdentifier(), "Unknown event variable identifier: \"" + name + "\"");
+		if (!(var instanceof EventVariable)) {
+			throw new RuntimeCompilerException(id.getIdentifier(), "This is not an event variable: \"" + name + "\"");
+		}
 		var.loadValue(context, id.getIdentifier());
 	}
 	
 	@Override
 	public void caseAEcycEvokeStatement(AEcycEvokeStatement stmt) {
 		stmt.getQualifiedEvokeCycle().apply(this);
+	}
+	
+	@Override
+	public void caseASimpQualifiedEvokeCycle(ASimpQualifiedEvokeCycle node) {
+		node.getSimpleEvokeCycle().apply(this);
 	}
 	
 	/** leaves EvokeEvent on stack */

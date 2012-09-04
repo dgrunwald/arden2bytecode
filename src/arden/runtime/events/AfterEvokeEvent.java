@@ -6,20 +6,19 @@ import java.util.TreeSet;
 import arden.runtime.ArdenDuration;
 import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
-import arden.runtime.ComparableArdenTime;
 import arden.runtime.ExecutionContext;
 
 public class AfterEvokeEvent extends EvokeEvent {
 
 	EvokeEvent target;
 	ArdenDuration duration;
-	SortedSet<ComparableArdenTime> additionalSchedules;
+	SortedSet<ArdenTime> additionalSchedules;
 	
 	public AfterEvokeEvent(ArdenDuration duration, EvokeEvent target, long primaryTime) {
 		super(primaryTime);
 		this.duration = duration;
 		this.target = target;
-		this.additionalSchedules = new TreeSet<ComparableArdenTime>();
+		this.additionalSchedules = new TreeSet<ArdenTime>(new ArdenTime.NaturalComparator());
 	}
 	
 	public AfterEvokeEvent(ArdenDuration duration, EvokeEvent target) {
@@ -35,16 +34,16 @@ public class AfterEvokeEvent extends EvokeEvent {
 		}
 		
 		// delete past events from additionalSchedules:
-		while (!additionalSchedules.isEmpty() && additionalSchedules.first().compareTo(currentTime) > 0) {
+		while (!additionalSchedules.isEmpty() && additionalSchedules.comparator().compare(currentTime, additionalSchedules.first()) > 0) {
 			additionalSchedules.remove(additionalSchedules.first());
 		}
 		
 		// decide whether to use additionalSchedule time or nextRunTime:
 		if (!additionalSchedules.isEmpty()) {
-			if (additionalSchedules.first().toArdenTime().compareTo(nextRunTime) > 0) {
+			if (additionalSchedules.comparator().compare(additionalSchedules.first(), nextRunTime) > 0) {
 				return nextRunTime;
 			} else {
-				return additionalSchedules.first().toArdenTime();
+				return additionalSchedules.first();
 			}
 		}
 		return nextRunTime;
@@ -55,7 +54,7 @@ public class AfterEvokeEvent extends EvokeEvent {
 		boolean run = target.runOnEvent(event, context);
 		if (run) {
 			// trigger in 'duration' after current time:
-			additionalSchedules.add(new ComparableArdenTime(context.getCurrentTime().add(duration)));
+			additionalSchedules.add(new ArdenTime(context.getCurrentTime().add(duration)));
 		}
 		return false;
 	}

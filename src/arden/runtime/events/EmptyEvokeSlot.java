@@ -4,22 +4,19 @@ import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
 
-public class FixedDateEvokeEvent extends EvokeEvent {
+public class EmptyEvokeSlot extends EvokeEvent {
 
-	private ArdenTime date;
-	
-	public FixedDateEvokeEvent(ArdenTime date, long primaryTime) {
+	public EmptyEvokeSlot(long primaryTime) {
 		super(primaryTime);
-		this.date = date;
 	}
 	
-	public FixedDateEvokeEvent(ArdenTime date) {
-		this(date, NOPRIMARYTIME);
+	public EmptyEvokeSlot() {
+		this(NOPRIMARYTIME);
 	}
 	
 	@Override
 	public ArdenTime getNextRunTime(ExecutionContext context) {
-		return date;
+		return null;
 	}
 
 	@Override
@@ -29,7 +26,7 @@ public class FixedDateEvokeEvent extends EvokeEvent {
 
 	@Override
 	public ArdenValue setTime(long newPrimaryTime) {
-		return new FixedDateEvokeEvent(date, newPrimaryTime);
+		return new EmptyEvokeSlot(newPrimaryTime);
 	}
 
 }

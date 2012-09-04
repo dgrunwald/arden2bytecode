@@ -90,4 +90,7 @@ public interface CommandLineOptions {
 			+ "\t  E.g. a database driver like \"mysql-connector-java-[version]-bin.jar\".")
 	String getClasspath();
 	boolean isClasspath();
+	
+	@Option(description = "Run daemon that invokes MLMs when they are scheduled")
+	boolean getDaemon();
 }

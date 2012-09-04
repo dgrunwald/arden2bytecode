@@ -29,6 +29,7 @@ package arden.runtime;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -114,6 +115,21 @@ public final class ArdenTime extends ArdenValue {
 		} else {
 			long milliseconds = (long) (1000 * dur.value);
 			return this.value - milliseconds;
+		}
+	}
+	
+	public static class NaturalComparator implements Comparator<ArdenTime> {
+		@Override
+		public int compare(ArdenTime arg0, ArdenTime arg1) {
+			if (arg0 == null) {
+				if (arg1 == null) {
+					return 0;
+				}
+				return 1;
+			} else if (arg1 == null) {
+				return -1;
+			}
+			return new Long(arg0.value).compareTo(new Long(arg1.value));
 		}
 	}
 }

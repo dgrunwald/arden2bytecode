@@ -45,10 +45,10 @@ import arden.runtime.DatabaseQuery;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.MemoryQuery;
 import arden.runtime.events.CyclicEvokeEvent;
+import arden.runtime.events.EmptyEvokeSlot;
 import arden.runtime.events.EvokeEvent;
 import arden.runtime.events.FixedDateEvokeEvent;
 import arden.runtime.events.MappedEvokeEvent;
-import arden.runtime.events.NeverEvokeEvent;
 
 public class ExampleEvokeTests {
 	private MedicalLogicModule compile(String filename) throws Exception {
@@ -190,7 +190,7 @@ public class ExampleEvokeTests {
 		TestContext context = new TestContext();
 		EvokeEvent e = mlm.getEvoke(context, null);
 
-		Assert.assertTrue(e instanceof NeverEvokeEvent);		
+		Assert.assertTrue(e instanceof EmptyEvokeSlot);		
 	}
 
 	@Test
@@ -210,6 +210,6 @@ public class ExampleEvokeTests {
 		EvokeEvent e = mlm.getEvoke(context, new ArdenValue[] { medOrders, medAllergens, patientAllergies,
 				patientReactions });
 
-		Assert.assertTrue(e instanceof NeverEvokeEvent);	
+		Assert.assertTrue(e instanceof EmptyEvokeSlot);	
 	}
 }

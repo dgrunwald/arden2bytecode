@@ -26,7 +26,7 @@ public class CyclicEvokeEvent extends EvokeEvent {
 	@Override
 	public ArdenTime getNextRunTime(ExecutionContext context) {
 		ArdenTime current = context.getCurrentTime();
-		ArdenTime limit = new ArdenTime(starting.add(interval)); 
+		ArdenTime limit = new ArdenTime(starting.add(length)); 
 		while (current.compareTo(next) > 0) {
 			next = new ArdenTime(next.add(interval));
 			if (next.compareTo(limit) > 0) {
