@@ -56,9 +56,6 @@ public class ExampleEvokeTests {
 		c.enableDebugging(filename + ".mlm");
 		CompiledMlm mlm = c
 				.compileMlm(new InputStreamReader(ExampleEvokeTests.class.getResourceAsStream(filename + ".mlm")));
-		FileOutputStream fos = new FileOutputStream(mlm.getName() + ".class");
-		mlm.saveClassFile(fos);
-		fos.close();
 		return mlm;
 	}
 

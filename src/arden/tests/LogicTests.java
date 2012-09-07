@@ -197,7 +197,6 @@ public class LogicTests {
 				+ "  result := 1;"
 				+ "ENDIF; conclude true;",
 				"return result * arg;");
-		mlm.saveClassFile(new FileOutputStream(new File("test_mlm.class")));
 		ArdenValue[] result = mlm.run(new TestContext(), new ArdenValue[] { new ArdenNumber(10) });
 		Assert.assertEquals(1, result.length);
 		Assert.assertEquals("3628800", result[0].toString());
@@ -232,6 +231,15 @@ public class LogicTests {
 	public void AttributeAssignment() throws Exception {
 		ArdenObject obj = (ArdenObject) eval("Rectangle := Object [ aLeft, aTop, aWidth, aHeight ];",
 				"rect := NEW Rectangle; rect.aLeft := 0; rect.aTop := 0; rect.aWidth := 10; rect.aHeight := 20; "
+						+ " conclude true;", "return rect;", new TestContext());
+		Assert.assertEquals("Rectangle := OBJECT [ aLeft, aTop, aWidth, aHeight ]", obj.type.toString());
+		Assert.assertEquals("NEW Rectangle WITH 0, 0, 10, 20", obj.toString());
+	}
+	
+	@Test
+	public void AttributeAssignmentWithLet() throws Exception {
+		ArdenObject obj = (ArdenObject) eval("Rectangle := Object [ aLeft, aTop, aWidth, aHeight ];",
+				"rect := NEW Rectangle; LET rect.aLeft BE 0; LET rect.aTop BE 0; LET rect.aWidth BE 10; LET rect.aHeight BE 20; "
 						+ " conclude true;", "return rect;", new TestContext());
 		Assert.assertEquals("Rectangle := OBJECT [ aLeft, aTop, aWidth, aHeight ]", obj.type.toString());
 		Assert.assertEquals("NEW Rectangle WITH 0, 0, 10, 20", obj.toString());
