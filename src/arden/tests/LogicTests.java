@@ -27,8 +27,6 @@
 
 package arden.tests;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.lang.reflect.InvocationTargetException;
 
 import org.junit.Assert;
