@@ -50,7 +50,7 @@ public class JDBCQueryTests {
 		try {
 			driver = (Driver)Class.forName("org.sqlite.JDBC", true, ulc).newInstance();
 		} catch (ClassNotFoundException e) {
-			System.err.println("SQLite JDBC driver not found. Skipping associated test.");
+			System.err.println("SQLite JDBC driver not found. Skipping associated test in " + this.getClass().getName());
 			return null;
 		}
 		DriverManager.registerDriver(new DriverHelper(driver));

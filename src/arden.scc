@@ -638,7 +638,7 @@ logic_assignment =
 
 identifier_becomes =
       {id}      identifier_or_object_ref assign
-    | {let}     let identifier be
+    | {let}     let identifier_or_object_ref be
     | {now}     now assign;
 
 identifier_or_object_ref =

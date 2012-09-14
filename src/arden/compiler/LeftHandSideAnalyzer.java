@@ -63,7 +63,7 @@ final class LeftHandSideAnalyzer extends VisitorBase {
 
 	// identifier_becomes =
 	// {id} identifier_or_object_ref assign
-	// | {let} let identifier be
+	// | {let} let identifier_or_object_ref be
 	// | {now} now assign;
 	@Override
 	public void caseAIdIdentifierBecomes(AIdIdentifierBecomes node) {
@@ -72,7 +72,7 @@ final class LeftHandSideAnalyzer extends VisitorBase {
 
 	@Override
 	public void caseALetIdentifierBecomes(ALetIdentifierBecomes node) {
-		result = new LeftHandSideIdentifier(node.getIdentifier());
+		node.getIdentifierOrObjectRef().apply(this);
 	}
 
 	@Override
