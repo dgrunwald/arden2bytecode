@@ -45,6 +45,18 @@
         <path id="jar.classpath">
             <path location="." />
         </path>
+    	<uptodate property="arden.compiler.update.necessary" targetfile="${src.dir}/arden.scc">
+            <srcfiles dir="${src.dir}/arden/compiler/analysis" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/compiler/lexer" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/compiler/node" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/compiler/parser" includes="**/*" />
+    	</uptodate>
+    	<uptodate property="arden.constants.update.necessary" targetfile="${src.dir}/ardenConstants.scc">
+            <srcfiles dir="${src.dir}/arden/constants/analysis" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/constants/lexer" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/constants/node" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/constants/parser" includes="**/*" />
+    	</uptodate>
     </target>
 
     <target name="clean" depends="init" 
@@ -55,6 +67,10 @@
     	<mkdir dir="${src.dir}/arden/compiler/lexer" />
     	<mkdir dir="${src.dir}/arden/compiler/node" />
     	<mkdir dir="${src.dir}/arden/compiler/parser" />
+    	<mkdir dir="${src.dir}/arden/constants/analysis" />
+    	<mkdir dir="${src.dir}/arden/constants/lexer" />
+    	<mkdir dir="${src.dir}/arden/constants/node" />
+    	<mkdir dir="${src.dir}/arden/constants/parser" />
         <delete includeemptydirs="true">
             <fileset dir="${build.dir}" includes="**/*" />
             <fileset dir="${dist.dir}" includes="**/*" />
@@ -62,27 +78,33 @@
         	<fileset dir="${src.dir}/arden/compiler/lexer" includes="**/*" />
         	<fileset dir="${src.dir}/arden/compiler/node" includes="**/*" />
             <fileset dir="${src.dir}/arden/compiler/parser" includes="**/*" />
+        	<fileset dir="${src.dir}/arden/constants/analysis" includes="**/*" />
+        	<fileset dir="${src.dir}/arden/constants/lexer" includes="**/*" />
+        	<fileset dir="${src.dir}/arden/constants/node" includes="**/*" />
+            <fileset dir="${src.dir}/arden/constants/parser" includes="**/*" />
         </delete>
     </target>
 
-	<target name="sableCC" depends="init"
-		    description="start sableCC to generate parser from grammar">
-		<!-- <java jar="${tools.dir}/sablecc.jar" 
-			dir="${src.dir}"
-			fork="true"
-		    failonerror="true"
-		    maxmemory="128m">
-		    <arg value="arden.scc"/>
-		</java> -->
-
-	    <taskdef name="sablecc" classname="org.sablecc.ant.taskdef.Sablecc">
-	        <classpath>
-	            <pathelement location="${tools.dir}/sablecc.jar"/>
-	        </classpath>
-	    </taskdef> 
-		
-		<sablecc src="${src.dir}" includes="*.scc"
+	<target name="initSableCC" depends="init">
+		<taskdef name="sablecc" classname="org.sablecc.ant.taskdef.Sablecc">
+			        <classpath>
+			            <pathelement location="${tools.dir}/sablecc.jar"/>
+			        </classpath>
+			    </taskdef>
+	</target>
+	
+	<target name="sableCC.constants" depends="init,initSableCC" if="arden.constants.update.necessary">
+		<sablecc src="${src.dir}" includes="ardenConstants.scc"
 			outputdirectory="${src.dir}"></sablecc>
+	</target>
+		
+	<target name="sableCC.compiler" depends="init,initSableCC" if="arden.compiler.update.necessary">
+		<sablecc src="${src.dir}" includes="arden.scc"
+			outputdirectory="${src.dir}"></sablecc>
+	</target>
+	
+	<target name="sableCC" depends="init,sableCC.constants,sableCC.compiler"
+		    description="start sableCC to generate parsers from grammars">
 	</target>
 	
     <target name="compileOnly" depends="init"
