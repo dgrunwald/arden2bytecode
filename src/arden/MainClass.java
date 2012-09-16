@@ -87,8 +87,8 @@ public class MainClass {
 					if (classFile.exists()) {
 						inputFiles.add(classFile);
 					} else {
-						System.err.println("Class file " + classFileName 
-								+ " does not exist.");
+						System.err.println("File " + filePath + " and class file " + classFileName 
+								+ " do not exist.");
 					}
 				} else {
 					System.err.println("File \"" + filePath 
