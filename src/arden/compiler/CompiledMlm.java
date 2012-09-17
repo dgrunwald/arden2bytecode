@@ -36,6 +36,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import arden.MainClass;
 import arden.runtime.ArdenList;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
@@ -80,9 +81,9 @@ public final class CompiledMlm implements MedicalLogicModule {
 	
 	public CompiledMlm(File mlmfile, String mlmname) throws IOException {		
 		this((byte[]) null, mlmname);
-		// for debugging reasons:
-		//System.err.println("mlm: " + mlmfile.getPath());
-		//System.err.println("mlmname: " + mlmname);
+		if (this.mlmname == null) {
+			this.mlmname = MainClass.getFilenameBase(mlmfile.getName());
+		}
 		loadClassFile(mlmfile);
 		this.mlmname = getName();
 	}
