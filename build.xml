@@ -6,16 +6,16 @@
     Author: Hannes Flicka (hflicka@github)
 -->
 <project name="arden2bytecode" default="default" basedir=".">
-	<description>arden2bytecode ant build script.</description>
-	
+    <description>arden2bytecode ant build script.</description>
+    
     <target name="default" depends="jar" 
-    	    description="default target, depends on 'jar' which means a binary jar file will be built.">
+            description="default target, depends on 'jar' which means a binary jar file will be built.">
     </target>
 
     <target name="init" 
-    	    description="initializes used variables, mostly paths and directories">
+            description="initializes used variables, mostly paths and directories">
         <tstamp>
-        	<format property="release.stamp" pattern="yyyy-MM-dd" locale="en,US" />
+            <format property="release.stamp" pattern="yyyy-MM-dd" locale="en,US" />
         </tstamp>
         <property name="debug" value="on" />
         <property name="optimize" value="off" />
@@ -24,7 +24,7 @@
         <property name="name" value="${ant.project.name}" />
         <property name="src.dir" value="src" />
         <property name="tools.dir" value="tools" />
-    	<property name="resource.dir" value="resource" />
+        <property name="resource.dir" value="resource" />
         <property name="lib.dir" value="lib" />
         <property name="build.dir" value="bin" />
         <property name="dist.dir" value="dist" />
@@ -45,94 +45,111 @@
         <path id="jar.classpath">
             <path location="." />
         </path>
-    	<uptodate property="arden.compiler.update.necessary" targetfile="${src.dir}/arden.scc">
-            <srcfiles dir="${src.dir}/arden/compiler/analysis" includes="**/*" />
-            <srcfiles dir="${src.dir}/arden/compiler/lexer" includes="**/*" />
-            <srcfiles dir="${src.dir}/arden/compiler/node" includes="**/*" />
-            <srcfiles dir="${src.dir}/arden/compiler/parser" includes="**/*" />
-    	</uptodate>
-    	<uptodate property="arden.constants.update.necessary" targetfile="${src.dir}/ardenConstants.scc">
-            <srcfiles dir="${src.dir}/arden/constants/analysis" includes="**/*" />
-            <srcfiles dir="${src.dir}/arden/constants/lexer" includes="**/*" />
-            <srcfiles dir="${src.dir}/arden/constants/node" includes="**/*" />
-            <srcfiles dir="${src.dir}/arden/constants/parser" includes="**/*" />
-    	</uptodate>
+        
+        <condition property="sableCCDirectoriesExist">
+            <and>
+                <available file="${src.dir}/arden/compiler/analysis" type="dir" />
+                <available file="${src.dir}/arden/compiler/lexer" type="dir" />
+                <available file="${src.dir}/arden/compiler/node" type="dir" />
+                <available file="${src.dir}/arden/compiler/parser" type="dir" />
+                <available file="${src.dir}/arden/constants/analysis" type="dir" />
+                <available file="${src.dir}/arden/constants/lexer" type="dir" />
+                <available file="${src.dir}/arden/constants/node" type="dir" />
+                <available file="${src.dir}/arden/constants/parser" type="dir" />
+            </and>
+        </condition>
+        
     </target>
 
-    <target name="clean" depends="init" 
-    	    description="clean the 'bin' and 'dist' directories and delete sableCC-generated .java files">
+    <target name="createSableCCDirectories" unless="sableCCDirectoriesExist">
+        <mkdir dir="${src.dir}/arden/compiler/analysis" />
+        <mkdir dir="${src.dir}/arden/compiler/lexer" />
+        <mkdir dir="${src.dir}/arden/compiler/node" />
+        <mkdir dir="${src.dir}/arden/compiler/parser" />
+        <mkdir dir="${src.dir}/arden/constants/analysis" />
+        <mkdir dir="${src.dir}/arden/constants/lexer" />
+        <mkdir dir="${src.dir}/arden/constants/node" />
+        <mkdir dir="${src.dir}/arden/constants/parser" />
+    </target>
+    
+    <target name="clean" depends="init,createSableCCDirectories" 
+            description="clean the 'bin' and 'dist' directories and delete sableCC-generated .java files">
         <mkdir dir="${build.dir}" />
         <mkdir dir="${dist.dir}" />
-    	<mkdir dir="${src.dir}/arden/compiler/analysis" />
-    	<mkdir dir="${src.dir}/arden/compiler/lexer" />
-    	<mkdir dir="${src.dir}/arden/compiler/node" />
-    	<mkdir dir="${src.dir}/arden/compiler/parser" />
-    	<mkdir dir="${src.dir}/arden/constants/analysis" />
-    	<mkdir dir="${src.dir}/arden/constants/lexer" />
-    	<mkdir dir="${src.dir}/arden/constants/node" />
-    	<mkdir dir="${src.dir}/arden/constants/parser" />
         <delete includeemptydirs="true">
             <fileset dir="${build.dir}" includes="**/*" />
             <fileset dir="${dist.dir}" includes="**/*" />
-        	<fileset dir="${src.dir}/arden/compiler/analysis" includes="**/*" />
-        	<fileset dir="${src.dir}/arden/compiler/lexer" includes="**/*" />
-        	<fileset dir="${src.dir}/arden/compiler/node" includes="**/*" />
+            <fileset dir="${src.dir}/arden/compiler/analysis" includes="**/*" />
+            <fileset dir="${src.dir}/arden/compiler/lexer" includes="**/*" />
+            <fileset dir="${src.dir}/arden/compiler/node" includes="**/*" />
             <fileset dir="${src.dir}/arden/compiler/parser" includes="**/*" />
-        	<fileset dir="${src.dir}/arden/constants/analysis" includes="**/*" />
-        	<fileset dir="${src.dir}/arden/constants/lexer" includes="**/*" />
-        	<fileset dir="${src.dir}/arden/constants/node" includes="**/*" />
+            <fileset dir="${src.dir}/arden/constants/analysis" includes="**/*" />
+            <fileset dir="${src.dir}/arden/constants/lexer" includes="**/*" />
+            <fileset dir="${src.dir}/arden/constants/node" includes="**/*" />
             <fileset dir="${src.dir}/arden/constants/parser" includes="**/*" />
         </delete>
     </target>
 
-	<target name="initSableCC" depends="init">
-		<taskdef name="sablecc" classname="org.sablecc.ant.taskdef.Sablecc">
-			        <classpath>
-			            <pathelement location="${tools.dir}/sablecc.jar"/>
-			        </classpath>
-			    </taskdef>
-	</target>
-	
-	<target name="sableCC.constants" depends="init,initSableCC" if="arden.constants.update.necessary">
-		<sablecc src="${src.dir}" includes="ardenConstants.scc"
-			outputdirectory="${src.dir}"></sablecc>
-	</target>
-		
-	<target name="sableCC.compiler" depends="init,initSableCC" if="arden.compiler.update.necessary">
-		<sablecc src="${src.dir}" includes="arden.scc"
-			outputdirectory="${src.dir}"></sablecc>
-	</target>
-	
-	<target name="sableCC" depends="init,sableCC.constants,sableCC.compiler"
-		    description="start sableCC to generate parsers from grammars">
-	</target>
-	
+    <target name="initSableCC" depends="init,createSableCCDirectories">
+        <uptodate property="arden.compiler.update.necessary" targetfile="${src.dir}/arden.scc">
+            <srcfiles dir="${src.dir}/arden/compiler/analysis" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/compiler/lexer" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/compiler/node" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/compiler/parser" includes="**/*" />
+        </uptodate>
+        <uptodate property="arden.constants.update.necessary" targetfile="${src.dir}/ardenConstants.scc">
+            <srcfiles dir="${src.dir}/arden/constants/analysis" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/constants/lexer" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/constants/node" includes="**/*" />
+            <srcfiles dir="${src.dir}/arden/constants/parser" includes="**/*" />
+        </uptodate>
+        <taskdef name="sablecc" classname="org.sablecc.ant.taskdef.Sablecc">
+            <classpath>
+                <pathelement location="${tools.dir}/sablecc.jar"/>
+            </classpath>
+        </taskdef>
+    </target>
+    
+    <target name="sableCC.constants" depends="init,initSableCC" if="arden.constants.update.necessary">
+        <sablecc src="${src.dir}" includes="ardenConstants.scc"
+            outputdirectory="${src.dir}"></sablecc>
+    </target>
+        
+    <target name="sableCC.compiler" depends="init,initSableCC" if="arden.compiler.update.necessary">
+        <sablecc src="${src.dir}" includes="arden.scc"
+            outputdirectory="${src.dir}"></sablecc>
+    </target>
+    
+    <target name="sableCC" depends="init,initSableCC,sableCC.constants,sableCC.compiler"
+            description="start sableCC to generate parsers from grammars">
+    </target>
+    
     <target name="compileOnly" depends="init"
-    	    description="compile all .java files in ./src except for tests">
+            description="compile all .java files in ./src except for tests">
         <mkdir dir="${build.dir}" />
-    	<copy todir="${build.dir}">
-    		<fileset dir="${src.dir}">
-    		    <exclude name="**/*.java"/>
-    		</fileset>
-    	</copy>
+        <copy todir="${build.dir}">
+            <fileset dir="${src.dir}">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
         <javac srcdir="${src.dir}" 
                destdir="${build.dir}" 
                debug="${debug}" 
                classpathref="build.classpath" 
                optimize="${optimize}" 
                source="1.6"
-        	   includeantruntime="false">
+               includeantruntime="false">
             <include name="**/*.java" />
-        	<exclude name="arden/tests/*.java"/>
+            <exclude name="arden/tests/*.java"/>
         </javac>
     </target>
-	
-	<target name="compile" depends="sableCC,compileOnly"
-		    description="start sableCC and, after that, compile sources">
-	</target>
-	
+    
+    <target name="compile" depends="sableCC,compileOnly"
+            description="start sableCC and, after that, compile sources">
+    </target>
+    
     <target name="jarOnly" depends="init"
-    	    description="generate .jar bundle from compiled files without actually compiling the sources">
+            description="generate .jar bundle from compiled files without actually compiling the sources">
         <mkdir dir="${dist.dir}" />
         <manifestclasspath property="manifest.classpath" jarfile="${dist.jar}">
             <classpath refid="jar.classpath" />
@@ -147,74 +164,74 @@
                 <attribute name="Implementation-Version" value="${version}" />
             </manifest>
             <fileset dir="${build.dir}" />
-        	<fileset file="${resource.dir}/arden2bytecode.config" />
-        	<zipgroupfileset dir="${lib.dir}" includes="*.jar" />
+            <fileset file="${resource.dir}/arden2bytecode.config" />
+            <zipgroupfileset dir="${lib.dir}" includes="*.jar" />
         </jar>
         <basename property="jar.filename" file="${dist.jar}" />
         <echo file="${dist.dir}/${name}.cmd" append="false">@echo off
              java -jar "%~dp0${jar.filename}" %*
              rem pause
         </echo>
-    	<echo file="${dist.dir}/${name}" append="false">#!/bin/sh
-    	     java -jar "$( cd -P "$( dirname "$0" )" &amp;&amp; pwd )/${jar.filename}" "$@"
-    	</echo>
-    	<chmod file="${dist.dir}/${name}" perm="ugo+x" />
+        <echo file="${dist.dir}/${name}" append="false">#!/bin/sh
+             java -jar "$( cd -P "$( dirname "$0" )" &amp;&amp; pwd )/${jar.filename}" "$@"
+        </echo>
+        <chmod file="${dist.dir}/${name}" perm="ugo+x" />
     </target>
 
-	<target name="jar" depends="compile,jarOnly"
-		    description="compile, then package everything into a .jar">
-	</target>
-	
-	<target name="distOnly" depends="jarOnly"
-		    description="build distribution .tar and .zip file">
-		<tar destfile="${dist.dir}/${name} - binary release ${release.stamp}.tar.gz"
-			compression="gzip">
-			<tarfileset dir="${dist.dir}">
-				<include name="${dist.jar}"/>
-				<include name="${name}.cmd"/>
-			</tarfileset>
-			<tarfileset dir="${dist.dir}" filemode="755">
-				<include name="${name}"/>
-			</tarfileset>
-			<tarfileset dir="${resource.dir}">
-				<include name="examples/**" />
-			</tarfileset>
-		</tar>
-		<zip destfile="${dist.dir}/${name} - binary release ${release.stamp}.zip">
-			<zipfileset dir="${dist.dir}">
-				<include name="${dist.jar}" />
-				<include name="${name}.cmd" />
-			</zipfileset>
-			<zipfileset dir="${dist.dir}" filemode="755">
-				<include name="${name}" />
-			</zipfileset>
-			<zipfileset dir="${resource.dir}">
-				<include name="examples/**" />
-			</zipfileset>
-		</zip>
-	</target>
-	
-	<target name="dist" depends="jar,distOnly"
-			    description="build distribution .tar and .zip file">
-	</target>
-	
-	<target name="compileAndJarOnly" depends="compileOnly,jarOnly"
-		    description="compile the sources without starting sableCC, then package a .jar">		
-	</target>
-	
+    <target name="jar" depends="compile,jarOnly"
+            description="compile, then package everything into a .jar">
+    </target>
+    
+    <target name="distOnly" depends="jarOnly"
+            description="build distribution .tar and .zip file">
+        <tar destfile="${dist.dir}/${name} - binary release ${release.stamp}.tar.gz"
+            compression="gzip">
+            <tarfileset dir="${dist.dir}">
+                <include name="${dist.jar}"/>
+                <include name="${name}.cmd"/>
+            </tarfileset>
+            <tarfileset dir="${dist.dir}" filemode="755">
+                <include name="${name}"/>
+            </tarfileset>
+            <tarfileset dir="${resource.dir}">
+                <include name="examples/**" />
+            </tarfileset>
+        </tar>
+        <zip destfile="${dist.dir}/${name} - binary release ${release.stamp}.zip">
+            <zipfileset dir="${dist.dir}">
+                <include name="${dist.jar}" />
+                <include name="${name}.cmd" />
+            </zipfileset>
+            <zipfileset dir="${dist.dir}" filemode="755">
+                <include name="${name}" />
+            </zipfileset>
+            <zipfileset dir="${resource.dir}">
+                <include name="examples/**" />
+            </zipfileset>
+        </zip>
+    </target>
+    
+    <target name="dist" depends="jar,distOnly"
+                description="build distribution .tar and .zip file">
+    </target>
+    
+    <target name="compileAndJarOnly" depends="compileOnly,jarOnly"
+            description="compile the sources without starting sableCC, then package a .jar">        
+    </target>
+    
     <target name="runOnly" depends="init"
-    	    description="run the program from the bin directory">
+            description="run the program from the bin directory">
         <property name="echoclasspath" refid="run.classpath" />
         <echo message="Running ${run.entrypoint} with classpath: ${echoclasspath}" />
         <java classname="${run.entrypoint}" classpathref="run.classpath" fork="true"></java>
     </target>
-	
-	<target name="run" depends="compile,runOnly"
-		    description="compile, then run the program">		
-	</target>
+    
+    <target name="run" depends="compile,runOnly"
+            description="compile, then run the program">        
+    </target>
 
     <target name="runAndRedirectOutput" depends="compile"
-    	    description="run the program and redirect output to 'output.txt'">    	
+            description="run the program and redirect output to 'output.txt'">        
         <property name="echoclasspath" refid="run.classpath" />
         <echo message="Redirecting output to 'output.txt'" />
         <echo message="Running ${run.entrypoint} with classpath: ${echoclasspath}" />
