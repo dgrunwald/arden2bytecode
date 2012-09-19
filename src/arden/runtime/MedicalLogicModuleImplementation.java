@@ -27,6 +27,8 @@
 
 package arden.runtime;
 
+import java.lang.reflect.Field;
+
 import arden.runtime.events.EvokeEvent;
 import arden.runtime.events.UndefinedEvokeEvent;
 
@@ -59,7 +61,7 @@ public abstract class MedicalLogicModuleImplementation {
 	}
 	
 	/** Gets the maintenance metadata 
-	 * (not declared abstract to stay downwards compatible with exiting MLMs) */
+	 * (not declared abstract to stay downwards compatible with existing MLMs) */
 	public MaintenanceMetadata getMaintenanceMetadata() {
 		return null;
 	}
@@ -78,6 +80,9 @@ public abstract class MedicalLogicModuleImplementation {
 		return RuntimeHelpers.DEFAULT_PRIORITY;
 	}
 	
+	/**
+	 * Gets the event when this MLM should be invoked
+	 */
 	public EvokeEvent getEvokeEvent(ExecutionContext context) {
 		return new UndefinedEvokeEvent();
 	}
