@@ -27,8 +27,6 @@
 
 package arden.runtime;
 
-import java.lang.reflect.Field;
-
 import arden.runtime.events.EvokeEvent;
 import arden.runtime.events.UndefinedEvokeEvent;
 
@@ -85,5 +83,13 @@ public abstract class MedicalLogicModuleImplementation {
 	 */
 	public EvokeEvent getEvokeEvent(ExecutionContext context) {
 		return new UndefinedEvokeEvent();
+	}
+	
+	/**
+	 * Gets a Variable that is declared in the Medical Logic Module.
+	 * This method should be overridden by the MLMs ByteCode.
+	 */
+	public ArdenValue getValue(String name) {
+		return ArdenNull.INSTANCE;
 	}
 }
