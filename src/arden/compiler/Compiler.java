@@ -164,6 +164,8 @@ public final class Compiler {
 			throw new RuntimeException(e);
 		}
 
+		codeGen.createGetValue();
+			
 		byte[] data;
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
