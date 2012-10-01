@@ -7,7 +7,6 @@ import org.junit.Test;
 
 import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
-import arden.runtime.ArdenBoolean;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenValue;
 import arden.runtime.MedicalLogicModule;
