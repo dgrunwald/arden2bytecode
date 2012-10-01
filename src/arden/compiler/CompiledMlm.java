@@ -65,6 +65,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 	private byte[] data;
 	Class<? extends MedicalLogicModuleImplementation> clazz = null;
 	private MedicalLogicModuleImplementation uninitializedInstance = null;	
+	private MedicalLogicModuleImplementation initializedInstance = null;
 	private EvokeEvent evokeEvent = null;
 	private String mlmname;
 
@@ -180,6 +181,7 @@ public final class CompiledMlm implements MedicalLogicModule {
 	@Override
 	public ArdenValue[] run(ExecutionContext context, ArdenValue[] arguments) throws InvocationTargetException {
 		MedicalLogicModuleImplementation instance = createInstance(context, arguments);
+		initializedInstance = instance;
 		try {
 			if (instance.logic(context))
 				return instance.action(context);
@@ -239,10 +241,19 @@ public final class CompiledMlm implements MedicalLogicModule {
 	@Override
 	public EvokeEvent getEvoke(ExecutionContext context, ArdenValue[] arguments) throws InvocationTargetException {
 		if (evokeEvent == null) {
-			MedicalLogicModuleImplementation instance = createInstance(context, arguments);
+			MedicalLogicModuleImplementation instance = initializedInstance;
+			if (instance == null) {
+				instance = createInstance(context, arguments);
+			}
 			evokeEvent = instance.getEvokeEvent(context);
 		}
 		return evokeEvent;
 	}
 
+	public ArdenValue getValue(String name) {
+		if (initializedInstance != null) {
+			return initializedInstance.getValue(name);
+		}
+		return null;
+	}
 }
