@@ -72,12 +72,18 @@
         <mkdir dir="${src.dir}/arden/constants/parser" />
     </target>
     
-    <target name="clean" depends="init,createSableCCDirectories" 
-            description="clean the 'bin' and 'dist' directories and delete sableCC-generated .java files">
+    <target name="cleanClasses" depends="init" 
+            description="clean all java classes and files in the 'bin' directory">
         <mkdir dir="${build.dir}" />
-        <mkdir dir="${dist.dir}" />
         <delete includeemptydirs="true">
             <fileset dir="${build.dir}" includes="**/*" />
+        </delete>
+    </target>
+    
+    <target name="clean" depends="init,createSableCCDirectories,cleanClasses" 
+            description="clean the 'bin' and 'dist' directories and delete sableCC-generated .java files">
+        <mkdir dir="${dist.dir}" />
+        <delete includeemptydirs="true">
             <fileset dir="${dist.dir}" includes="**/*" />
             <fileset dir="${src.dir}/arden/compiler/analysis" includes="**/*" />
             <fileset dir="${src.dir}/arden/compiler/lexer" includes="**/*" />
@@ -130,6 +136,7 @@
         <copy todir="${build.dir}">
             <fileset dir="${src.dir}">
                 <exclude name="**/*.java"/>
+                <exclude name="**/*.class"/>
             </fileset>
         </copy>
         <javac srcdir="${src.dir}" 
