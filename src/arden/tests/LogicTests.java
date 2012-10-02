@@ -32,6 +32,7 @@ import java.lang.reflect.InvocationTargetException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import arden.compiler.CompiledMlm;
 import arden.runtime.ArdenList;
 import arden.runtime.ArdenNumber;
 import arden.runtime.ArdenObject;
@@ -186,7 +187,7 @@ public class LogicTests {
 
 	@Test
 	public void RecursiveMlm() throws Exception {
-		MedicalLogicModule mlm = ActionTests.parseTemplate(
+		CompiledMlm mlm = ActionTests.parseTemplate(
 				"this := MLM mlm_self; arg := ARGUMENT;",
 				"If arg > 1 THEN"
 				+ "  result := CALL this WITH (arg-1);"
@@ -228,6 +229,15 @@ public class LogicTests {
 	public void AttributeAssignment() throws Exception {
 		ArdenObject obj = (ArdenObject) eval("Rectangle := Object [ aLeft, aTop, aWidth, aHeight ];",
 				"rect := NEW Rectangle; rect.aLeft := 0; rect.aTop := 0; rect.aWidth := 10; rect.aHeight := 20; "
+						+ " conclude true;", "return rect;", new TestContext());
+		Assert.assertEquals("Rectangle := OBJECT [ aLeft, aTop, aWidth, aHeight ]", obj.type.toString());
+		Assert.assertEquals("NEW Rectangle WITH 0, 0, 10, 20", obj.toString());
+	}
+	
+	@Test
+	public void AttributeAssignmentWithLet() throws Exception {
+		ArdenObject obj = (ArdenObject) eval("Rectangle := Object [ aLeft, aTop, aWidth, aHeight ];",
+				"rect := NEW Rectangle; LET rect.aLeft BE 0; LET rect.aTop BE 0; LET rect.aWidth BE 10; LET rect.aHeight BE 20; "
 						+ " conclude true;", "return rect;", new TestContext());
 		Assert.assertEquals("Rectangle := OBJECT [ aLeft, aTop, aWidth, aHeight ]", obj.type.toString());
 		Assert.assertEquals("NEW Rectangle WITH 0, 0, 10, 20", obj.toString());

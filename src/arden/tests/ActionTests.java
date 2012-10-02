@@ -34,6 +34,7 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 
+import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
 import arden.compiler.CompilerException;
 import arden.runtime.ArdenRunnable;
@@ -46,7 +47,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class ActionTests {
-	private static String inputStreamToString(InputStream in) throws IOException {
+	public static String inputStreamToString(InputStream in) throws IOException {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
 		StringBuilder stringBuilder = new StringBuilder();
 
@@ -60,7 +61,7 @@ public class ActionTests {
 		return stringBuilder.toString();
 	}
 
-	public static MedicalLogicModule parseTemplate(String dataCode, String logicCode, String actionCode)
+	public static CompiledMlm parseTemplate(String dataCode, String logicCode, String actionCode)
 			throws CompilerException {
 		try {
 			InputStream s = ActionTests.class.getResourceAsStream("ActionTemplate.mlm");

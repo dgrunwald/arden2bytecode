@@ -35,6 +35,12 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
+import arden.runtime.events.AfterEvokeEvent;
+import arden.runtime.events.CyclicEvokeEvent;
+import arden.runtime.events.EvokeEvent;
+import arden.runtime.events.NeverEvokeEvent;
+import arden.runtime.events.UntilEvokeEvent;
+
 /**
  * Static helper methods for ExpressionCompiler (mostly operators with special
  * list handling).
@@ -42,6 +48,15 @@ import java.util.regex.Pattern;
  * @author Daniel Grunwald
  */
 public final class ExpressionHelpers {
+	/** helper function */
+	public static String getClassName(Object o) {
+		if (o == null) {
+			return "null";
+		}
+		return o.getClass().getSimpleName();
+	}
+	
+	
 	/** implements the ",x" operator */
 	public static ArdenList unaryComma(ArdenValue value) {
 		if (value instanceof ArdenList)
@@ -666,7 +681,22 @@ public final class ExpressionHelpers {
 		else
 			return ArdenNull.create(primaryTime);
 	}
-
+	
+	/** implements the AFTER duration operator */
+	public static EvokeEvent after(ArdenValue duration, EvokeEvent event) {
+		if (duration instanceof ArdenDuration) {
+			long primaryTime = getCommonTime(new ArdenValue[]{duration, event});
+			return new AfterEvokeEvent((ArdenDuration) duration, event, primaryTime);
+		}
+		throw new RuntimeException("AFTER operator not implemented for "
+						+ getClassName(duration) 
+						+ " AFTER " + getClassName(event));
+	}
+	
+	public static EvokeEvent timeOf(EvokeEvent event, ExecutionContext context) {
+		return event;
+	}
+	
 	public static ArdenValue createDuration(ArdenValue val, double multiplier, boolean isMonths) {
 		if (val instanceof ArdenList) {
 			ArdenValue[] inputs = ((ArdenList) val).values;
@@ -680,7 +710,36 @@ public final class ExpressionHelpers {
 			return ArdenNull.create(val.primaryTime);
 		}
 	}
+	
+	public static EvokeEvent createEvokeCycle(ArdenValue interval, ArdenValue length, EvokeEvent start, ExecutionContext context) {
+		if (interval instanceof ArdenDuration && length instanceof ArdenDuration) {
+			ArdenTime starting = start.getNextRunTime(context);
+			if (starting != null) {
+				return new CyclicEvokeEvent((ArdenDuration) interval, (ArdenDuration) length, starting);
+			} else {
+				return new NeverEvokeEvent();
+			}
+		}
+		throw new RuntimeException("cannot create evoke cycle with these types: " + 
+						getClassName(interval) + ", " +
+						getClassName(length) + ", " +
+						getClassName(start));
+	}
 
+	public static EvokeEvent until(EvokeEvent simpleEvokeCycle, ArdenValue untilExpr) {
+		if (untilExpr instanceof ArdenTime) {
+			return new UntilEvokeEvent(simpleEvokeCycle, (ArdenTime) untilExpr);
+		} else if (untilExpr instanceof ArdenNull) {
+			return simpleEvokeCycle;
+		}
+		throw new RuntimeException("cannot create until event for type " + getClassName(untilExpr) + " after the 'until'");
+	}
+	
+	/** returns the EvokeEvent when 'call' is stated in the evoke slot */
+	public static EvokeEvent evokeSlotCall() {
+		return new NeverEvokeEvent();
+	}
+	
 	public static ArdenValue extractTimeComponent(ArdenValue time, int component) {
 		if (time instanceof ArdenList) {
 			ArdenValue[] inputs = ((ArdenList) time).values;

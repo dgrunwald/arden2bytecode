@@ -660,9 +660,14 @@ final class ExpressionCompiler extends VisitorBase {
 	@Override
 	public void caseAExprDuration(AExprDuration node) {
 		node.getExprFunction().apply(this);
+		PDurationOp durOp = node.getDurationOp();
+		compileDurationOp(durOp);
+		context.writer.invokeStatic(getMethod("createDuration", ArdenValue.class, double.class, boolean.class));
+	}
+	
+	public void compileDurationOp(Node durOp) {
 		boolean isMonths;
 		double multiplier;
-		PDurationOp durOp = node.getDurationOp();
 		if (durOp instanceof ADayDurationOp || durOp instanceof ADaysDurationOp) {
 			isMonths = false;
 			multiplier = 86400;
@@ -689,9 +694,8 @@ final class ExpressionCompiler extends VisitorBase {
 		}
 		context.writer.loadDoubleConstant(multiplier);
 		context.writer.loadIntegerConstant(isMonths ? 1 : 0);
-		context.writer.invokeStatic(getMethod("createDuration", ArdenValue.class, double.class, boolean.class));
 	}
-
+	
 	// expr_function =
 	// {expr} expr_factor
 	// | {ofexpr} of_func_op expr_function

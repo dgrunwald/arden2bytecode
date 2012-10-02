@@ -29,6 +29,7 @@ package arden.compiler;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,8 +46,11 @@ import arden.runtime.ArdenString;
 import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.ExecutionContext;
+import arden.runtime.LibraryMetadata;
+import arden.runtime.MaintenanceMetadata;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.MedicalLogicModuleImplementation;
+import arden.runtime.events.EvokeEvent;
 
 /**
  * This class is responsible for generating the
@@ -166,6 +170,7 @@ final class CodeGenerator {
 	public CodeGenerator(String mlmName, int lineNumberForStaticInitializationSequencePoint) {
 		this.classFileWriter = new ClassFileWriter(mlmName, MedicalLogicModuleImplementation.class);
 		this.lineNumberForStaticInitializationSequencePoint = lineNumberForStaticInitializationSequencePoint;
+		createParameterLessConstructor();
 	}
 
 	private boolean isDebuggingEnabled = false;
@@ -181,6 +186,8 @@ final class CodeGenerator {
 	private final Label ctorInitCodeLabel = new Label();
 	private int lineNumberForInitializationSequencePoint;
 
+	private MethodWriter parameterLessCtor;
+	
 	public CompilerContext createConstructor(int lineNumberForInitializationSequencePoint) {
 		ctor = classFileWriter.createConstructor(Modifier.PUBLIC, new Class<?>[] { ExecutionContext.class,
 				MedicalLogicModule.class, ArdenValue[].class });
@@ -199,6 +206,19 @@ final class CodeGenerator {
 		}
 		ctor.jump(ctorInitCodeLabel);
 		ctor.mark(ctorUserCodeLabel);
+		return new CompilerContext(this, ctor, 3);
+	}
+	
+	public CompilerContext createParameterLessConstructor() {
+		parameterLessCtor = classFileWriter.createConstructor(Modifier.PUBLIC, new Class<?>[] {});
+		parameterLessCtor.loadThis();
+		try {
+			parameterLessCtor.invokeConstructor(MedicalLogicModuleImplementation.class.getConstructor());
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
 		return new CompilerContext(this, ctor, 3);
 	}
 
@@ -223,6 +243,96 @@ final class CodeGenerator {
 		if (isDebuggingEnabled)
 			w.enableLineNumberTable();
 		return new CompilerContext(this, w, 0);
+	}
+	
+	public CompilerContext createPriority() {
+		MethodWriter w = classFileWriter.createMethod("getPriority", Modifier.PUBLIC, new Class<?>[] {}, Double.TYPE);
+		if (isDebuggingEnabled)
+			w.enableLineNumberTable();
+		return new CompilerContext(this, w, 0);
+	}
+	
+	public CompilerContext createMaintenance() {
+		MethodWriter w = classFileWriter.createMethod("getMaintenanceMetadata", Modifier.PUBLIC, new Class<?>[] {}, MaintenanceMetadata.class);
+		if (isDebuggingEnabled)
+			w.enableLineNumberTable();
+		return new CompilerContext(this, w, 0);
+	}
+	
+	public CompilerContext createLibrary() {
+		MethodWriter w = classFileWriter.createMethod("getLibraryMetadata", Modifier.PUBLIC, new Class<?>[] {}, LibraryMetadata.class);
+		if (isDebuggingEnabled)
+			w.enableLineNumberTable();
+		return new CompilerContext(this, w, 0);
+	}
+	
+	public CompilerContext createEvokeEvent() {
+		MethodWriter w = classFileWriter.createMethod(
+				"getEvokeEvent", 
+				Modifier.PUBLIC, 
+				new Class<?>[] { ExecutionContext.class }, 
+				EvokeEvent.class);
+		if (isDebuggingEnabled)
+			w.enableLineNumberTable();
+		return new CompilerContext(this, w, 1);
+	}
+	
+	public void createGetValue() {
+		MethodWriter w = classFileWriter.createMethod(
+				"getValue", 
+				Modifier.PUBLIC, 
+				new Class<?>[]{ String.class }, 
+				ArdenValue.class);
+		try {
+			Label excptBegin = new Label();
+			Label excptEnd = new Label();
+			Label end = new Label();
+			Label secHandler = new Label();
+			Label noSuchFieldHandler = new Label();
+			Label illegalArgHandler = new Label();
+			Label illegalAccHandler = new Label();
+			w.mark(excptBegin);
+			w.loadThis();
+			w.invokeInstance(Object.class.getMethod("getClass"));
+			w.loadVariable(1);
+			w.invokeInstance(Class.class.getMethod("getDeclaredField", String.class));
+			w.dup();
+			w.storeVariable(2);
+			w.loadThis();
+			w.invokeInstance(Field.class.getMethod("get", Object.class));
+			w.checkCast(ArdenValue.class);
+			w.returnObjectFromFunction();
+			w.mark(excptEnd);
+			
+			w.markExceptionHandler(secHandler);
+			w.storeVariable(3);
+			w.jump(end);
+			
+			w.markExceptionHandler(noSuchFieldHandler);
+			w.storeVariable(3);
+			w.jump(end);
+			
+			w.markExceptionHandler(illegalArgHandler);
+			w.storeVariable(3);
+			w.jump(end);
+			
+			w.markExceptionHandler(illegalAccHandler);
+			w.storeVariable(3);
+			w.jump(end);
+			
+			w.mark(end);
+			w.loadNull();
+			w.returnObjectFromFunction();
+			
+			w.addExceptionInfo(excptBegin, excptEnd, noSuchFieldHandler, NoSuchFieldException.class);
+			w.addExceptionInfo(excptBegin, excptEnd, secHandler, SecurityException.class);
+			w.addExceptionInfo(excptBegin, excptEnd, illegalAccHandler, IllegalAccessException.class);
+			w.addExceptionInfo(excptBegin, excptEnd, illegalArgHandler, IllegalArgumentException.class);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public FieldReference getNowField() {
@@ -288,6 +398,10 @@ final class CodeGenerator {
 	/** Saves the class file */
 	public void save(DataOutput output) throws IOException {
 		if (!isFinished) {
+			if (parameterLessCtor != null) {
+				parameterLessCtor.returnFromProcedure();
+			}
+			
 			if (staticInitializer != null)
 				staticInitializer.returnFromProcedure();
 

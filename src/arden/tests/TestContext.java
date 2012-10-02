@@ -28,13 +28,34 @@
 package arden.tests;
 
 import arden.runtime.ArdenString;
+import arden.runtime.ArdenTime;
 import arden.runtime.ArdenValue;
 import arden.runtime.DatabaseQuery;
 import arden.runtime.ExecutionContext;
+import arden.runtime.events.EvokeEvent;
 
 public class TestContext extends ExecutionContext {
 	StringBuilder b = new StringBuilder();
-
+	EvokeEvent defaultEvent = null;
+	ArdenTime defaultTime = null;
+	
+	public TestContext() {
+		
+	}
+	
+	public TestContext(EvokeEvent defaultEvent) {
+		this.defaultEvent = defaultEvent;
+	}
+	
+	public TestContext(EvokeEvent defaultEvent, ArdenTime defaultTime) {
+		this(defaultEvent);
+		this.defaultTime = defaultTime;
+	}
+	
+	public TestContext(ArdenTime defaultTime) {
+		this.defaultTime = defaultTime;
+	}
+	
 	@Override
 	public DatabaseQuery createQuery(String mapping) {
 		return DatabaseQuery.NULL;
@@ -48,5 +69,25 @@ public class TestContext extends ExecutionContext {
 
 	public String getOutputText() {
 		return b.toString();
+	}
+	
+	@Override
+	public EvokeEvent getEvent(String mapping) {
+		if (defaultEvent != null) {
+			return defaultEvent;
+		}
+		return super.getEvent(mapping);
+	}
+	
+	@Override
+	public ArdenTime getCurrentTime() {
+		if (defaultTime != null) {
+			return defaultTime;
+		}
+		return super.getCurrentTime();
+	}
+	
+	public void setCurrentTime(ArdenTime currentTime) {
+		defaultTime = currentTime;
 	}
 }

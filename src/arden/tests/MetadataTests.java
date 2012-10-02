@@ -32,9 +32,12 @@ import java.io.InputStreamReader;
 import org.junit.Assert;
 import org.junit.Test;
 
-import arden.compiler.CompiledMlm;
 import arden.compiler.Compiler;
+import arden.compiler.CompiledMlm;
+import arden.runtime.ExecutionContext;
+import arden.runtime.LibraryMetadata;
 import arden.runtime.MaintenanceMetadata;
+import arden.runtime.MedicalLogicModuleImplementation;
 
 public class MetadataTests {
 	@Test
@@ -80,5 +83,58 @@ public class MetadataTests {
 		Assert.assertEquals("allergy", mlm.getLibrary().getKeywords().get(1));
 
 		Assert.assertEquals(42, mlm.getPriority(), 0);
+	}
+	
+	@Test
+	public void X21FromByteCode() throws Exception {
+		Compiler c = new Compiler();
+		CompiledMlm compiledMlm = c.compileMlm(new InputStreamReader(MetadataTests.class.getResourceAsStream("x2.1.mlm")));
+		
+		ExecutionContext cx = new TestContext();
+		
+		MedicalLogicModuleImplementation impl = compiledMlm.createInstance(cx, null);
+
+		MaintenanceMetadata m = impl.getMaintenanceMetadata();
+		Assert.assertEquals("Fractional excretion of sodium", m.getTitle());
+		Assert.assertEquals("fractional_na", m.getMlmName());
+		Assert.assertEquals("2", m.getArdenVersion());
+		Assert.assertEquals("1.00", m.getVersion());
+		Assert.assertEquals("Columbia-Presbyterian Medical Center", m.getInstitution());
+		Assert.assertEquals("George Hripcsak, M.D.(hripcsak@cucis.cis.columbia.edu)", m.getAuthor());
+		Assert.assertNull(m.getSpecialist());
+		Assert.assertEquals("testing", m.getValidation());
+
+		LibraryMetadata l = impl.getLibraryMetadata();
+		Assert.assertEquals(3, l.getKeywords().size());
+		Assert.assertEquals("fractional excretion", l.getKeywords().get(0));
+		Assert.assertEquals("serum sodium", l.getKeywords().get(1));
+		Assert.assertEquals("azotemia", l.getKeywords().get(2));
+	}
+	
+	@Test
+	public void X23FromByteCode() throws Exception {
+		Compiler c = new Compiler();
+		CompiledMlm compiledMlm = c.compileMlm(new InputStreamReader(MetadataTests.class.getResourceAsStream("x2.3.mlm")));
+
+		ExecutionContext cx = new TestContext();
+		
+		MedicalLogicModuleImplementation impl = compiledMlm.createInstance(cx, null);
+		
+		MaintenanceMetadata m = impl.getMaintenanceMetadata();
+		Assert.assertEquals("Check for penicillin allergy", m.getTitle());
+		Assert.assertEquals("pen_allergy", m.getMlmName());
+		Assert.assertEquals("1", m.getArdenVersion());
+		Assert.assertEquals("1.00", m.getVersion());
+		Assert.assertEquals("Columbia-Presbyterian Medical Center", m.getInstitution());
+		Assert.assertEquals("George Hripcsak, M.D.", m.getAuthor());
+		Assert.assertNull(m.getSpecialist());
+		Assert.assertEquals("testing", m.getValidation());
+
+		LibraryMetadata l = impl.getLibraryMetadata();
+		Assert.assertEquals(2, l.getKeywords().size());
+		Assert.assertEquals("penicillin", l.getKeywords().get(0));
+		Assert.assertEquals("allergy", l.getKeywords().get(1));
+
+		Assert.assertEquals(42, impl.getPriority(), 0);
 	}
 }

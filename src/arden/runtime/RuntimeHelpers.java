@@ -34,6 +34,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+
 /**
  * Static helper methods.
  * 
@@ -55,8 +56,10 @@ public final class RuntimeHelpers {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
 	public static final double DEFAULT_URGENCY = 50;
+	
+	public static final double DEFAULT_PRIORITY = 50; 
 
 	public static double urgencyGetPrimitiveValue(ArdenValue val) {
 		if (val instanceof ArdenNumber)

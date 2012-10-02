@@ -33,9 +33,14 @@ import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+import arden.codegenerator.FieldReference;
+import arden.codegenerator.Label;
+import arden.codegenerator.MethodWriter;
 import arden.compiler.analysis.DepthFirstAdapter;
 import arden.compiler.lexer.Lexer;
 import arden.compiler.lexer.LexerException;
@@ -48,6 +53,7 @@ import arden.compiler.node.ANumUrgencyVal;
 import arden.compiler.node.AUrgUrgencySlot;
 import arden.compiler.node.PActionSlot;
 import arden.compiler.node.PDataSlot;
+import arden.compiler.node.PEvokeSlot;
 import arden.compiler.node.PLogicSlot;
 import arden.compiler.node.PUrgencySlot;
 import arden.compiler.node.PUrgencyVal;
@@ -56,8 +62,11 @@ import arden.compiler.node.TIdentifier;
 import arden.compiler.parser.Parser;
 import arden.compiler.parser.ParserException;
 import arden.runtime.ArdenValue;
+import arden.runtime.LibraryMetadata;
+import arden.runtime.MaintenanceMetadata;
 import arden.runtime.MedicalLogicModule;
 import arden.runtime.RuntimeHelpers;
+import arden.runtime.events.EvokeEvent;
 
 /**
  * The main class of the compiler.
@@ -139,12 +148,24 @@ public final class Compiler {
 				.getLine());
 		if (isDebuggingEnabled)
 			codeGen.enableDebugging(sourceFileName);
-
+		
 		compileData(codeGen, knowledge.getDataSlot());
 		compileLogic(codeGen, knowledge.getLogicSlot());
 		compileAction(codeGen, knowledge.getActionSlot());
+		compileEvoke(codeGen, knowledge.getEvokeSlot());
 		compileUrgency(codeGen, knowledge.getUrgencySlot());
+		try {
+			compileMaintenance(codeGen, metadata.maintenance);
+			compileLibrary(codeGen, metadata.library);
+			compilePriority(codeGen, metadata.priority);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		}
 
+		codeGen.createGetValue();
+			
 		byte[] data;
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -155,9 +176,97 @@ public final class Compiler {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		return new CompiledMlm(data, metadata.maintenance, metadata.library, metadata.priority);
+		return new CompiledMlm(data, metadata.maintenance.getMlmName());
 	}
 
+	private void compileMaintenance(CodeGenerator codeGen, MaintenanceMetadata maintenance) throws NoSuchMethodException, SecurityException {		
+		FieldReference maintenanceField = codeGen.createStaticFinalField(MaintenanceMetadata.class);
+		MethodWriter init = codeGen.getStaticInitializer();
+		// format = new MaintenanceMetadata(String title, String mlmName, String ardenVersion, String version, String institution, String author, String specialist, Date date, String validation)
+		init.newObject(MaintenanceMetadata.class);
+		init.dup();
+		init.loadStringConstant(maintenance.getTitle());
+		init.loadStringConstant(maintenance.getMlmName());
+		init.loadStringConstant(maintenance.getArdenVersion());
+		init.loadStringConstant(maintenance.getVersion());
+		init.loadStringConstant(maintenance.getInstitution());
+		init.loadStringConstant(maintenance.getAuthor());
+		init.loadStringConstant(maintenance.getSpecialist());
+		
+		init.newObject(Date.class);
+		init.dup();
+		init.loadLongConstant(maintenance.getDate().getTime());
+		init.invokeConstructor(Date.class.getConstructor(new Class<?>[]{Long.TYPE}));
+		
+		init.loadStringConstant(maintenance.getValidation());
+		
+		init.invokeConstructor(MaintenanceMetadata.class.getConstructor(new Class<?>[]{String.class, String.class, String.class, String.class, String.class, String.class, String.class, Date.class, String.class}));
+		init.storeStaticField(maintenanceField);
+		
+		CompilerContext context = codeGen.createMaintenance();
+		context.writer.loadStaticField(maintenanceField);
+		context.writer.returnObjectFromFunction();
+	}
+	
+	private void compileLibrary(CodeGenerator codeGen, LibraryMetadata library) throws NoSuchMethodException, SecurityException {		
+		FieldReference libraryField = codeGen.createStaticFinalField(LibraryMetadata.class);
+		MethodWriter init = codeGen.getStaticInitializer();
+		// format = new LibraryMetadata(String purpose, String explanation, String[] keywords, String citations, String links)
+		init.newObject(LibraryMetadata.class);
+		init.dup();
+		init.loadStringConstant(library.getPurpose());
+		init.loadStringConstant(library.getExplanation());
+		init.loadIntegerConstant(library.getKeywords().size());
+		init.newArray(String.class);
+		for (int i = 0; i < library.getKeywords().size(); i++) {
+			init.dup();
+			init.loadIntegerConstant(i);
+			init.loadStringConstant(library.getKeywords().get(i));
+			init.storeObjectToArray();
+		}
+		init.loadStringConstant(library.getCitations());
+		init.loadStringConstant(library.getLinks());
+		
+		init.invokeConstructor(LibraryMetadata.class.getConstructor(new Class<?>[]{String.class, String.class, String[].class, String.class, String.class}));
+		init.storeStaticField(libraryField);
+		
+		CompilerContext context = codeGen.createLibrary();
+		context.writer.loadStaticField(libraryField);
+		context.writer.returnObjectFromFunction();
+	}
+	
+	private void compilePriority(CodeGenerator codeGen, double priority) {
+		CompilerContext context = codeGen.createPriority();
+		context.writer.loadDoubleConstant(priority);
+		context.writer.returnDoubleFromFunction();
+	}
+	
+	private void compileEvoke(CodeGenerator codeGen, PEvokeSlot evokeSlot) {
+		CompilerContext context = codeGen.createEvokeEvent();
+
+		// event is a keyword, thus there cannot be another field named 'event'
+		FieldReference eventField = context.codeGenerator.createField("event", EvokeEvent.class, Modifier.PRIVATE);
+		
+		Label isNull = new Label();
+		
+		context.writer.loadThis();
+		context.writer.loadInstanceField(eventField);
+		context.writer.jumpIfNull(isNull);
+		context.writer.loadThis();
+		context.writer.loadInstanceField(eventField);
+		context.writer.returnObjectFromFunction();
+		
+		context.writer.mark(isNull);		
+		evokeSlot.apply(new EvokeCompiler(context)); 
+		
+		// the evoke compiler is supposed to leave an EvokeEvent subclass instance on the stack		
+		context.writer.dup();
+		context.writer.loadThis();
+		context.writer.swap();
+		context.writer.storeInstanceField(eventField);
+		context.writer.returnObjectFromFunction();
+	}
+	
 	private void compileData(CodeGenerator codeGen, PDataSlot dataSlot) {
 		int lineNumber = ((ADataSlot) dataSlot).getDataColon().getLine();
 		CompilerContext context = codeGen.createConstructor(lineNumber);
@@ -182,10 +291,11 @@ public final class Compiler {
 		context.writer.returnObjectFromFunction();
 	}
 
-	private void compileUrgency(CodeGenerator codeGen, PUrgencySlot urgencySlot) {
+	private double compileUrgency(CodeGenerator codeGen, PUrgencySlot urgencySlot) {
 		// urgency_slot =
 		// {empty}
 		// | {urg} urgency urgency_val semicolons;
+		double urgency = RuntimeHelpers.DEFAULT_URGENCY;
 		if (urgencySlot instanceof AUrgUrgencySlot) {
 			PUrgencyVal val = ((AUrgUrgencySlot) urgencySlot).getUrgencyVal();
 			CompilerContext context = codeGen.createUrgency();
@@ -194,8 +304,9 @@ public final class Compiler {
 			// {num} P.number
 			// | {id} identifier;
 			if (val instanceof ANumUrgencyVal) {
-				context.writer.loadDoubleConstant(ParseHelpers
-						.getLiteralDoubleValue(((ANumUrgencyVal) val).getNumberLiteral()));
+				urgency = ParseHelpers
+						.getLiteralDoubleValue(((ANumUrgencyVal) val).getNumberLiteral());
+				context.writer.loadDoubleConstant(urgency);
 			} else if (val instanceof AIdUrgencyVal) {
 				TIdentifier ident = ((AIdUrgencyVal) val).getIdentifier();
 				Variable var = codeGen.getVariableOrShowError(ident);
@@ -210,6 +321,7 @@ public final class Compiler {
 			}
 			context.writer.returnDoubleFromFunction();
 		}
+		return urgency;
 	}
 
 	static Method getRuntimeHelper(String name, Class<?>... parameterTypes) {

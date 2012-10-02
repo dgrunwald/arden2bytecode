@@ -39,6 +39,14 @@ public final class ArdenString extends ArdenValue {
 		this.value = value;
 	}
 
+	public static String getStringFromValue(ArdenValue ardenValue) {
+		if (ardenValue instanceof ArdenString) {
+			return ((ArdenString)ardenValue).value;
+		} else {
+			return null;
+		}
+	}
+	
 	@Override
 	public ArdenValue setTime(long newPrimaryTime) {
 		return new ArdenString(value, newPrimaryTime);
@@ -76,4 +84,5 @@ public final class ArdenString extends ArdenValue {
 			return Integer.MIN_VALUE;
 		}
 	}
+	
 }

@@ -50,6 +50,9 @@ public final class MethodWriter {
 	/** Line number table, used if debugging information should be output */
 	private LineNumberTable lineNumberTable;
 
+	/** Exception table declaring jump targets for given Exceptions */
+	private ExceptionTable exceptionTable;
+	
 	/** Table of local variables (for use by debuggers) */
 	private LocalVariableTable localVariableTable;
 
@@ -265,7 +268,11 @@ public final class MethodWriter {
 			byte[] code = getByteCode();
 			data.writeInt(code.length);
 			data.write(code);
-			data.writeShort(0); // exception_table_length
+			if (exceptionTable == null) {
+				data.writeShort(0); // exception_table_length
+			} else {
+				data.write(exceptionTable.getData());
+			}
 			int attributesCount = 0;
 			if (lineNumberTable != null)
 				attributesCount++;
@@ -322,6 +329,20 @@ public final class MethodWriter {
 			lineNumberTable.addEntry(byteCode.size(), lineNumber);
 	}
 
+	/**
+	 * Marks a try..catch region.
+	 * @param start Beginning of region where thrown Exceptions should be handled
+	 * @param end End of region where thrown Exceptions should be handled
+	 * @param handler Start of Exception handling code
+	 * @param exceptionType Type of Exception to be thrown
+	 */
+	public void addExceptionInfo(Label start, Label end, Label handler, Class<? extends Throwable> exceptionType) {
+		if (exceptionTable == null) {
+			exceptionTable = new ExceptionTable(pool);
+		}
+		exceptionTable.addExceptionRange(start, end, handler, exceptionType);
+	}
+	
 	private void emitLdc(int constantIndex) {
 		if (constantIndex < 256) {
 			emit(18); // ldc
@@ -820,6 +841,16 @@ public final class MethodWriter {
 								+ label.stackSize);
 			stackSize = 0;
 			label.stackSize = 0;
+		} else {
+			throw new IllegalArgumentException("The label already was used to mark a position.");
+		}
+	}
+	
+	public void markExceptionHandler(Label label) {
+		if (label.markedPosition == -1) {
+			label.markedPosition = getCurrentPosition();
+			stackSize = -1;
+			label.stackSize = -1;
 		} else {
 			throw new IllegalArgumentException("The label already was used to mark a position.");
 		}

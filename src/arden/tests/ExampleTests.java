@@ -27,7 +27,6 @@
 
 package arden.tests;
 
-import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 
 import org.junit.Assert;
@@ -49,9 +48,9 @@ public class ExampleTests {
 		c.enableDebugging(filename + ".mlm");
 		CompiledMlm mlm = c
 				.compileMlm(new InputStreamReader(ExampleTests.class.getResourceAsStream(filename + ".mlm")));
-		FileOutputStream fos = new FileOutputStream("bin/" + mlm.getName() + ".class");
+		/*FileOutputStream fos = new FileOutputStream(filename + ".class");
 		mlm.saveClassFile(fos);
-		fos.close();
+		fos.close();*/
 		return mlm;
 	}
 

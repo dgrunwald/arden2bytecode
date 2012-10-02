@@ -40,7 +40,7 @@ import arden.compiler.node.Token;
  * @author Daniel Grunwald
  * 
  */
-final class DataVariable extends Variable {
+class DataVariable extends Variable {
 	final FieldReference field;
 
 	public DataVariable(TIdentifier name, FieldReference field) {

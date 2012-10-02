@@ -27,6 +27,9 @@
 
 package arden.runtime;
 
+import arden.runtime.events.EvokeEvent;
+import arden.runtime.events.UndefinedEvokeEvent;
+
 /**
  * Base class for compiled logic etc. The compiler creates derived classes. An
  * instance of the derived class will be created whenever the MLM is executed.
@@ -53,5 +56,40 @@ public abstract class MedicalLogicModuleImplementation {
 	/** Gets the urgency. */
 	public double getUrgency() {
 		return RuntimeHelpers.DEFAULT_URGENCY;
+	}
+	
+	/** Gets the maintenance metadata 
+	 * (not declared abstract to stay downwards compatible with existing MLMs) */
+	public MaintenanceMetadata getMaintenanceMetadata() {
+		return null;
+	}
+	
+	/**
+	 * Gets the library metadata
+	 */
+	public LibraryMetadata getLibraryMetadata() {
+		return null;
+	}
+	
+	/**
+	 * Gets the priority
+	 */
+	public double getPriority() {
+		return RuntimeHelpers.DEFAULT_PRIORITY;
+	}
+	
+	/**
+	 * Gets the event when this MLM should be invoked
+	 */
+	public EvokeEvent getEvokeEvent(ExecutionContext context) {
+		return new UndefinedEvokeEvent();
+	}
+	
+	/**
+	 * Gets a Variable that is declared in the Medical Logic Module.
+	 * This method should be overridden by the MLMs ByteCode.
+	 */
+	public ArdenValue getValue(String name) {
+		return ArdenNull.INSTANCE;
 	}
 }

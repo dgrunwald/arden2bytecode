@@ -39,6 +39,24 @@ public class MaintenanceMetadata {
 	private String specialist;
 	private Date date;
 	private String validation;
+	
+	public MaintenanceMetadata() {
+		
+	}
+	
+	public MaintenanceMetadata(String title, String mlmName, String ardenVersion, String version, String institution,
+			String author, String specialist, Date date, String validation) {
+		super();
+		this.title = title;
+		this.mlmName = mlmName;
+		this.ardenVersion = ardenVersion;
+		this.version = version;
+		this.institution = institution;
+		this.author = author;
+		this.specialist = specialist;
+		this.date = date;
+		this.validation = validation;
+	}
 
 	public void setTitle(String title) {
 		this.title = title;
